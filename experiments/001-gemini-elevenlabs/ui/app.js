@@ -59,6 +59,9 @@ document.querySelectorAll("input[data-setting]").forEach((input) => {
 
 fetch("/api/settings").then((r) => r.json()).then(showSettings);
 
+// Settings start collapsed on narrow screens, where the sidebar stacks above the conversation.
+if (window.matchMedia("(max-width: 899px)").matches) $("#settings").open = false;
+
 // ---- Status ---------------------------------------------------------------------------------
 
 function setStatus(text, isError = false) {

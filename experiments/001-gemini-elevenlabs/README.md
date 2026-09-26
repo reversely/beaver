@@ -107,6 +107,13 @@ once. `ui/pieces.html` shows all eight with their build times and dimension chec
 `tests/artifacts.test.mjs` checks that the registry matches the spec, that every dimension check
 passes, and that the Python and JavaScript piece lists agree.
 
+The page works from 360 px phones to wide desktops. Below 900 px, where the 300 px sidebar would
+crush the conversation, the sidebar stacks on top, settings collapse into a disclosure, notebooks
+scroll sideways, and the notebook header stacks. Touch screens get 44 px targets, hover effects
+apply only on devices that hover, and body lines stop near 70 characters. The layout audit at 360,
+390, 600, 768, 900, 1280, and 1920 px reports no fails and no warns on the conversation, a
+notebook, and `pieces.html`.
+
 The server listens on 127.0.0.1 only, serves audio only from inside `runs/`, accepts only the
 listed settings and values, and caps requests at 15 MB. API keys stay on the server.
 
