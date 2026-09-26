@@ -225,10 +225,12 @@ def bilingual_turn(config, record, question, image_file):
     for piece in bilingual.synthesize_in_order(config, result["groups"]):
         if not sentences:
             record.mark("first_audio_ready", start)
-        name = f"g{piece['group'] + 1}-{piece['code']}.wav"
-        record.save_file(name, devices.pcm_to_wav(piece["pcm"], piece["rate"]))
         print(f"  [{piece['code']}] {piece['text']}")
         sentences.append({k: v for k, v in piece.items() if k not in ("pcm", "rate")})
+        if piece["pcm"] is None:
+            continue
+        name = f"g{piece['group'] + 1}-{piece['code']}.wav"
+        record.save_file(name, devices.pcm_to_wav(piece["pcm"], piece["rate"]))
         devices.play_pcm(config, record, piece["pcm"], piece["rate"])
     record.mark("all_spoken", start)
     record.data["timings_ms"].pop("playback", None)
@@ -237,7 +239,16 @@ def bilingual_turn(config, record, question, image_file):
     # waited_ms after the first sentence is silence between sentences while synthesis catches up.
     record.data["gap_ms_total"] = sum(s["waited_ms"] for s in sentences[1:])
     record.data["question_text"] = result["question"]
+    record.data["peak_memory_mb"] = peak_memory_mb()
     return result
+
+
+def peak_memory_mb():
+    """This process's peak resident memory. macOS reports bytes, Linux kilobytes."""
+    import resource
+
+    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return round(peak / (1024 * 1024 if sys.platform == "darwin" else 1024))
 
 
 def step_bilingual(config, record, args):
@@ -276,7 +287,10 @@ def step_bilingualtest(config, record, args):
                 "case": case["name"],
                 "mode": config["answer"]["mode"],
                 "answer_ms": t.get("gemini_answer"),
-                "translate_ms": t.get("gemini_translate", 0),
+                "backend": config["translation"]["backend"],
+                "translate_ms": t.get("gemini_translate", 0)
+                + t.get("argos_translate", 0),
+                "peak_mb": data["peak_memory_mb"],
                 "first_audio_ms": t["first_audio_ready"],
                 "all_spoken_ms": t["all_spoken"],
                 "gap_ms": data["gap_ms_total"],
@@ -322,6 +336,16 @@ STEPS = {
 }
 
 
+def step_getmodels(config, args):
+    """Download Argos models between English and each named language: getmodels fr ar zh-Hant"""
+    import argos
+
+    if not args.words:
+        raise SystemExit("Name the languages, for example: getmodels fr ar es zh-Hant")
+    for line in argos.download(config, args.words):
+        print(f"  {line}")
+
+
 def step_serve(config, args):
     from server import serve
 
@@ -329,7 +353,12 @@ def step_serve(config, args):
 
 
 # Commands that make no run folder of their own.
-QUERIES = {"list": step_list, "usage": step_usage, "serve": step_serve}
+QUERIES = {
+    "list": step_list,
+    "usage": step_usage,
+    "serve": step_serve,
+    "getmodels": step_getmodels,
+}
 
 
 def main():

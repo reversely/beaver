@@ -27,6 +27,12 @@ max_characters = 600
 # Send each sentence's ISO 639-1 language code. Only eleven_flash_v2_5 and eleven_turbo_v2_5
 # accept it; other models reject the request.
 send_language_code = false
+# Languages the model above speaks (ISO 639-1), from the ElevenLabs models API; `run.py list`
+# shows each model's list. Sentences in other languages show on the page without audio.
+spoken_languages = [
+  "ar", "bg", "cs", "da", "de", "el", "en", "es", "fi", "fil", "fr", "hi", "hr", "id", "it",
+  "ja", "ko", "ms", "nl", "pl", "pt", "ro", "ru", "sk", "sv", "ta", "tr", "uk", "zh",
+]
 
 [microphone]
 sample_rate = 16000
@@ -61,6 +67,21 @@ order = "official_first"
 mode = "translate"
 # Longest answer, in characters of the first official language.
 max_characters = 280
+
+[translation]
+# Pipeline mode only. "gemini": one batched Gemini request. "argos": open-source Argos Translate
+# models (OPUS-MT, CC-BY 4.0) on CTranslate2, run locally; `run.py getmodels ar es zh-Hant`
+# downloads them.
+backend = "gemini"
+# For a language no Argos model covers: "gemini" translates it with Gemini, "none" drops it.
+fallback = "gemini"
+models_dir = "models/argos"
+# Models kept loaded at once; each takes roughly 80 MB on disk. Keep low on a 4 GB Pi.
+max_loaded = 3
+# "int8" quantizes weights to 8 bits, which cuts memory and suits the Pi's CPU.
+compute_type = "int8"
+threads = 2
+beam_size = 2
 
 [tts]
 # Sentences synthesized at once, so later sentences are ready while earlier ones play.

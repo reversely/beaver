@@ -12,6 +12,7 @@ import time
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 
+import argos
 import gemini
 import speech
 from record import RunRecord
@@ -34,7 +35,10 @@ VISITOR_FIELDS = {
         "description": "The visitor's question, word for word, in their language.",
     },
     "visitor_language_name": {"type": "string"},
-    "visitor_language_code": {"type": "string", "description": "ISO 639-1 code"},
+    "visitor_language_code": {
+        "type": "string",
+        "description": "BCP 47 tag with the script where it matters, such as ar, es, zh-Hant, zh-Hans",
+    },
 }
 
 
@@ -124,6 +128,16 @@ def _answer_then_translate(config, record, system, question, image, spoken):
     names = {**NAMES, visitor["code"]: visitor["name"]}
     translations = {source: sentences}
     others = [code for code in codes if code != source]
+    if config["translation"]["backend"] == "argos" and others:
+        # The visitor's full tag reaches Argos, so zh-Hant selects the Traditional model.
+        targets = {c: visitor["tag"] if c == visitor["code"] else c for c in others}
+        record.sent(
+            "Argos", targets=", ".join(targets.values()), sentences="\n".join(sentences)
+        )
+        found, others = argos.translate_many(config, record, sentences, source, targets)
+        translations.update(found)
+        if config["translation"]["fallback"] != "gemini":
+            others = []
     if others:
         schema = {
             "type": "object",
@@ -199,9 +213,11 @@ def _answer_inline(config, record, system, question, image, spoken):
 
 
 def _visitor(reply: dict) -> dict:
+    tag = reply["visitor_language_code"]
     return {
         "name": reply["visitor_language_name"],
-        "code": reply["visitor_language_code"].lower().split("-")[0],
+        "tag": tag,
+        "code": tag.lower().replace("_", "-").split("-")[0],
     }
 
 
@@ -224,13 +240,19 @@ def synthesize_in_order(config: dict, groups: list) -> Iterator[dict]:
     """Yield each sentence's audio in speaking order. Up to tts.parallel sentences synthesize at
     once, so later sentences are ready while earlier ones play."""
     pieces = [(g, code, text) for g, group in enumerate(groups) for code, text in group]
+    # A language the voice model cannot speak is shown without audio; its official-language
+    # partner in the same group is still spoken.
+    spoken = set(config["elevenlabs"]["spoken_languages"])
     with ThreadPoolExecutor(config["tts"]["parallel"]) as pool:
         futures = [
-            pool.submit(speech.convert, config, text, code) for _, code, text in pieces
+            pool.submit(speech.convert, config, text, code) if code in spoken else None
+            for _, code, text in pieces
         ]
         for (group, code, text), future in zip(pieces, futures, strict=True):
             waited = time.perf_counter()
-            pcm, rate, first_ms, total_ms = future.result()
+            pcm, rate, first_ms, total_ms = (
+                future.result() if future else (None, None, 0, 0)
+            )
             yield {
                 "group": group,
                 "code": code,

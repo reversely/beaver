@@ -35,6 +35,7 @@ EDITABLE = {
         "order": ("official_first", "visitor_first"),
     },
     "answer": {"mode": ("translate", "inline")},
+    "translation": {"backend": ("gemini", "argos")},
 }
 MAX_REQUEST_BYTES = 15 * 1024 * 1024
 
@@ -95,14 +96,17 @@ def ask_events(config: dict, payload: dict):
         for piece in bilingual.synthesize_in_order(config, result["groups"]):
             if not sentences:
                 record.mark("first_audio_ready", start)
-            name = f"g{piece['group'] + 1}-{piece['code']}.wav"
-            record.save_file(name, devices.pcm_to_wav(piece["pcm"], piece["rate"]))
             sentence = {k: v for k, v in piece.items() if k not in ("pcm", "rate")}
             sentences.append(sentence)
+            audio = None
+            if piece["pcm"] is not None:
+                name = f"g{piece['group'] + 1}-{piece['code']}.wav"
+                record.save_file(name, devices.pcm_to_wav(piece["pcm"], piece["rate"]))
+                audio = f"/runs/{record.dir.name}/{name}"
             yield {
                 "type": "sentence",
                 **sentence,
-                "audio": f"/runs/{record.dir.name}/{name}",
+                "audio": audio,
             }
         record.mark("all_synthesized", start)
         record.data["sentences"] = sentences

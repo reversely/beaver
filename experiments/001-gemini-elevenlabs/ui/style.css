@@ -246,6 +246,7 @@ body {
 .line.is-visitor { font-weight: 700; color: var(--ink); }
 .line.is-speaking { color: var(--ink); }
 .line.is-pending { color: var(--ink-3); }
+.line.is-silent { font-style: italic; }
 
 @keyframes pulse { 50% { opacity: 0.35; } }
 

@@ -49,10 +49,18 @@
         </div>
 
         <div class="field">
-          <span class="field-label" id="mode-label">Translation</span>
+          <span class="field-label" id="mode-label">Translation step</span>
           <div class="seg" role="radiogroup" aria-labelledby="mode-label" data-setting="answer.mode">
             <button type="button" role="radio" data-value="translate">Separate step</button>
             <button type="button" role="radio" data-value="inline">In the answer</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label" id="backend-label">Translated by</span>
+          <div class="seg" role="radiogroup" aria-labelledby="backend-label" data-setting="translation.backend">
+            <button type="button" role="radio" data-value="gemini">Gemini</button>
+            <button type="button" role="radio" data-value="argos">Argos</button>
           </div>
         </div>
       </section>

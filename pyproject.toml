@@ -13,20 +13,24 @@ dev = [
     "ruff==0.16.9",
 ]
 pi = [
+    "ctranslate2>=4.8.2",
     "elevenlabs>=2.69.0",
     "google-genai>=2.25.0",
     "numpy>=2.5.3",
     "openwakeword>=0.6.0",
     "python-dotenv>=1.2.3",
     "scipy>=1.18.1",
+    "sentencepiece>=0.2.2",
     "sounddevice>=0.5.6",
 ]
 sandbox = [
+    "ctranslate2>=4.8.2",
     "elevenlabs>=2.69.0",
     "google-genai>=2.25.0",
     "numpy>=2.5.3",
     "opencv-python>=5.0.0.93",
     "python-dotenv>=1.2.3",
+    "sentencepiece>=0.2.2",
     "sounddevice>=0.5.6",
 ]
 

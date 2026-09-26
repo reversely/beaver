@@ -331,7 +331,13 @@ function handleEvent(event, turn, groups, player) {
     line.textContent = event.text;
     line.title = languageName(event.code);
     group.append(line);
-    player.add({ url: event.audio, line });
+    if (event.audio) {
+      player.add({ url: event.audio, line });
+    } else {
+      // The voice model does not speak this language; the line shows without audio.
+      line.classList.add("is-silent");
+      line.title = `${languageName(event.code)}, shown only`;
+    }
   } else if (event.type === "done") {
     if (!player.started) setStatus("");
     const wait = () => (player.playing ? setTimeout(wait, 300) : setStatus(""));

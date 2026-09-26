@@ -36,3 +36,6 @@ experiments/*/settings.local.json
 
 # Review notebooks built by the experiment 001 interface
 experiments/*/notebooks/
+
+# Downloaded translation models
+experiments/*/models/

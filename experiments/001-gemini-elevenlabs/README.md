@@ -66,6 +66,23 @@ changes persist in `settings.local.json` (gitignored). The header's low-poly Par
 roofs, the Library's slate roof, and an evening sky. The page chrome stays brown on warm white; the
 contrast ratios of its colour tokens are recorded at the top of `ui/style.css`.
 
+### Translation backends
+
+In pipeline mode, `translation.backend` chooses who translates the answer's sentences. `gemini`
+sends one batched Gemini request. `argos` runs Argos Translate model packages locally on
+CTranslate2 and SentencePiece, both open-source, without the `argostranslate` library, which pulls
+in PyTorch through `stanza`. `run.py getmodels fr ar es zh-Hant` downloads models between English
+and each language into `models/argos/` (gitignored); Argos covers 49 languages, including
+Traditional Chinese (`zt`) apart from Simplified (`zh`). A pair with no direct model goes through
+English, and a language with no model falls back to `translation.fallback`. The visitor's language
+keeps its BCP 47 tag, so `zh-Hant` selects the Traditional model. A sentence in a language outside
+`elevenlabs.spoken_languages` shows on the page in italics and is not synthesized; its
+official-language partner is still spoken.
+
+The Argos packages carry OPUS-MT models by Jörg Tiedemann and Santhosh Thottingal (University of
+Helsinki), "OPUS-MT: Building open translation services for the World", EAMT 2020, licensed
+CC-BY 4.0.
+
 ### Notebooks
 
 After a turn's audio is ready, one text-only Gemini request (`prompts/notebook.md`) files the
@@ -143,7 +160,29 @@ Measured on 2026-09-26 on the MacBook, with the default `config.toml` unless not
 | 4 camera | | Not yet run |
 | 5 translate | | Not yet run |
 | imagetest | `gemini-3.5-flash-lite`, 5 questions x 4 image variants | See below |
+| bilingualtest | `gemini` translation, 3 cases, playback off | Translation 1,060 to 1,341 ms; first audio 4.3 to 7.3 s; peak memory 87 MB |
+| bilingualtest | `argos` translation, 3 cases, playback off | Translation 385 to 481 ms; first audio 3.6 to 4.3 s; peak memory 220 MB; 206 to 252 fewer Gemini tokens per case |
+| Argos alone | 3 sentences, int8, 2 threads | 143 to 188 ms warm per language; 300 to 1,200 ms to load a model; about 150 MB per loaded model |
 | Pieces | 8 pieces at 200 px, headless Chrome | 223 ms on a cold start, 96 ms on a second run; the first piece takes 74 ms for WebGL setup and the rest 1 to 8 ms each |
+
+### Translation comparison, 2026-09-26
+
+Gemini wrote each English answer; the two backends then translated the same kind of answer. The
+Gemini translations read fluently and keep the English name in brackets, as in
+"برج السلام (Peace Tower)". The Argos translations carried errors a visitor would notice:
+
+- Arabic: "Parliament Hill" became "البرلمان هيل", keeping "Hill" as a sound, and "Centre Block"
+  became "مركز "بلوك"".
+- Spanish: "nineteen seventeen" became "diecinueve y diecisiete años", and "wilderness" became
+  "desierto", which means desert.
+- Traditional Chinese: the first sentence lost its second half, "cheese" doubled as "奶酪奶酪", and
+  Simplified forms such as "制成" appeared.
+- Swahili: "fresh cheese curds topped with warm brown gravy" became "curds safi cheese kuchorea na
+  gravy joto kahawia", leaving English words in place.
+
+The spelled-out year comes from `prompts/system.md`, which asks Gemini to write numbers and dates
+the way a person would say them. Sentence-level translation models read "nineteen seventeen" as
+words, so the Spanish rendering fails where Gemini's own translation wrote 1917.
 
 ### Image test, 2026-09-26
 
