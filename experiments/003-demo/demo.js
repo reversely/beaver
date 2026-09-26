@@ -2,7 +2,13 @@ import Reveal from "reveal";
 import { createCity } from "./scene.js";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const city = createCity(document.getElementById("city"), { reducedMotion });
+// The painted layers load in the background; slides work straight away and the scene joins in.
+let city = { goTo() {} };
+let currentView = "hello";
+createCity(document.getElementById("city"), { reducedMotion }).then((c) => {
+  city = c;
+  city.goTo(currentView);
+});
 
 const stage = document.getElementById("stage");
 const LANG_NAMES = { en: "English", fr: "Français", es: "Español" };
@@ -56,10 +62,12 @@ const SCRIPTS = {
 };
 
 function showSlide(slide) {
-  city.goTo(slide.dataset.view);
+  currentView = slide.dataset.view;
+  city.goTo(currentView);
   clearTimers();
   const screen = slide.dataset.screen;
   stage.hidden = !screen;
+  stage.classList.toggle("wide", slide.dataset.stage === "wide");
   if (screen) {
     document.querySelectorAll(".app-view").forEach((v) => v.classList.toggle("on", v.dataset.screen === screen));
     SCRIPTS[screen]?.();
@@ -135,6 +143,7 @@ function wirePlayback(lines) {
     stopped = true;
     audio?.pause();
     lines.forEach((x) => x.el.classList.remove("speaking"));
+    lines[0]?.el.closest(".ask-turns").scrollTo({ top: 0 });
     button.textContent = "Play reply";
   };
   button.addEventListener("click", async () => {
@@ -144,6 +153,9 @@ function wirePlayback(lines) {
     for (const line of lines) {
       if (stopped) return;
       line.el.classList.add("speaking");
+      // Keep the spoken sentence in view inside the laptop screen without scrolling the page.
+      const box = line.el.closest(".ask-turns");
+      box.scrollTo({ top: line.el.offsetTop - box.offsetTop - 24, behavior: reducedMotion ? "auto" : "smooth" });
       audio = new Audio(line.src);
       await new Promise((done) => {
         audio.onended = done;
@@ -156,6 +168,35 @@ function wirePlayback(lines) {
   });
   Reveal.on("slidechanged", stop);
 }
+
+// The intro greets the visitor in the languages of Beaver's likely visitors, one at a time.
+const GREETINGS = [
+  ["Hi", "English", "en"],
+  ["Bonjour", "Français", "fr"],
+  ["Hola", "Español", "es"],
+  ["مرحبا", "العربية", "ar"],
+  ["你好", "中文", "zh"],
+  ["ਸਤ ਸ੍ਰੀ ਅਕਾਲ", "ਪੰਜਾਬੀ", "pa"],
+  ["Kumusta", "Tagalog", "tl"],
+  ["Kwe", "Anishinàbemowin", "alq"],
+];
+function cycleGreetings() {
+  const word = document.getElementById("greeting");
+  const label = document.getElementById("greeting-lang");
+  let i = 0;
+  setInterval(() => {
+    i = (i + 1) % GREETINGS.length;
+    const [text, name, code] = GREETINGS[i];
+    word.classList.remove("in");
+    void word.offsetWidth;
+    word.textContent = text;
+    word.lang = code;
+    word.dir = code === "ar" ? "rtl" : "ltr";
+    label.textContent = name;
+    word.classList.add("in");
+  }, 1800);
+}
+if (!reducedMotion) cycleGreetings();
 
 await Reveal.initialize({
   view: "scroll",

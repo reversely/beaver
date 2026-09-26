@@ -5,10 +5,11 @@
 | Status | Active |
 | Started | 2026-09-26 |
 | Builds on | [Experiment 001](../001-gemini-elevenlabs/README.md), [Experiment 002](../002-raspberry-pi/README.md) |
-| Ticket | [#9](https://github.com/reversely/beaver/issues/9) |
+| Tickets | [#9](https://github.com/reversely/beaver/issues/9), [#10](https://github.com/reversely/beaver/issues/10) |
 
 This folder is a static page that introduces Beaver on a laptop. It needs no API key and no
-server code; every reply it shows comes from a recorded experiment 001 run.
+server code. The sample conversation replays a recorded experiment 001 run; the "Hey Beaver..."
+exchanges come from the concept sheet.
 
 ## Question
 
@@ -28,52 +29,71 @@ advances one slide every 8 seconds and loops.
 
 | Slide | Content | Scene view |
 |---|---|---|
-| beaver | Name and one-line description in English and French | The town from above the river |
-| Rover | Hardware and features | The beaver at its dam |
-| Knowledge | Topics and rules from the guide prompt, and questions answered in testing | The clock tower |
-| Sign in | Operator sign-in on the laptop | The river bend |
-| Site | Site name, reply languages, topics, and voice | Over the town from the north |
-| Pairing | The laptop shows a QR code for the rover's camera | Street level below the tower |
-| Deployment | Settings go to the rover | Overhead |
-| Visitor session | Session code and QR code for visitor phones | The riverbank maples |
-| Sample conversation | A recorded question, camera frame, and reply | The dam from downstream |
-| Notebook | The notebook entry filed from that exchange | The town from the west |
-| beaver | Closing slide with **Start over** | The town from the south |
+| Greeting | "Hi" cycling through eight languages beside the Beaver wordmark and "the newcomer's field guide to Canada" | Pushed in on Parliament Hill, framed by maple branches |
+| Newcomer | The concept sheet's two-column introduction | The whole painting |
+| Hey Beaver... | The concept sheet's three exchanges in Arabic, Spanish, and Chinese with English | Panned over the river |
+| Sign in, Site, Pair, Deploy, Session | The host's setup for one rover on the laptop | A slow pan across the town per step |
+| Ask | The recorded experiment 001 exchange inside the laptop, with **Play reply** | The river bank |
+| Notebook | The notebook entry filed from that exchange | The far bank |
+| Close | Wordmark and **Start over** | Parliament Hill, framed by branches |
 
-The setup screens (sign-in to visitor session) are demo screens: the pairing status and deploy
-progress change on a timer, and no account, rover, or session exists behind them. Each screen
-carries a `demo` tag.
+The setup screens are demo screens: the pairing status and deploy progress change on a timer,
+and no account, rover, or session exists behind them. The QR codes scan, but they hold placeholder
+strings (`beaver-demo:pair:ROVER-1`, `beaver-demo:join:BVR-4K7`) that nothing reads yet. Each
+screen carries a `demo` tag.
 
 ## Files
 
 | File | Role |
 |---|---|
-| `index.html` | Slides and the laptop's operator screens |
-| `demo.js` | reveal.js setup, per-slide screen changes, QR codes, the sample exchange, autoplay |
-| `scene.js` | three.js autumn town: ground, river, roads, buildings, clock tower, maples, falling leaves, dam, beaver |
+| `index.html` | Slides and the laptop's screens |
+| `demo.js` | reveal.js setup, greeting cycle, per-slide screen changes, QR codes, the sample exchange, autoplay |
+| `scene.js` | The painted layers on planes at their depths, the camera views, branches, and falling leaves |
 | `style.css` | Palette roles, measured contrast, slide and laptop layout |
-| `sample/exchange.json` | Question, sentences, timings, and notebook entry from experiment 001 run `20260926-110552-ui` |
-| `sample/*.mp3`, `sample/frame.jpg` | That run's sentence audio (WAV converted to 48 kbps mono MP3) and camera frame |
+| `art/source/*.webp` | Three GPT Image 2 generations: the master painting, clouds, and maple branches |
+| `art/build_layers.py` | Cuts the sources into the layers below |
+| `art/*.webp` | Layers: `clouds`, `land`, `parliament`, `foreground` (branches), `leaf-2` (falling leaf) |
+| `beaver-mark.png` | The Beaver mark, cropped from the concept sheet; a placeholder until final branding |
+| `sample/` | Run `20260926-110552-ui`: question, sentences, timings, notebook entry, audio, camera frame |
 
 reveal.js 5.2.1 runs in scroll view, three.js 0.170.0 draws the scene, and qrcode-generator 1.4.4
-draws the QR codes; all three load from jsDelivr at pinned versions.
+draws the QR codes; all three load from jsDelivr at pinned versions. Inter and Instrument Sans
+load from Google Fonts.
+
+## Art pipeline
+
+The scene is one painting cut into depth layers, so every layer shares one style and lines up.
+Layers generated one at a time from separate prompts did not line up with the master or with each
+other, and one came back in a different painting style, so only the master, the clouds, and the
+branches are used.
+
+```
+uv run --with pillow --with numpy --with opencv-python-headless \
+    python experiments/003-demo/art/build_layers.py
+```
+
+`build_layers.py` removes the master's cream sky by flood fill from the top edge, cuts Parliament's
+buildings out of a fixed box (leaving the pale hills behind them on the land layer), refills that
+box on the land layer row by row from the colours on either side, keys the clouds off their
+orange field, and keys the branches off magenta by blue-over-green, because maple red sits close
+to magenta in plain colour distance.
+
+`scene.js` places each layer on a plane at its depth and scales it by that depth, so from the
+base camera the layers reassemble the painting. The camera only pans and pushes in, and each view
+is clamped so the visible area stays inside the land painting at any window shape. Parliament sits
+1.6 units in front of the land, so the refilled strip behind it shows only as a thin sliver.
 
 ## Design
 
-The palette is five colours: `#814E2B` brown, `#9F0A28` red, `#D55C2B` orange, `#F6E7D3` cream,
-and `#89A46F` sage. Every colour in the scene is one of these or a fixed mix of two, and the
-copper-green tower roof uses the sage. Text sits only on cream cards; the measured contrast of
-each text colour is recorded at the top of `style.css`. Orange and sage carry no text.
-
-The scene's camera eases to a new view on every slide. The laptop on the setup slides stays fixed
-while those slides scroll, and its screen contents scale with its width, so each screen fits at
-every window size. Reduced motion stops the falling leaves, the camera moves, and the screen
-animations.
+Text sits either on the painted sky in deep maroon, or on dark maroon surfaces in near-white; the
+measured contrast of each pair is recorded at the top of `style.css`. The page's one gradient is
+the sky behind the painting. Reduced motion stops the falling leaves, the camera moves, the
+greeting cycle, and the screen animations.
 
 ## Results
 
 | Test | Setting | Measurement |
 |---|---|---|
-| Frame rate | Chrome, Apple A18 Pro GPU, 1440 x 900, 5 s on the first slide | 60.0 frames per second; longest frame 33 ms |
+| Frame rate | Chrome, Apple A18 Pro GPU, 1440 x 900, 5 s on the first slide | 60.1 frames per second; longest frame 17 ms |
 | Layout audit | 1024, 1280, 1440, 1920 px, first slide | 0 fails, 0 warnings |
-| Slide screenshots | 1024 x 700, 1440 x 900, 1920 x 1080 | Every setup screen fits its laptop; no card overlaps the laptop |
+| Slide screenshots | 1024 x 700, 1440 x 900, 1920 x 1080 | Every setup screen fits its laptop; the camera never shows past the painting's edge |

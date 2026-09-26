@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Beaver demo</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="beaver-mark.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inria+Sans:wght@300;400;700&family=Inria+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
@@ -23,14 +23,14 @@
 <body>
   <canvas class="city" id="city" aria-hidden="true"></canvas>
 
-  <!-- The laptop stays fixed while the setup slides scroll past; each slide picks its screen. -->
+  <!-- The laptop stays fixed from sign-in to the notebook; each slide picks its screen. -->
   <div class="stage" id="stage" hidden>
-    <figure class="laptop" aria-label="Operator screens on a laptop">
+    <figure class="laptop" aria-label="Beaver on a laptop">
       <div class="lid">
         <div class="screen">
           <div class="app">
             <header class="app-bar">
-              <span class="app-name">beaver</span>
+              <span class="app-name"><img src="beaver-mark.png" alt="">Beaver</span>
               <span class="tag tag-demo">demo</span>
             </header>
 
@@ -110,6 +110,32 @@
               </div>
               <button class="app-button app-button-quiet" type="button" tabindex="-1">End session</button>
             </section>
+
+            <section class="app-view" data-screen="conversation">
+              <div class="ask">
+                <figure class="ask-frame">
+                  <img src="sample/frame.jpg" alt="Camera frame of a landscape painting on a screen" width="1024" height="576">
+                </figure>
+                <div class="ask-turns">
+                  <p class="bubble" lang="es" data-bind="question"></p>
+                  <ol class="groups" id="groups"></ol>
+                  <p class="app-note" data-bind="timings"></p>
+                </div>
+              </div>
+            </section>
+
+            <section class="app-view" data-screen="notebook">
+              <div class="nb-head">
+                <strong data-bind="nb-title"></strong>
+                <span lang="fr" data-bind="nb-title-fr"></span>
+                <span class="tag" data-bind="nb-theme"></span>
+              </div>
+              <table class="vocab">
+                <thead><tr><th>English</th><th>Français</th><th>Español</th><th>Meaning</th></tr></thead>
+                <tbody id="vocab"></tbody>
+              </table>
+              <div class="concepts" id="concepts"></div>
+            </section>
           </div>
         </div>
       </div>
@@ -132,51 +158,67 @@
   <div class="reveal">
     <div class="slides">
 
-      <section data-view="hero" class="slide-hero">
-        <div class="card card-hero">
-          <h1 class="wordmark">beaver</h1>
-          <p class="lead">A rover that answers questions about Canada in English and French</p>
-          <p class="lead lead-fr" lang="fr">Un robot guide qui répond aux questions sur le Canada en français et en anglais</p>
-          <p class="hint">Scroll or press the arrow keys</p>
-        </div>
-      </section>
-
-      <section data-view="rover">
-        <div class="card">
-          <h2>Rover</h2>
-          <p>Beaver runs on a Raspberry Pi 5 rover with a camera, a microphone, and a speaker. A visitor asks a question aloud, and the rover answers aloud in each language the site has chosen. The same guide runs in a web browser for classrooms without a rover.</p>
-          <ul class="features">
-            <li>Questions by voice or keyboard</li>
-            <li>A camera frame sent with each question</li>
-            <li>Replies in English, French, or both</li>
-            <li>The visitor's own language added to each sentence</li>
-            <li>A notebook of vocabulary and concepts from each exchange</li>
-            <li>A wake word or a button to start listening</li>
-          </ul>
-        </div>
-      </section>
-
-      <section data-view="knows">
-        <div class="card">
-          <h2>Knowledge</h2>
-          <p>Beaver answers with Gemini under a guide prompt that sets its topics and rules.</p>
-          <div class="chips chips-large">
-            <span class="chip">Canadian history</span><span class="chip">French and English</span><span class="chip">Civic life</span><span class="chip">Places</span><span class="chip">People</span><span class="chip">Institutions</span>
+      <section data-view="hello">
+        <div class="hello">
+          <div class="greeting-wrap" aria-live="polite">
+            <p class="greeting" id="greeting" lang="en">Hi</p>
+            <p class="greeting-lang" id="greeting-lang">English</p>
           </div>
-          <h3>Guide prompt rules</h3>
-          <ul class="features">
-            <li>At most 3 short sentences, written to be heard</li>
-            <li>Say so when unsure of a fact</li>
-            <li>Never invent dates, names, or figures</li>
-            <li>Answer a question outside these topics briefly, then suggest a Canadian one</li>
-          </ul>
-          <h3>Tested questions</h3>
-          <ul class="asked">
-            <li><span lang="ar" dir="rtl">هل يمكنك أن تأخذني في جولة في أرجاء مبنى البرلمان؟</span><span class="gloss">Can you take me on a tour of Parliament? Arabic</span></li>
-            <li><span lang="zh">Poutine到底是什麼？</span><span class="gloss">What exactly is poutine? Chinese</span></li>
-            <li><span lang="es">Cuéntame más sobre el artista de esta pintura del museo.</span><span class="gloss">Tell me more about the artist of this painting. Spanish</span></li>
-            <li><span>Why does Canada have two official languages?</span><span class="gloss">English, answered on the rover</span></li>
-          </ul>
+          <div class="brand">
+            <p class="brand-fr" lang="fr">votre guide du Canada</p>
+            <h1 class="wordmark" aria-label="Beaver"><img src="beaver-mark.png" alt=""><span aria-hidden="true">eaver</span></h1>
+            <p class="tagline">the newcomer's field guide to Canada</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-view="newcomer">
+        <div class="intro">
+          <p><strong>Being a newcomer in Canada can be overwhelming.</strong> With two national languages to a rich legacy of arts, history and cultural references, there's a lot to learn.</p>
+          <p><strong>Beaver</strong> is a friendly multilingual robot pet that can act as your guide to the context behind the things you see every day, transitioning fluidly between a speaker's native language, French &amp; English.</p>
+        </div>
+      </section>
+
+      <section data-view="hey">
+        <div class="hey">
+          <h2 class="hey-title">Hey Beaver...</h2>
+          <div class="qa">
+            <div class="q">
+              <p class="q-main" lang="ar" dir="rtl">هل يمكنك أن تأخذني في جولة في أرجاء مبنى البرلمان؟</p>
+              <p class="q-alt">Can you give me a tour of the Parliament grounds?</p>
+            </div>
+            <span class="arrow" aria-hidden="true"></span>
+            <div class="a">
+              <p class="a-en">What you are looking at is The Peace Tower.</p>
+              <p class="a-main" lang="ar" dir="rtl">ما تنظر إليه هو برج السلام (Peace Tower) في أوتاوا.</p>
+              <p class="a-en">Would you like to know more about the history or architecture?</p>
+              <p class="a-main" lang="ar" dir="rtl">هل تود معرفة المزيد عن التاريخ أو الهندسة المعمارية؟</p>
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">
+              <p class="q-main">Tell me more about the artist of this painting.</p>
+              <p class="q-alt" lang="es">Cuéntame más sobre el artista de esta pintura del museo.</p>
+            </div>
+            <span class="arrow" aria-hidden="true"></span>
+            <div class="a">
+              <p class="a-en"><cite>Stormy Weather, Georgian Bay</cite> is a famous 1921 oil painting by Canadian artist and Group of Seven founding member F.H. Varley.</p>
+              <p class="a-main" lang="es"><cite>Stormy Weather, Georgian Bay</cite> es un famoso óleo de 1921 del artista canadiense y miembro fundador del Grupo de los Siete, F.H. Varley.</p>
+            </div>
+          </div>
+          <div class="qa">
+            <div class="q">
+              <p class="q-main">What is poutine all about?</p>
+              <p class="q-alt" lang="zh-Hant">Poutine到底是什麼？</p>
+            </div>
+            <span class="arrow" aria-hidden="true"></span>
+            <div class="a">
+              <p class="a-en">Poutine is a classic Quebec dish!</p>
+              <p class="a-main" lang="zh-Hant">Poutine（起司肉汁薯條）是起源於加拿大魁北克省的國民級經典美食！</p>
+              <p class="a-en">It contains three main elements: French fries, cheese curds, and rich gravy.</p>
+              <p class="a-main" lang="zh-Hant">它包含三個主要元素：薯條、起司塊（Cheese Curds）、濃郁肉汁（Gravy）。</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -184,7 +226,7 @@
         <div class="card card-step">
           <ol class="steps" aria-label="Setup steps"><li class="on">Sign in</li><li>Site</li><li>Pair</li><li>Deploy</li><li>Session</li></ol>
           <h2>Sign in</h2>
-          <p>A teacher or museum guide signs in on a laptop with a school or museum email.</p>
+          <p>Hosting newcomers at a school, library, or museum? Sign in with your work email and Beaver is ready to meet them.</p>
         </div>
       </section>
 
@@ -192,85 +234,58 @@
         <div class="card card-step">
           <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="on">Site</li><li>Pair</li><li>Deploy</li><li>Session</li></ol>
           <h2>Site</h2>
-          <p>The operator names the site and picks the reply languages, the topics, and the voice.</p>
+          <p>Tell Beaver where it lives. Name your space, choose English, French, or both, and pick the topics your visitors care about.</p>
         </div>
       </section>
 
       <section data-view="pair" data-screen="pair" data-link="pair">
         <div class="card card-step">
           <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="on">Pair</li><li>Deploy</li><li>Session</li></ol>
-          <h2>Pairing</h2>
-          <p>The laptop shows a QR code, and the operator holds it up to the rover's camera. The rover reads the code and joins this site.</p>
+          <h2>Pair</h2>
+          <p>Hold the code up to Beaver's camera. One look, and Beaver knows where it belongs.</p>
         </div>
       </section>
 
       <section data-view="deploy" data-screen="deploy" data-link="pair">
         <div class="card card-step">
           <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="done">Pair</li><li class="on">Deploy</li><li>Session</li></ol>
-          <h2>Deployment</h2>
-          <p>The rover downloads the site settings and says in each chosen language that it is ready.</p>
+          <h2>Deploy</h2>
+          <p>Beaver picks up your settings and says hello in every language you chose.</p>
         </div>
       </section>
 
       <section data-view="session" data-screen="session" data-link="session">
         <div class="card card-step">
           <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="done">Pair</li><li class="done">Deploy</li><li class="on">Session</li></ol>
-          <h2>Visitor session</h2>
-          <p>Visitors scan the session QR code or type its code on their phones. Each visitor's questions and notebook stay with that session.</p>
+          <h2>Session</h2>
+          <p>Visitors scan the code with their phones and start asking, in whatever language feels like home. Their questions and notebooks stay with them for the visit.</p>
         </div>
       </section>
 
-      <section data-view="conversation">
-        <div class="card card-wide" id="conversation">
-          <h2>Sample conversation</h2>
+      <section data-view="conversation" data-screen="conversation" data-stage="wide">
+        <div class="card card-side">
+          <h2>Ask</h2>
+          <p>Point Beaver at a painting and ask in Spanish. Beaver answers sentence by sentence in English, French, and Spanish, so every new word comes with its translation.</p>
+          <button class="app-button" type="button" id="play-reply">Play reply</button>
           <p class="meta" data-bind="recorded"></p>
-          <div class="exchange">
-            <figure class="frame">
-              <img src="sample/frame.jpg" alt="Camera frame of a landscape painting on a screen" width="1024" height="576">
-              <figcaption>Camera frame</figcaption>
-            </figure>
-            <div class="turns">
-              <div class="question">
-                <span class="who">Visitor</span>
-                <p lang="es" data-bind="question"></p>
-                <p class="gloss">Tell me about this painting. Spanish</p>
-              </div>
-              <div class="reply">
-                <div class="reply-head">
-                  <span class="who">Beaver</span>
-                  <button class="play" type="button" id="play-reply">Play reply</button>
-                </div>
-                <ol class="groups" id="groups"></ol>
-              </div>
-              <p class="meta" data-bind="timings"></p>
-            </div>
-          </div>
         </div>
       </section>
 
-      <section data-view="notebook">
-        <div class="card card-wide" id="notebook">
+      <section data-view="notebook" data-screen="notebook" data-stage="wide">
+        <div class="card card-side">
           <h2>Notebook</h2>
-          <p>After the reply, Beaver files the exchange into a notebook for review.</p>
-          <div class="nb-head">
-            <strong data-bind="nb-title"></strong>
-            <span lang="fr" data-bind="nb-title-fr"></span>
-            <span class="tag" data-bind="nb-theme"></span>
-          </div>
-          <table class="vocab">
-            <thead><tr><th>English</th><th>Français</th><th>Español</th><th>Meaning</th></tr></thead>
-            <tbody id="vocab"></tbody>
-          </table>
-          <div class="concepts" id="concepts"></div>
+          <p>Every conversation becomes a notebook of new words and big ideas, in all three languages, to look back on after the visit.</p>
         </div>
       </section>
 
-      <section data-view="close" class="slide-hero">
-        <div class="card card-hero">
-          <h1 class="wordmark">beaver</h1>
-          <p class="lead">Your guide to Canada</p>
-          <p class="lead lead-fr" lang="fr">Votre guide du Canada</p>
-          <button class="app-button" type="button" id="restart">Start over</button>
+      <section data-view="close">
+        <div class="hello hello-close">
+          <div class="brand">
+            <p class="brand-fr" lang="fr">votre guide du Canada</p>
+            <p class="wordmark" aria-label="Beaver"><img src="beaver-mark.png" alt=""><span aria-hidden="true">eaver</span></p>
+            <p class="tagline">the newcomer's field guide to Canada</p>
+          </div>
+          <button class="app-button app-button-large" type="button" id="restart">Start over</button>
         </div>
       </section>
 
