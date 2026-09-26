@@ -169,19 +169,20 @@ function wirePlayback(lines) {
   Reveal.on("slidechanged", stop);
 }
 
-// The intro greets the visitor in the languages of Beaver's likely visitors, one at a time.
+// Beaver introduces itself in the languages of its likely visitors, one sentence at a time.
+// The product name stays in Latin letters in every language.
 const GREETINGS = [
-  ["Hi", "English", "en"],
-  ["Bonjour", "Français", "fr"],
-  ["Hola", "Español", "es"],
-  ["مرحبا", "العربية", "ar"],
-  ["你好", "中文", "zh"],
-  ["ਸਤ ਸ੍ਰੀ ਅਕਾਲ", "ਪੰਜਾਬੀ", "pa"],
-  ["Kumusta", "Tagalog", "tl"],
-  ["Kwe", "Anishinàbemowin", "alq"],
+  ["Hi, I'm Beaver", "en"],
+  ["Bonjour, je suis Beaver", "fr"],
+  ["Hola, soy Beaver", "es"],
+  ["مرحبًا، أنا Beaver", "ar"],
+  ["你好，我是 Beaver", "zh"],
+  ["ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਮੈਂ Beaver ਹਾਂ", "pa"],
+  ["Kumusta, ako si Beaver", "tl"],
+  ["Привіт, я Beaver", "uk"],
 ];
-// Shrinks a .fit line until it fits its column on one line; long greetings such as Punjabi get
-// smaller type, never a second line.
+
+// Shrinks a .fit line until it fits its column on one line.
 function fitLine(el) {
   el.style.fontSize = "";
   const room = el.parentElement.clientWidth;
@@ -189,27 +190,45 @@ function fitLine(el) {
     el.style.fontSize = `${(parseFloat(getComputedStyle(el).fontSize) * room) / el.scrollWidth}px`;
   }
 }
-const fitAll = () => document.querySelectorAll(".fit").forEach(fitLine);
+// One size for every greeting, set by the longest, so the type does not jump as languages change.
+function fitGreeting() {
+  const el = document.getElementById("greeting");
+  el.style.fontSize = "";
+  const base = parseFloat(getComputedStyle(el).fontSize);
+  const room = el.parentElement.clientWidth;
+  const probe = el.cloneNode();
+  Object.assign(probe.style, { position: "absolute", visibility: "hidden", width: "auto" });
+  el.parentElement.append(probe);
+  let widest = 0;
+  for (const [text, code] of GREETINGS) {
+    probe.textContent = text;
+    probe.lang = code;
+    widest = Math.max(widest, probe.scrollWidth);
+  }
+  probe.remove();
+  el.style.fontSize = `${Math.min(base, (base * room) / widest)}px`;
+}
+const fitAll = () => {
+  document.querySelectorAll(".fit").forEach(fitLine);
+  fitGreeting();
+};
 window.addEventListener("resize", fitAll);
 document.fonts.ready.then(fitAll);
 fitAll();
 
 function cycleGreetings() {
-  const word = document.getElementById("greeting");
-  const label = document.getElementById("greeting-lang");
+  const el = document.getElementById("greeting");
   let i = 0;
   setInterval(() => {
     i = (i + 1) % GREETINGS.length;
-    const [text, name, code] = GREETINGS[i];
-    word.classList.remove("in");
-    word.textContent = text;
-    word.lang = code;
-    word.dir = code === "ar" ? "rtl" : "ltr";
-    label.textContent = name;
-    fitLine(word);
-    void word.offsetWidth;
-    word.classList.add("in");
-  }, 2200);
+    const [text, code] = GREETINGS[i];
+    el.classList.remove("in");
+    el.textContent = text;
+    el.lang = code;
+    el.dir = code === "ar" ? "rtl" : "ltr";
+    void el.offsetWidth;
+    el.classList.add("in");
+  }, 2600);
 }
 if (!reducedMotion) cycleGreetings();
 

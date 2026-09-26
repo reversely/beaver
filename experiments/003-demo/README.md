@@ -29,7 +29,7 @@ advances one slide every 8 seconds and loops.
 
 | Slide | Content | Scene view |
 |---|---|---|
-| Greeting | "Hi" streaming in through eight languages above the Beaver wordmark and "the newcomer's field guide to Canada", text only, on one left edge | Pushed in on Parliament Hill, framed by maple branches |
+| Greeting | "Hi, I'm Beaver" streaming in through eight languages above "the newcomer's field guide to Canada" and "votre guide du Canada", text only, on one left edge | Pushed in on Parliament Hill, framed by maple branches |
 | Newcomer | The concept sheet's two-column introduction | The whole painting |
 | Hey Beaver... | The concept sheet's three exchanges in Arabic, Spanish, and Chinese with English | Panned over the river |
 | Sign in, Site, Pair, Deploy, Session | The host's setup for one rover on the laptop | A slow pan across the town per step |
@@ -89,8 +89,10 @@ Text sits either on the painted sky in deep maroon, or on dark maroon surfaces i
 measured contrast of each pair is recorded at the top of `style.css`. On the greeting and closing
 slides a light cream scrim covers the left of the screen and fades out by 60% of its width, so the
 maroon text reads while Parliament stays clear on the right. Every line there stays on one line:
-`demo.js` shrinks a line's type until it fits its column, so a long greeting such as ਸਤ ਸ੍ਰੀ ਅਕਾਲ
-gets smaller type instead of a second line. Each greeting streams in behind a soft gradient edge
+`demo.js` sizes the greeting once from the longest translation ("ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਮੈਂ Beaver ਹਾਂ" or
+"Kumusta, ako si Beaver", depending on the font), so the type holds one size as the languages
+change, and shrinks any other line that would wrap. The product name stays in Latin letters in
+every language. Each greeting streams in behind a soft gradient edge
 that moves in the greeting's reading direction; a letter-by-letter reveal would break the joined
 letters of Arabic and Punjabi. The page's one gradient is
 the sky behind the painting. Reduced motion stops the falling leaves, the camera moves, the

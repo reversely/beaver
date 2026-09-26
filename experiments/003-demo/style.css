@@ -86,16 +86,16 @@ html, body {
   pointer-events: none;
   background: linear-gradient(90deg, rgba(248, 238, 224, 0.94) 0%, rgba(248, 238, 224, 0.8) 30%, rgba(248, 238, 224, 0) 60%);
 }
-.hello { position: relative; z-index: 1; display: grid; gap: 5vh; width: min(40vw, 760px); }
+.hello { position: relative; z-index: 1; display: grid; gap: 3vh; width: min(46vw, 860px); }
 /* Lines marked .fit never wrap; demo.js shrinks each one until it fits the column. */
 .fit { white-space: nowrap; }
-.greeting-wrap { font-size: clamp(64px, 8vw, 150px); }
-.greeting {
+.reveal .greeting {
   font-family: var(--display);
-  font-weight: 600;
-  font-size: 1em;
+  font-weight: 700;
+  font-size: clamp(48px, 5.4vw, 104px);
   letter-spacing: -0.035em;
-  line-height: 1.05 !important;
+  line-height: 1.1 !important;
+  white-space: nowrap;
   margin: 0 !important;
   color: var(--maroon);
   /* Right-to-left greetings still start at the column's left edge; the box hugs the text so the
@@ -116,7 +116,6 @@ html, body {
   mask-image: linear-gradient(270deg, #000 45%, transparent 55%);
   animation-name: stream-rtl;
 }
-.greeting-lang { font-size: 0.13em; font-weight: 600; color: var(--maroon); margin: 0.9em 0 0 !important; letter-spacing: 0.02em; opacity: 0.8; }
 
 .brand { display: grid; justify-items: start; gap: 0.35em; }
 .wordmark {
