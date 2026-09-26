@@ -1,0 +1,36 @@
+{
+  "voices": {
+    "beaver": "eadgjmk4R4uojdsheG9t",
+    "beaver_fr": "93nuHbke4dTER9x2pDwE",
+    "visitor": "EXAVITQu4vr4xnSDxMaL"
+  },
+  "model": "eleven_multilingual_v2",
+  "clips": [
+    { "id": "hi-en", "voice": "beaver", "lang": "en", "text": "Hi, I'm Beaver." },
+    { "id": "hi-fr", "voice": "beaver_fr", "lang": "fr", "text": "Bonjour, je suis Beaver." },
+
+    { "id": "q1-ar", "voice": "visitor", "lang": "ar", "text": "هل يمكنك أن تأخذني في جولة في أرجاء مبنى البرلمان؟" },
+    { "id": "q1-en", "voice": "visitor", "lang": "en", "text": "Can you give me a tour of the Parliament grounds?" },
+    { "id": "a1-en-1", "voice": "beaver", "lang": "en", "text": "What you are looking at is The Peace Tower." },
+    { "id": "a1-ar-1", "voice": "beaver", "lang": "ar", "text": "ما تنظر إليه هو برج السلام (Peace Tower) في أوتاوا." },
+    { "id": "a1-en-2", "voice": "beaver", "lang": "en", "text": "Would you like to know more about the history or architecture?" },
+    { "id": "a1-ar-2", "voice": "beaver", "lang": "ar", "text": "هل تود معرفة المزيد عن التاريخ أو الهندسة المعمارية؟" },
+
+    { "id": "q2-en", "voice": "visitor", "lang": "en", "text": "Tell me more about the artist of this painting." },
+    { "id": "q2-es", "voice": "visitor", "lang": "es", "text": "Cuéntame más sobre el artista de esta pintura del museo." },
+    { "id": "a2-en-1", "voice": "beaver", "lang": "en", "text": "Stormy Weather, Georgian Bay is a famous 1921 oil painting by Canadian artist and Group of Seven founding member F.H. Varley." },
+    { "id": "a2-es-1", "voice": "beaver", "lang": "es", "text": "Stormy Weather, Georgian Bay es un famoso óleo de 1921 del artista canadiense y miembro fundador del Grupo de los Siete, F.H. Varley." },
+
+    { "id": "q3-en", "voice": "visitor", "lang": "en", "text": "What is poutine all about?" },
+    { "id": "q3-zh", "voice": "visitor", "lang": "zh", "text": "Poutine到底是什麼？" },
+    { "id": "a3-en-1", "voice": "beaver", "lang": "en", "text": "Poutine is a classic Quebec dish!" },
+    { "id": "a3-zh-1", "voice": "beaver", "lang": "zh", "text": "Poutine（起司肉汁薯條）是起源於加拿大魁北克省的國民級經典美食！" },
+    { "id": "a3-en-2", "voice": "beaver", "lang": "en", "text": "It contains three main elements: French fries, cheese curds, and rich gravy." },
+    { "id": "a3-zh-2", "voice": "beaver", "lang": "zh", "text": "它包含三個主要元素：薯條、起司塊（Cheese Curds）、濃郁肉汁（Gravy）。" },
+
+    { "id": "poutine-fr", "voice": "beaver_fr", "lang": "fr", "text": "La poutine est un plat classique du Québec !" }
+  ],
+  "ambience": [
+    { "id": "ambience-park", "seconds": 22, "text": "Gentle autumn park ambience in Ottawa: soft wind rustling through dry maple leaves, a distant calm river, occasional quiet bird calls far away. Calm and peaceful, steady and loopable. No voices, no music, no traffic." }
+  ]
+}

@@ -1,5 +1,7 @@
 import Reveal from "reveal";
 import { createCity } from "./scene.js";
+import { createSound } from "./sound.js";
+import { setupStory } from "./story.js";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // The painted layers load in the background; slides work straight away and the scene joins in.
@@ -9,6 +11,9 @@ createCity(document.getElementById("city"), { reducedMotion }).then((c) => {
   city = c;
   city.goTo(currentView);
 });
+
+const sound = createSound();
+setupStory(sound);
 
 const stage = document.getElementById("stage");
 const LANG_NAMES = { en: "English", fr: "Français", es: "Español" };
@@ -62,6 +67,7 @@ const SCRIPTS = {
 };
 
 function showSlide(slide) {
+  sound.stop();
   currentView = slide.dataset.view;
   city.goTo(currentView);
   clearTimers();
@@ -259,3 +265,14 @@ function setAutoplay(on) {
 }
 autoplay.addEventListener("click", () => setAutoplay(!autoTimer));
 document.getElementById("restart").addEventListener("click", () => Reveal.slide(0));
+
+const ambience = document.getElementById("ambience");
+function showAmbience() {
+  ambience.setAttribute("aria-pressed", String(!sound.muted));
+  ambience.querySelector("span").textContent = sound.muted ? "Sound off" : "Sound on";
+}
+ambience.addEventListener("click", () => {
+  sound.setMuted(!sound.muted);
+  showAmbience();
+});
+showAmbience();

@@ -5,7 +5,7 @@
 | Status | Active |
 | Started | 2026-09-26 |
 | Builds on | [Experiment 001](../001-gemini-elevenlabs/README.md), [Experiment 002](../002-raspberry-pi/README.md) |
-| Tickets | [#9](https://github.com/reversely/beaver/issues/9), [#10](https://github.com/reversely/beaver/issues/10) |
+| Tickets | [#9](https://github.com/reversely/beaver/issues/9), [#10](https://github.com/reversely/beaver/issues/10), [#15](https://github.com/reversely/beaver/issues/15) |
 
 This folder is a static page that introduces Beaver on a laptop. It needs no API key and no
 server code. The sample conversation replays a recorded experiment 001 run; the "Hey Beaver..."
@@ -25,22 +25,53 @@ uv run python -m http.server 8766 -d experiments/003-demo
 Then open `http://127.0.0.1:8766`. Scroll, press the arrow keys, or press **Play demo**, which
 advances one slide every 8 seconds and loops.
 
-## Slides
+## Pages
 
-| Slide | Content | Scene view |
+Every word on the story pages is the concept sheet's own text. The two paragraphs are told one
+line per page: the current line is set large with its key words highlighted, and the earlier lines
+of the paragraph stay above it, smaller and dimmed.
+
+| Page | Concept sheet text | Interaction |
 |---|---|---|
-| Greeting | "Hi, I'm Beaver" streaming in through eight languages above "the newcomer's field guide to Canada" and "votre guide du Canada", text only, on one left edge | Pushed in on Parliament Hill, framed by maple branches |
-| Newcomer | The concept sheet's two-column introduction | The whole painting |
-| Hey Beaver... | The concept sheet's three exchanges in Arabic, Spanish, and Chinese with English | Panned over the river |
-| Sign in, Site, Pair, Deploy, Session | The host's setup for one rover on the laptop | A slow pan across the town per step |
-| Ask | The recorded experiment 001 exchange inside the laptop, with **Play reply** | The river bank |
-| Notebook | The notebook entry filed from that exchange | The far bank |
-| Close | Wordmark and **Start over** | Parliament Hill, framed by branches |
+| Hello | "Hi, I'm Beaver" in eight languages; "the newcomer's field guide to Canada"; "votre guide du Canada" | The greeting streams in one language at a time |
+| Newcomer 1 | Being a newcomer in Canada can be **overwhelming**. | |
+| Newcomer 2 | With **two national languages** | **English** and **Français** buttons play Beaver saying hello in each |
+| Newcomer 3 | to a rich legacy of **arts**, **history** and **cultural references**, | Each word opens its "Hey Beaver..." exchange (arts: the painting, history: Parliament, cultural references: poutine) and plays it |
+| Newcomer 4 | there's a lot to learn. | |
+| Beaver 1 | **Beaver** is a friendly multilingual robot pet | |
+| Beaver 2 | that can act as your guide to the **context** behind the things you see every day, | |
+| Beaver 3 | transitioning fluidly between a speaker's **native language, French & English**. | A diagram carries one sentence from Chinese to French to English; each card plays its language, and **Hear all three** plays them in order |
+| Hey Beaver... | The three exchanges | The play button between question and answer plays the question in the visitor's language, then each answer line; any single line plays on its own; the line being spoken is highlighted |
+| Sign in, Site, Pair, Deploy, Session | The host's setup for one rover on the laptop | The pairing status and deploy progress change on a timer |
+| Ask, Notebook | The recorded experiment 001 exchange and its notebook entry | **Play reply** |
+| Close | Wordmark and **Start over** | |
 
-The setup screens are demo screens: the pairing status and deploy progress change on a timer,
-and no account, rover, or session exists behind them. The QR codes scan, but they hold placeholder
-strings (`beaver-demo:pair:ROVER-1`, `beaver-demo:join:BVR-4K7`) that nothing reads yet. Each
-screen carries a `demo` tag.
+The setup screens are demo screens: no account, rover, or session exists behind them. The QR codes
+scan, but they hold placeholder strings (`beaver-demo:pair:ROVER-1`, `beaver-demo:join:BVR-4K7`)
+that nothing reads yet. Each screen carries a `demo` tag.
+
+## Sound
+
+Every spoken line is an MP3 in `audio/`, generated once by `audio/build_audio.py` from
+`audio/clips.json`, which holds each clip's exact text, language, and voice role:
+
+```
+uv run --group sandbox python experiments/003-demo/audio/build_audio.py
+```
+
+| Role | ElevenLabs voice | Used for |
+|---|---|---|
+| Beaver | Chadwitch (en-CA), `eleven_multilingual_v2` | Beaver's lines in English, Arabic, Spanish, and Chinese |
+| Beaver in French | Adam, a Québécois voice added from the ElevenLabs voice library | Beaver's French lines |
+| Visitor | Sarah | The visitors' questions |
+
+The 19 clips took 977 characters. The script skips any clip whose MP3 already exists, so editing
+one line and deleting its MP3 regenerates only that clip.
+
+An autumn park ambience (wind in dry leaves, a distant river, far-off birds), 22 seconds from the
+ElevenLabs sound-effects endpoint, loops under the page. Browsers allow sound only after a click
+or key press, so the loop starts on the first one; it drops from 22% to 6% volume while a clip
+plays. **Sound on** in the lower right mutes it, and the choice is remembered in the browser.
 
 ## Files
 
@@ -48,6 +79,9 @@ screen carries a `demo` tag.
 |---|---|
 | `index.html` | Slides and the laptop's screens |
 | `demo.js` | reveal.js setup, greeting cycle, per-slide screen changes, QR codes, the sample exchange, autoplay |
+| `story.js` | Builds each story page from its paragraph template and handles words, lines, and speaker buttons |
+| `sound.js` | Plays clips in order with line highlighting, and runs the ambience loop and its mute |
+| `audio/` | `clips.json`, `build_audio.py`, and the generated MP3s |
 | `scene.js` | The painted layers on planes at their depths, the camera views, branches, and falling leaves |
 | `style.css` | Palette roles, measured contrast, slide and laptop layout |
 | `art/source/*.webp` | Three GPT Image 2 generations: the master painting, clouds, and maple branches |

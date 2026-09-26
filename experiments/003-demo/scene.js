@@ -17,7 +17,13 @@ const LAYERS = [
 // pan or a push-in and the painting never skews.
 const VIEWS = {
   hello: [4.5, 4.6, -6],
-  newcomer: [0, 0.4, 1.5],
+  "newcomer-1": [2.5, 3, -2],
+  "newcomer-2": [3.5, 3.4, -4],
+  "newcomer-3": [4.5, 3.6, -6],
+  "newcomer-4": [3, 2.4, -1],
+  "beaver-1": [5.5, 4.4, -8],
+  "beaver-2": [4.5, 3.6, -5],
+  "beaver-3": [3.5, 2.6, -2],
   hey: [-6, -1.6, -3],
   signin: [-8, 0.5, -4],
   site: [-4, 2.5, -6],
@@ -29,7 +35,7 @@ const VIEWS = {
   close: [2, 1, -2],
 };
 // Slides where the maple branches frame the view.
-const FRAMED = new Set(["hello", "newcomer", "close"]);
+const FRAMED = new Set(["hello", "close"]);
 
 // Multiplied over the orange leaf sprite for a spread of autumn colours.
 const LEAF_TINTS = ["#ffffff", "#f2a37c", "#e0604a", "#f5c26b"];
