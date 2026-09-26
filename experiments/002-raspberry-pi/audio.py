@@ -2,6 +2,8 @@
 
 import io
 import queue
+import shutil
+import subprocess
 import wave
 
 import numpy as np
@@ -98,9 +100,28 @@ class Microphone:
             self.frames.get_nowait()
 
 
+_speaker_enabled = False
+
+
+def enable_speaker(config: dict) -> None:
+    """Drive the amplifier's enable pin high, once per process.
+
+    The Robot HAT v4 powers its speaker only while GPIO 20 is high, and after boot the DAC overlay
+    leaves that pin as an I2S input. pinctrl runs without sudo for members of the gpio group."""
+    global _speaker_enabled
+    pin = config["speaker"]["enable_pin"]
+    if _speaker_enabled or pin < 0:
+        return
+    if not shutil.which("pinctrl"):
+        raise SystemExit("speaker.enable_pin needs pinctrl; set it to -1 off the Pi")
+    subprocess.run(["pinctrl", "set", str(pin), "op", "dh"], check=True)
+    _speaker_enabled = True
+
+
 def play_pcm(config: dict, record: RunRecord, pcm: bytes, rate: int) -> None:
     if not config["speaker"]["play"]:
         return
+    enable_speaker(config)
     with record.timed("playback"):
         sd.play(
             np.frombuffer(pcm, dtype=np.int16),
@@ -114,6 +135,7 @@ def chime(config: dict) -> None:
     settings = config["speaker"]
     if not (settings["play"] and settings["chime"]):
         return
+    enable_speaker(config)
     t = np.arange(int(RATE * settings["chime_seconds"])) / RATE
     # A 10 ms fade at each end avoids clicks.
     fade = np.minimum(1, np.minimum(t, t[-1] - t) / 0.01)

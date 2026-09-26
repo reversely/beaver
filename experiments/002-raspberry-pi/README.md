@@ -97,6 +97,9 @@ one value for one run. Two defaults differ from experiment 001, based on its res
   20 requests.
 - `gemini.media_resolution = "low"`, which costs 260 image tokens against 1080 at the model default.
 
+`speaker.enable_pin` names the GPIO pin that powers the amplifier. The Robot HAT v4 powers its
+speaker only while GPIO 20 is high, so every command drives that pin high before it plays audio.
+
 The prompts in `prompts/` are unchanged copies from experiment 001. Each turn prints what it sends
 to Gemini and ElevenLabs and saves a run folder under `runs/` (gitignored) with `record.json`, the
 question audio, the camera frame, and the spoken reply.
