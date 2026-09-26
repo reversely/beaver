@@ -76,40 +76,61 @@ html, body {
 .reveal h2 { font-size: 2.4em; font-weight: 600; }
 .reveal p { margin: 0 0 0.7em; line-height: 1.5; }
 
-/* Intro: a greeting that changes language beside the wordmark. */
-/* The intro sits in the open sky, above the painted skyline. */
-.hello { display: grid; gap: 4vh; max-width: min(36vw, 700px); align-self: flex-start; margin-top: 15vh; text-shadow: 0 0 18px rgba(243, 229, 207, 0.9); }
-.greeting-wrap { font-size: clamp(72px, 9vw, 170px); }
+/* Intro and close: text only, every line on one left edge, over a light scrim that fades out
+   toward the right so the painting stays clear on that side. */
+.slide-scrim::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(248, 238, 224, 0.94) 0%, rgba(248, 238, 224, 0.8) 30%, rgba(248, 238, 224, 0) 60%);
+}
+.hello { position: relative; z-index: 1; display: grid; gap: 5vh; width: min(40vw, 760px); }
+/* Lines marked .fit never wrap; demo.js shrinks each one until it fits the column. */
+.fit { white-space: nowrap; }
+.greeting-wrap { font-size: clamp(64px, 8vw, 150px); }
 .greeting {
   font-family: var(--display);
   font-weight: 600;
-  letter-spacing: -0.04em;
-  line-height: 1 !important;
+  font-size: 1em;
+  letter-spacing: -0.035em;
+  line-height: 1.05 !important;
   margin: 0 !important;
   color: var(--maroon);
-  min-height: 1em;
+  /* Right-to-left greetings still start at the column's left edge; the box hugs the text so the
+     stream edge sweeps across the word, not the whole column. */
+  text-align: left;
+  width: fit-content;
 }
-.greeting.in { animation: greet 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.greeting-lang { font-size: 0.13em; font-weight: 600; color: var(--maroon); margin: 1em 0 0 !important; letter-spacing: 0.02em; }
+/* Each greeting streams in behind a soft gradient edge, in its own reading direction. */
+.greeting.in {
+  -webkit-mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+  mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
+  -webkit-mask-size: 260% 100%;
+  mask-size: 260% 100%;
+  animation: stream 0.9s cubic-bezier(0.25, 0.7, 0.25, 1) both;
+}
+.greeting.in[dir="rtl"] {
+  -webkit-mask-image: linear-gradient(270deg, #000 45%, transparent 55%);
+  mask-image: linear-gradient(270deg, #000 45%, transparent 55%);
+  animation-name: stream-rtl;
+}
+.greeting-lang { font-size: 0.13em; font-weight: 600; color: var(--maroon); margin: 0.9em 0 0 !important; letter-spacing: 0.02em; opacity: 0.8; }
 
-.brand { display: grid; justify-items: start; }
-.brand-fr { font-size: 1.3em; color: var(--maroon); margin: 0 0 -0.3em 5.4em !important; }
+.brand { display: grid; justify-items: start; gap: 0.35em; }
 .wordmark {
-  display: flex;
-  align-items: flex-end;
   font-family: var(--display) !important;
-  font-size: clamp(60px, 6.4vw, 120px) !important;
+  font-size: clamp(56px, 5.6vw, 110px) !important;
   font-weight: 700 !important;
   letter-spacing: -0.04em !important;
   line-height: 1 !important;
   margin: 0 !important;
   color: var(--maroon) !important;
 }
-.wordmark img { height: 1.5em; width: auto; margin-right: -0.14em; }
-.wordmark span { padding-bottom: 0.05em; }
-.tagline { font-size: 1.4em; color: var(--maroon); margin: 0.55em 0 0 !important; }
-.hello-close { gap: 4vh; margin-top: 30vh; }
-.hello-close .app-button { text-shadow: none; }
+.tagline { font-size: 1.45em; font-weight: 500; color: var(--maroon); margin: 0.2em 0 0 !important; }
+.brand-fr { font-size: 1.2em; color: var(--maroon); opacity: 0.8; margin: 0 !important; }
+.hello-close { gap: 4vh; }
 
 /* Newcomer introduction: two columns, bold lead phrases, as on the concept sheet. */
 .intro {
@@ -248,8 +269,7 @@ html, body {
 .app { height: 100%; display: flex; flex-direction: column; font-size: 2.5cqi; }
 .stage.wide .app { font-size: 1.9cqi; }
 .app-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.55em 1.1em; border-bottom: 1px solid var(--hairline); }
-.app-name { display: flex; align-items: center; gap: 0.4em; font-family: var(--display); font-weight: 700; color: var(--ink); }
-.app-name img { height: 1.5em; }
+.app-name { font-family: var(--display); font-weight: 700; color: var(--ink); }
 .app-view { display: none; flex: 1; padding: 1em 1.5em; flex-direction: column; gap: 0.6em; min-height: 0; }
 .app-view.on { display: flex; animation: rise 0.45s ease-out; }
 .app-view h3 { margin: 0 !important; font-size: 1.45em !important; }
@@ -341,7 +361,8 @@ html, body {
 button:focus-visible { outline: 3px solid var(--accent-text); outline-offset: 2px; }
 
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes greet { from { opacity: 0; transform: translateY(0.12em); } to { opacity: 1; transform: none; } }
+@keyframes stream { from { -webkit-mask-position: 100% 0; mask-position: 100% 0; } to { -webkit-mask-position: 0 0; mask-position: 0 0; } }
+@keyframes stream-rtl { from { -webkit-mask-position: 0 0; mask-position: 0 0; } to { -webkit-mask-position: 100% 0; mask-position: 100% 0; } }
 @keyframes flow { to { stroke-dashoffset: -16; } }
 
 @media (prefers-reduced-motion: reduce) {

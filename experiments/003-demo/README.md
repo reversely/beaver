@@ -29,7 +29,7 @@ advances one slide every 8 seconds and loops.
 
 | Slide | Content | Scene view |
 |---|---|---|
-| Greeting | "Hi" cycling through eight languages beside the Beaver wordmark and "the newcomer's field guide to Canada" | Pushed in on Parliament Hill, framed by maple branches |
+| Greeting | "Hi" streaming in through eight languages above the Beaver wordmark and "the newcomer's field guide to Canada", text only, on one left edge | Pushed in on Parliament Hill, framed by maple branches |
 | Newcomer | The concept sheet's two-column introduction | The whole painting |
 | Hey Beaver... | The concept sheet's three exchanges in Arabic, Spanish, and Chinese with English | Panned over the river |
 | Sign in, Site, Pair, Deploy, Session | The host's setup for one rover on the laptop | A slow pan across the town per step |
@@ -53,7 +53,7 @@ screen carries a `demo` tag.
 | `art/source/*.webp` | Three GPT Image 2 generations: the master painting, clouds, and maple branches |
 | `art/build_layers.py` | Cuts the sources into the layers below |
 | `art/*.webp` | Layers: `clouds`, `land`, `parliament`, `foreground` (branches), `leaf-2` (falling leaf) |
-| `beaver-mark.png` | The Beaver mark, cropped from the concept sheet; a placeholder until final branding |
+| `beaver-mark.png` | The Beaver mark from the concept sheet, used as the page icon; a placeholder until final branding |
 | `sample/` | Run `20260926-110552-ui`: question, sentences, timings, notebook entry, audio, camera frame |
 
 reveal.js 5.2.1 runs in scroll view, three.js 0.170.0 draws the scene, and qrcode-generator 1.4.4
@@ -86,7 +86,13 @@ is clamped so the visible area stays inside the land painting at any window shap
 ## Design
 
 Text sits either on the painted sky in deep maroon, or on dark maroon surfaces in near-white; the
-measured contrast of each pair is recorded at the top of `style.css`. The page's one gradient is
+measured contrast of each pair is recorded at the top of `style.css`. On the greeting and closing
+slides a light cream scrim covers the left of the screen and fades out by 60% of its width, so the
+maroon text reads while Parliament stays clear on the right. Every line there stays on one line:
+`demo.js` shrinks a line's type until it fits its column, so a long greeting such as ਸਤ ਸ੍ਰੀ ਅਕਾਲ
+gets smaller type instead of a second line. Each greeting streams in behind a soft gradient edge
+that moves in the greeting's reading direction; a letter-by-letter reveal would break the joined
+letters of Arabic and Punjabi. The page's one gradient is
 the sky behind the painting. Reduced motion stops the falling leaves, the camera moves, the
 greeting cycle, and the screen animations.
 

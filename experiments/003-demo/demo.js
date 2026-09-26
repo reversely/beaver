@@ -180,6 +180,20 @@ const GREETINGS = [
   ["Kumusta", "Tagalog", "tl"],
   ["Kwe", "Anishinàbemowin", "alq"],
 ];
+// Shrinks a .fit line until it fits its column on one line; long greetings such as Punjabi get
+// smaller type, never a second line.
+function fitLine(el) {
+  el.style.fontSize = "";
+  const room = el.parentElement.clientWidth;
+  if (el.scrollWidth > room) {
+    el.style.fontSize = `${(parseFloat(getComputedStyle(el).fontSize) * room) / el.scrollWidth}px`;
+  }
+}
+const fitAll = () => document.querySelectorAll(".fit").forEach(fitLine);
+window.addEventListener("resize", fitAll);
+document.fonts.ready.then(fitAll);
+fitAll();
+
 function cycleGreetings() {
   const word = document.getElementById("greeting");
   const label = document.getElementById("greeting-lang");
@@ -188,13 +202,14 @@ function cycleGreetings() {
     i = (i + 1) % GREETINGS.length;
     const [text, name, code] = GREETINGS[i];
     word.classList.remove("in");
-    void word.offsetWidth;
     word.textContent = text;
     word.lang = code;
     word.dir = code === "ar" ? "rtl" : "ltr";
     label.textContent = name;
+    fitLine(word);
+    void word.offsetWidth;
     word.classList.add("in");
-  }, 1800);
+  }, 2200);
 }
 if (!reducedMotion) cycleGreetings();
 
