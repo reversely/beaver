@@ -10,10 +10,10 @@
     { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
   </script>
   <style>
-    .gallery { max-width: 1100px; margin: 32px auto; padding: 0 24px; }
+    .gallery { max-width: 1100px; margin: 32px auto; padding: 24px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--ring); }
     .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr)); gap: 16px; }
     .gallery-card figcaption { overflow-wrap: anywhere; }
-    .gallery-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 12px; text-align: center; }
+    .gallery-card { background: var(--surface-raised); box-shadow: var(--ring); border-radius: var(--radius); padding: 12px; text-align: center; }
     .gallery-card img { width: 100%; aspect-ratio: 1; background: linear-gradient(180deg, #a9c3d6, #f1d3b3); border-radius: 10px; }
     .checks { margin-top: 24px; columns: 2 280px; font-size: 14px; color: var(--ink-2); }
   </style>
@@ -24,6 +24,7 @@
     <div class="gallery-grid" id="grid"></div>
     <ul class="checks" id="checks"></ul>
   </main>
+  <script src="background.js"></script>
   <script type="module">
     import { PIECES, runChecks } from "./artifact-specs.js";
     import { artifactImage } from "./artifacts.js";

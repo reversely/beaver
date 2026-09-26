@@ -124,8 +124,9 @@ function start() {
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200);
   const target = new THREE.Vector3(1.2, 4.2, 0);
 
-  scene.add(new THREE.HemisphereLight(0xdbe7ef, 0x8a7a5e, 1.3));
-  // Low evening sun from the left, warm, as in the photo.
+  // Night: a dim aurora-green sky light; the warm light below reads as a floodlight on the stone.
+  scene.add(new THREE.HemisphereLight(0x9fc9a0, 0x1a2a20, 0.9));
+  // A warm floodlight on the stone from the front left.
   const sun = new THREE.DirectionalLight(0xffe0bd, 2.1);
   sun.position.set(-14, 9, 10);
   scene.add(sun);

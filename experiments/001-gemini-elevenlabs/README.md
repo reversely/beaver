@@ -63,8 +63,18 @@ reply sentence by sentence while highlighting the sentence being spoken. The set
 `languages.official`, `languages.include_visitor_language`, `languages.order`, and `answer.mode`;
 changes persist in `settings.local.json` (gitignored). The header's low-poly Parliament Hill
 (`ui/scene.js`, three.js) takes its colours from a photo of the Hill: sandstone, copper-green
-roofs, the Library's slate roof, and an evening sky. The page chrome stays brown on warm white; the
+roofs, and the Library's slate roof, floodlit against the page's night scene. The
 contrast ratios of its colour tokens are recorded at the top of `ui/style.css`.
+
+A night scene over the Canadian Shield fills the page behind every view (`ui/background.js`,
+inline SVG): layered low-poly hills, a spruce treeline, a lake with a canoe, a campfire, and a
+grainy aurora as the one light source, with motes drifting toward it. Every colour in it mixes one
+aurora green toward one near-black at fixed ratios, following the colour-theory depth palette; the
+campfire is the only warm mark. Content sits on translucent neutral-dark cards with near-white
+text, which measure at least 6.2:1 for body text and 3.8:1 for metadata even over the aurora's
+brightest point; no text sits directly on the scene. Brown remains the accent for buttons and
+highlights. The aurora drifts, the fire flickers, and the motes rise, all through transform and
+opacity, holding 60 frames per second at 1440 px; reduced motion stops all three.
 
 ### Translation backends
 

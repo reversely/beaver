@@ -1,19 +1,28 @@
-/* Roles, not swatches. Measured contrast (WCAG) on --field / --surface / --tint:
-   --ink 13.7 / 14.6 / 12.3, --ink-2 6.9 / 7.3 / 6.2, --ink-3 4.3 / 4.6 / 3.9 (meta only),
-   --accent 7.2 / 7.7 / 6.5, white on --accent 7.8. The Parliament palette lives in scene.js. */
+/* Night theme over the scene in background.js. Roles, not swatches.
+   Cards are a translucent neutral dark (--surface at 78%), so the scene's hue shows through
+   while text contrast holds everywhere. Measured WCAG contrast of each text tier on a card
+   composited over the darkest sky (#19281e) / the brightest aurora (#b8e0ad):
+   --ink 15.2 / 9.2, --ink-2 10.3 / 6.2, --ink-3 6.2 / 3.8 (meta only), --accent-text 8.4 / 5.1.
+   White on --accent (buttons) 6.0. No text sits directly on the scene: over the aurora core it
+   would fall to 1.2. */
 :root {
-  --field: #faf6f0;
-  --surface: #fffdf9;
-  --tint: #f3e9dd;
-  /* Alpha hairlines recede into whichever surface they sit on. */
-  --hairline: rgba(59, 33, 28, 0.12);
-  --ink: #3b211c;
-  --ink-2: #6b4f47;
-  --ink-3: #8a6e64;
-  --accent: #7b4428;
-  --accent-soft: #f0e0d2;
-  --error: #b3412f;
-  --radius: 14px;
+  --field: #07110f;
+  --surface: rgba(14, 23, 21, 0.78);
+  --surface-raised: rgba(255, 255, 255, 0.06);
+  --tint: rgba(255, 255, 255, 0.07);
+  --tint-strong: rgba(255, 255, 255, 0.14);
+  /* Dark surfaces: depth as a faint white ring rather than a shadow stack. */
+  --ring: 0 0 0 1px rgba(255, 255, 255, 0.09);
+  --hairline: rgba(255, 255, 255, 0.1);
+  --ink: #f4efe6;
+  --ink-2: #cfc6b8;
+  --ink-3: #a39a8c;
+  /* Brown stays the accent: a fire-lit brown fill for buttons, a lighter tone for text. */
+  --accent: #9a4e27;
+  --accent-text: #e3a86f;
+  --accent-soft: rgba(227, 168, 111, 0.14);
+  --error: #f0907c;
+  --radius: 16px;
   --font: "Inria Sans", system-ui, sans-serif;
 }
 
@@ -33,23 +42,46 @@ body {
   font-family: var(--font);
   font-size: 17px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* The illustrated night, fixed behind every view. */
+.scene { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+.scene svg { width: 100%; height: 100%; display: block; }
+.aurora-drift { animation: drift 24s ease-in-out infinite alternate; transform-origin: 1240px 0; }
+.flame { animation: flicker 1.6s ease-in-out infinite alternate; transform-origin: 0 0; }
+.ember { animation: rise 2.4s ease-out infinite; }
+.mote { animation: float 9s ease-in-out infinite; }
+@keyframes float { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: 0.9; } 100% { transform: translate(40px, -160px); opacity: 0; } }
+@keyframes drift { from { transform: skewX(-2deg); opacity: 0.85; } to { transform: skewX(3deg) translateX(-30px); opacity: 1; } }
+@keyframes flicker { from { transform: scale(0.94, 0.9); } to { transform: scale(1.04, 1.08); } }
+@keyframes rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-40px); opacity: 0; } }
 
 .app {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
+  gap: 24px;
   min-height: 100vh;
   max-width: 1440px;
   margin: 0 auto;
+  padding: 24px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--ring);
 }
 
 /* Sidebar */
 .side {
-  padding: 36px 28px;
-  border-right: 1px solid var(--hairline);
+  align-self: start;
+  position: sticky;
+  top: 24px;
+  padding: 28px 24px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
 }
 
 .brand { display: flex; flex-direction: column; line-height: 1.05; }
@@ -88,13 +120,13 @@ body {
   cursor: pointer;
 }
 .seg button[aria-checked="true"] {
-  background: var(--surface);
+  background: var(--tint-strong);
   color: var(--ink);
   font-weight: 700;
-  box-shadow: 0 1px 2px rgba(59, 33, 28, 0.12);
+  box-shadow: var(--ring);
 }
 .seg button:focus-visible, .talk:focus-visible, .ask:focus-visible, .switch input:focus-visible + .switch-track {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-text);
   outline-offset: 2px;
 }
 
@@ -105,7 +137,7 @@ body {
   width: 38px;
   height: 22px;
   border-radius: 999px;
-  background: var(--hairline);
+  background: rgba(255, 255, 255, 0.18);
   position: relative;
   transition: background 0.15s;
 }
@@ -117,7 +149,7 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--surface);
+  background: var(--ink);
   transition: transform 0.15s;
 }
 .switch input:checked + .switch-track { background: var(--accent); }
@@ -126,28 +158,30 @@ body {
 .empty { color: var(--ink-3); font-size: 15px; margin: 0; }
 
 /* Main column */
-.main { padding: 28px 40px 64px; min-width: 0; }
+.main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+#conversation-view { display: flex; flex-direction: column; gap: 20px; }
 
 .hero {
   position: relative;
-  height: 260px;
+  height: 300px;
   border-radius: var(--radius);
   overflow: hidden;
-  /* Sky from the Parliament photo: pale blue into sunset peach; the atmosphere layer. */
-  background: linear-gradient(180deg, #a9c3d6 0%, #cfdbe2 55%, #f1d3b3 100%);
+  /* A window onto the scene: the floodlit Hill floats over the page's own aurora. */
+  background: transparent;
 }
 #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hero-title {
   position: absolute;
-  left: 28px;
-  bottom: 18px;
+  left: 20px;
+  bottom: 16px;
   margin: 0;
   font-size: 44px;
   font-weight: 700;
   color: var(--ink);
-  background: rgba(250, 246, 240, 0.88);
+  background: var(--surface);
+  box-shadow: var(--ring);
   padding: 2px 16px 6px;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .composer {
@@ -156,7 +190,7 @@ body {
   grid-template-areas: "talk typed" "talk camera" "status status";
   gap: 12px 20px;
   align-items: center;
-  margin: 24px 0 8px;
+  padding: 20px 24px 14px;
 }
 
 .talk {
@@ -176,14 +210,15 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 6px 18px rgba(123, 68, 40, 0.28);
+  /* Lit from the campfire side. */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 8px 28px rgba(240, 138, 60, 0.28);
   transition: transform 0.12s;
   touch-action: none;
   user-select: none;
 }
 .talk:active, .talk.is-recording { transform: scale(0.96); }
 .talk-dot { width: 14px; height: 14px; border-radius: 50%; background: #fff; }
-.talk.is-recording .talk-dot { background: #f3b7a4; animation: pulse 1s ease-in-out infinite; }
+.talk.is-recording .talk-dot { background: #ffd27a; animation: pulse 1s ease-in-out infinite; }
 .talk:disabled { opacity: 0.55; cursor: progress; }
 
 .typed { grid-area: typed; display: flex; gap: 10px; }
@@ -194,12 +229,12 @@ body {
   padding: 0 18px;
   border: 1px solid var(--hairline);
   border-radius: 999px;
-  background: var(--surface);
+  background: var(--surface-raised);
   color: var(--ink);
   font: inherit;
 }
 .typed input::placeholder { color: var(--ink-3); }
-.typed input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.typed input:focus { outline: 2px solid var(--accent-text); outline-offset: 1px; }
 .ask {
   min-height: 48px;
   padding: 0 26px;
@@ -217,16 +252,16 @@ body {
 .camera .switch { margin: 0; }
 #camera-view { width: 120px; height: 68px; object-fit: cover; border-radius: 10px; background: var(--tint); }
 
-.status { grid-area: status; margin: 0; min-height: 24px; font-size: 14px; color: var(--ink-3); }
+.status { grid-area: status; margin: 0; min-height: 22px; font-size: 14px; color: var(--ink-3); }
 .status.is-error { color: var(--error); }
 
 /* Conversation */
-.thread { display: flex; flex-direction: column; gap: 18px; margin-top: 12px; }
-.thread-empty { padding: 28px 0; }
+.thread { display: flex; flex-direction: column; gap: 16px; }
+.thread-empty { padding: 20px 24px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--ring); }
 
 .turn {
   background: var(--surface);
-  border: 1px solid var(--hairline);
+  box-shadow: var(--ring);
   border-radius: var(--radius);
   padding: 22px 26px;
 }
@@ -242,11 +277,11 @@ body {
 .group {
   padding: 8px 14px;
   border-left: 3px solid transparent;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 10px 10px 0;
   transition: background 0.2s, border-color 0.2s;
 }
 .group + .group { margin-top: 6px; }
-.group.is-speaking { background: var(--accent-soft); border-left-color: var(--accent); }
+.group.is-speaking { background: var(--accent-soft); border-left-color: var(--accent-text); }
 .line { margin: 0; color: var(--ink-2); max-width: 70ch; text-wrap: pretty; }
 .line.is-visitor { font-weight: 700; color: var(--ink); }
 .line.is-speaking { color: var(--ink); }
@@ -256,7 +291,7 @@ body {
 @keyframes pulse { 50% { opacity: 0.35; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .talk.is-recording .talk-dot { animation: none; }
+  .talk.is-recording .talk-dot, .aurora-drift, .flame, .ember, .mote { animation: none; }
   .group, .switch-track, .switch-track::after { transition: none; }
 }
 
@@ -280,29 +315,31 @@ body {
   cursor: pointer;
 }
 .nav-item.is-active { background: var(--accent-soft); color: var(--ink); font-weight: 700; }
-.nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nav-item:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 .notebook-thumb { width: 40px; height: 40px; flex: none; }
 .notebook-item-text { display: flex; flex-direction: column; min-width: 0; }
 .notebook-item-title { overflow-wrap: anywhere; line-height: 1.25; }
 .notebook-item-meta { display: flex; gap: 10px; font-size: 13px; font-weight: 400; color: var(--ink-3); }
 
-.tag-link { border: 0; font: inherit; cursor: pointer; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.tag-link { border: 0; font: inherit; cursor: pointer; background: var(--accent-soft); color: var(--accent-text); font-weight: 700; }
 
 /* Notebook view */
-.notebook-view { display: flex; flex-direction: column; gap: 28px; }
+.notebook-view { display: flex; flex-direction: column; gap: 20px; }
 .nb-head {
   display: flex;
   align-items: center;
   gap: 24px;
   padding: 24px 28px;
   border-radius: var(--radius);
-  background: linear-gradient(180deg, #a9c3d6 0%, #cfdbe2 60%, #f1d3b3 100%);
+  /* Like the header: the piece sits on the scene itself. */
+  background: transparent;
 }
 .nb-artifact { width: 132px; height: 132px; flex: none; }
-.nb-titles { min-width: 0; background: rgba(250, 246, 240, 0.9); border-radius: 12px; padding: 14px 20px; }
+.nb-titles { min-width: 0; background: var(--surface); box-shadow: var(--ring); border-radius: 12px; padding: 14px 20px; }
 .nb-title { margin: 0; font-size: 34px; line-height: 1.15; text-wrap: balance; }
 .nb-title-fr { margin: 2px 0 10px; font-style: italic; font-weight: 300; color: var(--ink-2); font-size: 20px; }
 .nb-titles .turn-meta { margin: 0; }
+.nb-section { padding: 20px 24px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--ring); }
 .nb-heading {
   margin: 0 0 12px;
   font-size: 13px;
@@ -323,12 +360,13 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--field);
+  background: var(--accent-text);
+  box-shadow: 0 0 0 3px rgba(14, 23, 21, 1);
 }
-.timeline-year { font-weight: 700; color: var(--accent); }
+.timeline-year { font-weight: 700; color: var(--accent-text); }
 .timeline-event { color: var(--ink); }
 
+/* Cards nested in a notebook section sit one step up rather than repeating the section's glass. */
 .vocab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 12px; }
 .vocab-card {
   display: flex;
@@ -337,27 +375,29 @@ body {
   gap: 8px;
   min-height: 132px;
   padding: 16px 18px;
-  border: 1px solid var(--hairline);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface-raised);
+  box-shadow: var(--ring);
   color: var(--ink);
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition: box-shadow 0.15s ease-out;
 }
-.vocab-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.vocab-card:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 .vocab-word { font-size: 24px; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
 .vocab-meaning { font-size: 14px; color: var(--ink-3); }
 
 .concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr)); gap: 12px; }
-.concept-card { padding: 18px 20px; border: 1px solid var(--hairline); border-radius: var(--radius); background: var(--surface); }
+.concept-card { padding: 18px 20px; border-radius: 12px; background: var(--surface-raised); box-shadow: var(--ring); }
 .concept-title { margin: 0 0 6px; font-size: 19px; }
 .concept-summary { margin: 0 0 12px; color: var(--ink-2); }
-.concept-why { margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--accent-soft); display: flex; flex-direction: column; gap: 2px; }
-.concept-why-label { font-size: 13px; font-weight: 700; color: var(--accent); }
+.concept-why { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); display: flex; flex-direction: column; gap: 2px; }
+.concept-why-label { font-size: 13px; font-weight: 700; color: var(--accent-text); }
 
 .question-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.question-item { padding: 14px 18px; border: 1px solid var(--hairline); border-radius: var(--radius); background: var(--surface); }
+.question-item { padding: 14px 18px; border-radius: 12px; background: var(--surface-raised); box-shadow: var(--ring); }
 .question-text { margin: 0 0 4px; font-weight: 700; }
 .question-answer { margin: 0; color: var(--ink-2); font-size: 15px; max-width: 70ch; }
 
@@ -385,13 +425,13 @@ body {
 .settings[open] > .settings-summary::after { transform: rotate(-135deg); }
 /* Chrome keeps layout boxes for closed <details> content; take it out of layout entirely. */
 .settings:not([open]) > :not(summary) { display: none; }
-.settings-summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.settings-summary:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; border-radius: 6px; }
 
 /* Hover only where a pointer can hover; a tap must not leave a stuck state. */
 @media (hover: hover) and (pointer: fine) {
   .nav-item:hover { background: var(--tint); }
   .tag-link:hover { text-decoration: underline; }
-  .vocab-card:hover { border-color: var(--accent); }
+  .vocab-card:hover { box-shadow: 0 0 0 1px rgba(227, 168, 111, 0.5); }
 }
 
 /* Touch screens: every control reaches a 44 px target. */
@@ -402,25 +442,26 @@ body {
 
 /* Below 900 px the 300 px sidebar crushes the main column: stack it on top instead. */
 @media (max-width: 899px) {
-  .app { grid-template-columns: minmax(0, 1fr); }
-  .side { border-right: 0; border-bottom: 1px solid var(--hairline); padding: 20px 16px 12px; gap: 16px; }
+  .app { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 12px; }
+  .side { position: static; padding: 18px 16px 10px; gap: 14px; }
   .brand-word { font-size: 52px; }
   .notebook-nav { flex-direction: row; overflow-x: auto; gap: 8px; padding-bottom: 6px; scroll-snap-type: x proximity; }
   .notebook-list { flex-direction: row; gap: 8px; }
   .notebook-nav .nav-item { width: auto; flex: none; max-width: 260px; scroll-snap-align: start; }
-  .main { padding: 16px 16px 48px; }
+  .main, #conversation-view, .notebook-view { gap: 14px; }
   .hero { height: 200px; }
   .hero-title { font-size: 32px; left: 12px; bottom: 12px; padding: 2px 12px 4px; }
-  .composer { grid-template-areas: "talk camera" "typed typed" "status status"; gap: 12px 16px; }
+  .composer { grid-template-areas: "talk camera" "typed typed" "status status"; gap: 12px 16px; padding: 16px; }
   .talk { width: 104px; height: 104px; font-size: 15px; }
   .camera { flex-wrap: wrap; }
-  .turn { padding: 16px 16px; }
+  .turn { padding: 16px; }
   .turn-question { font-size: 19px; }
   .nb-head { flex-direction: column; align-items: stretch; padding: 16px; gap: 12px; }
   .nb-artifact { width: 104px; height: 104px; align-self: center; }
   .nb-titles { padding: 12px 14px; }
   .nb-title { font-size: 26px; }
   .nb-title-fr { font-size: 17px; }
+  .nb-section { padding: 16px; }
   .timeline-item { grid-template-columns: 52px minmax(0, 1fr); }
   /* Two vocabulary cards per row on a phone rather than one long column. */
   .vocab-grid { grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); }
