@@ -20,6 +20,7 @@ from pathlib import Path
 
 import bilingual
 import devices
+import notebooks
 from record import RunRecord
 from settings import HERE, render_prompt
 
@@ -105,6 +106,16 @@ def ask_events(config: dict, payload: dict):
             }
         record.mark("all_synthesized", start)
         record.data["sentences"] = sentences
+        if config["notebooks"]["enabled"]:
+            # After every sentence is synthesized, so filing never delays the first audio.
+            try:
+                yield {
+                    "type": "notebook",
+                    **notebooks.file_exchange(config, record, result),
+                }
+            except (SystemExit, Exception) as error:  # noqa: BLE001 -- the reply already played
+                record.data["notebook_error"] = str(error)
+                yield {"type": "notebook_error", "message": str(error)}
         record.finish(reply="see sentences")
         yield {
             "type": "done",
@@ -189,6 +200,17 @@ def make_handler(app: App):
             path = self.path.split("?")[0]
             if path == "/api/settings":
                 self._json(HTTPStatus.OK, app.settings())
+            elif path == "/api/notebooks":
+                self._json(
+                    HTTPStatus.OK, notebooks.summaries(notebooks.load(app.config))
+                )
+            elif path.startswith("/api/notebooks/"):
+                wanted = path.removeprefix("/api/notebooks/")
+                found = [n for n in notebooks.load(app.config) if n["id"] == wanted]
+                if found:
+                    self._json(HTTPStatus.OK, found[0])
+                else:
+                    self.send_error(HTTPStatus.NOT_FOUND)
             elif path.startswith("/runs/"):
                 self._file(_inside(runs, path.removeprefix("/runs/")))
             else:

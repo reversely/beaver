@@ -66,6 +66,20 @@ changes persist in `settings.local.json` (gitignored). The header's low-poly Par
 roofs, the Library's slate roof, and an evening sky. The page chrome stays brown on warm white; the
 contrast ratios of its colour tokens are recorded at the top of `ui/style.css`.
 
+### Notebooks
+
+After a turn's audio is ready, one text-only Gemini request (`prompts/notebook.md`) files the
+exchange into a review notebook, reusing a notebook on the same story or starting one with a title
+in English and French, a theme (civic, history, culture, or language), and a span of years. The
+same request extracts up to `notebooks.max_vocabulary` terms in English, French, and the visitor's
+language, up to `notebooks.max_concepts` concepts with a note on why each matters to someone living
+in Canada, and dated moments, which the prompt limits to years the model is certain of. The
+sidebar lists the notebooks; a notebook view shows the timeline in year order, vocabulary cards
+that switch language on click, the concepts, and the questions asked. `#notebook=<id>` links open a
+notebook directly. Each theme has a small low-poly piece (`ui/artifacts.js`): the Peace Tower,
+a canoe, a poutine bowl, and an open book. Notebooks persist in `notebooks/notebooks.json`
+(gitignored).
+
 The server listens on 127.0.0.1 only, serves audio only from inside `runs/`, accepts only the
 listed settings and values, and caps requests at 15 MB. API keys stay on the server.
 

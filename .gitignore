@@ -33,3 +33,6 @@ experiments/*/test-images/
 
 # Settings saved from the experiment 001 web interface
 experiments/*/settings.local.json
+
+# Review notebooks built by the experiment 001 interface
+experiments/*/notebooks/

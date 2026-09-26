@@ -94,6 +94,7 @@ answer_inline = "answer_inline.md"
 translate_sentences = "translate_sentences.md"
 image_note = "image_note.md"
 question_spoken = "question_spoken.md"
+notebook = "notebook.md"
 
 [prompt_vars]
 # Values for the ${name} placeholders in the prompt files.
@@ -131,6 +132,14 @@ questions = [
   { kind = "unrelated", text = "Why does Canada have two official languages?" },
   { kind = "vague", text = "Tell me more about it." },
 ]
+
+[notebooks]
+# File each exchange into a review notebook after its audio is ready (desktop interface).
+enabled = true
+# Gitignored; one JSON file holding every notebook.
+store = "notebooks/notebooks.json"
+max_vocabulary = 4
+max_concepts = 2
 
 [server]
 # `run.py serve` opens the desktop interface at http://127.0.0.1:<port>.

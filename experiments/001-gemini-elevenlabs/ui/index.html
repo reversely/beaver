@@ -59,11 +59,16 @@
 
       <section class="panel" aria-labelledby="notebooks-heading">
         <h2 id="notebooks-heading">Notebooks</h2>
-        <p class="empty">Notebooks fill as you ask questions</p>
+        <nav class="notebook-nav" aria-labelledby="notebooks-heading">
+          <button type="button" class="nav-item is-active" id="nav-conversation">Conversation</button>
+          <ul class="notebook-list" id="notebook-list"></ul>
+          <p class="empty" id="notebooks-empty">Notebooks fill as you ask questions</p>
+        </nav>
       </section>
     </aside>
 
     <main class="main">
+      <div id="conversation-view">
       <header class="hero">
         <canvas id="scene" aria-hidden="true"></canvas>
         <h1 class="hero-title">Hey Beaver…</h1>
@@ -92,6 +97,8 @@
       <section class="thread" id="thread" aria-live="polite">
         <p class="empty thread-empty" id="thread-empty">Ask about anything you see around Ottawa</p>
       </section>
+      </div>
+      <div class="notebook-view" id="notebook-view" hidden></div>
     </main>
   </div>
   <script type="module" src="scene.js"></script>

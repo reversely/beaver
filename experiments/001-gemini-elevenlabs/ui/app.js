@@ -1,4 +1,5 @@
 // Page logic: settings, hold-to-talk recording, camera frames, and in-order sentence playback.
+import { openNotebook, refreshNotebooks, showConversation } from "./notebooks.js";
 
 const $ = (selector) => document.querySelector(selector);
 const talk = $("#talk");
@@ -271,6 +272,7 @@ class Player {
 }
 
 async function ask(payload) {
+  showConversation();
   setBusy(true);
   const sentAt = performance.now();
   const frame = captureFrame();
@@ -334,6 +336,17 @@ function handleEvent(event, turn, groups, player) {
     if (!player.started) setStatus("");
     const wait = () => (player.playing ? setTimeout(wait, 300) : setStatus(""));
     wait();
+  } else if (event.type === "notebook") {
+    refreshNotebooks();
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "tag tag-link";
+    link.textContent = event.title_en;
+    link.title = "Open notebook";
+    link.addEventListener("click", () => openNotebook(event.id));
+    turn.querySelector(".turn-meta").append(link);
+  } else if (event.type === "notebook_error") {
+    addTag(turn, "not filed");
   } else if (event.type === "error") {
     setStatus(event.message, true);
   }
