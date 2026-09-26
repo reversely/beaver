@@ -64,7 +64,7 @@ reply sentence by sentence while highlighting the sentence being spoken. The set
 changes persist in `settings.local.json` (gitignored). The header's low-poly Parliament Hill
 (`ui/scene.js`, three.js) takes its colours from a photo of the Hill: sandstone, copper-green
 roofs, and the Library's slate roof, floodlit against the page's night scene. The
-contrast ratios of its colour tokens are recorded at the top of `ui/style.css`.
+contrast ratios of the page's colour tokens are recorded at the top of `ui/style.css`.
 
 A night scene over the Canadian Shield fills the page behind every view (`ui/background.js`,
 inline SVG): layered low-poly hills, a spruce treeline, a lake with a canoe, a campfire, and a
