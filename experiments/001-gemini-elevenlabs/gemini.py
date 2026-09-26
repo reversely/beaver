@@ -20,15 +20,15 @@ def _describe(attachment):
     return attachment if isinstance(attachment, str) else attachment[2]
 
 
-def _generate(client, settings, parts, request_config, record):
+def _generate(client, settings, parts, request_config, record, label):
     """Retry server errors such as 503 "high demand"; the timing covers the final attempt only."""
     for attempt in range(settings["retries"] + 1):
         try:
-            with record.timed("gemini"):
+            with record.timed(label):
                 response = client.models.generate_content(
                     model=settings["model"], contents=parts, config=request_config
                 )
-            record.data["gemini_retries"] = attempt
+            record.data[f"{label}_retries"] = attempt
             return response
         except errors.ServerError as error:
             if attempt == settings["retries"]:
@@ -46,9 +46,12 @@ def ask(
     system: str,
     text: str,
     attachments: list = (),
+    schema: dict | None = None,
+    label: str = "gemini",
 ) -> str:
     """Each attachment is a text string or a (bytes, mime_type, description) tuple; the
-    description is what gets logged. Attachments precede the instruction `text`."""
+    description is what gets logged. Attachments precede the instruction `text`. A JSON
+    `schema` makes Gemini reply with matching JSON. `label` names the timing and token entries."""
     settings = config["gemini"]
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     parts = [_part(attachment) for attachment in attachments]
@@ -71,6 +74,8 @@ def ask(
         max_output_tokens=settings["max_output_tokens"],
         thinking_config=thinking,
         media_resolution=resolution,
+        response_mime_type="application/json" if schema else None,
+        response_json_schema=schema,
         # The experiment declares no tools, so the SDK's automatic tool calling stays off.
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
@@ -83,20 +88,25 @@ def ask(
         user_prompt=text,
     )
     try:
-        response = _generate(client, settings, parts, request_config, record)
+        response = _generate(client, settings, parts, request_config, record, label)
     except errors.ServerError as error:
         raise SystemExit(
             f"Gemini server error ({error.code}) after {settings['retries']} retries: "
             f"{error.message}"
         )
     except errors.ClientError as error:
+        if error.code == 402:
+            raise SystemExit(
+                "Gemini prepaid credits are used up; add credit to the AI Studio project "
+                f"(https://ai.studio/projects): {error.message}"
+            )
         if error.code == 429:
             raise SystemExit(
                 f"Gemini rate limit reached (free tier quota): {error.message}"
             )
         raise SystemExit(f"Gemini rejected the request ({error.code}): {error.message}")
     usage = response.usage_metadata
-    record.data["gemini_tokens"] = {
+    record.data[f"{label}_tokens"] = {
         "prompt": usage.prompt_token_count,
         "prompt_by_type": {
             detail.modality.name.lower(): detail.token_count

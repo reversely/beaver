@@ -11,6 +11,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+import bilingual
 import devices
 import gemini
 import speech
@@ -211,6 +212,92 @@ def step_list(config, args):
         print(f"  {voice.voice_id}  {voice.name}")
 
 
+def bilingual_turn(config, record, question, image_file):
+    """Answer, translate, and speak sentence by sentence; record per-sentence timings."""
+    image = [image_attachment(config, record, image_file)] if image_file else []
+    start = time.perf_counter()
+    result = bilingual.answer(config, record, question, image)
+    record.mark("text_ready", start)
+    print(
+        f"\n----- {result['visitor']['name']} speaker, languages {result['codes']} -----"
+    )
+    sentences = []
+    for piece in bilingual.synthesize_in_order(config, result["groups"]):
+        if not sentences:
+            record.mark("first_audio_ready", start)
+        name = f"g{piece['group'] + 1}-{piece['code']}.wav"
+        record.save_file(name, devices.pcm_to_wav(piece["pcm"], piece["rate"]))
+        print(f"  [{piece['code']}] {piece['text']}")
+        sentences.append({k: v for k, v in piece.items() if k not in ("pcm", "rate")})
+        devices.play_pcm(config, record, piece["pcm"], piece["rate"])
+    record.mark("all_spoken", start)
+    record.data["timings_ms"].pop("playback", None)
+    record.data["sentences"] = sentences
+    record.data["elevenlabs_characters"] = sum(len(s["text"]) for s in sentences)
+    # waited_ms after the first sentence is silence between sentences while synthesis catches up.
+    record.data["gap_ms_total"] = sum(s["waited_ms"] for s in sentences[1:])
+    record.data["question_text"] = result["question"]
+    return result
+
+
+def step_bilingual(config, record, args):
+    """7. Typed words, or the microphone when none are given."""
+    if args.words:
+        question = [
+            render_prompt(config, "typed_question", {"question": " ".join(args.words)})
+        ]
+    else:
+        question = recorded_question(config, record)
+    result = bilingual_turn(config, record, question, config["bilingual"]["image_file"])
+    return " / ".join(text for group in result["groups"] for _, text in group)
+
+
+def step_bilingualtest(config, record, args):
+    """Run each concept-sheet case as its own run folder; print a summary table."""
+    settings = config["bilingualtest"]
+    rows = []
+    for i, case in enumerate(settings["cases"]):
+        if i:
+            time.sleep(settings["pause_seconds"])
+        print(f"\n===== {case['name']}: {case['question']}")
+        case_record = RunRecord(config, f"bilingual-{case['name']}")
+        question = [
+            render_prompt(config, "typed_question", {"question": case["question"]})
+        ]
+        try:
+            bilingual_turn(config, case_record, question, case["image_file"])
+            case_record.finish(reply="see sentences")
+        except SystemExit as error:
+            case_record.finish(error=str(error))
+            raise
+        data, t = case_record.data, case_record.data["timings_ms"]
+        rows.append(
+            {
+                "case": case["name"],
+                "mode": config["answer"]["mode"],
+                "answer_ms": t.get("gemini_answer"),
+                "translate_ms": t.get("gemini_translate", 0),
+                "first_audio_ms": t["first_audio_ready"],
+                "all_spoken_ms": t["all_spoken"],
+                "gap_ms": data["gap_ms_total"],
+                "sentences": len(data["sentences"]),
+                "characters": data["elevenlabs_characters"],
+                "tokens": sum(
+                    v["prompt"] + v["reply"] + v["thinking"]
+                    for k, v in data.items()
+                    if k.endswith("_tokens")
+                ),
+            }
+        )
+    header = list(rows[0])
+    table = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    table += ["| " + " | ".join(str(r[h]) for h in header) + " |" for r in rows]
+    report = "\n".join(table) + "\n"
+    record.save_file("report.md", report.encode())
+    print(f"\n{report}")
+    return report
+
+
 STEPS = {
     "text": (step_text, "1. Typed question to Gemini, text reply"),
     "speak": (step_speak, "2. Text to ElevenLabs speech, played aloud"),
@@ -219,6 +306,8 @@ STEPS = {
     "translate": (step_translate, "5. French/English voice loop"),
     "look": (step_look, "6. Question plus camera image to Gemini to ElevenLabs"),
     "imagetest": (step_imagetest, "Questions with and without the image, compared"),
+    "bilingual": (step_bilingual, "7. Sentence-by-sentence reply in each language"),
+    "bilingualtest": (step_bilingualtest, "The concept-sheet cases through step 7"),
 }
 # Account queries that make no run folder.
 QUERIES = {"list": step_list, "usage": step_usage}

@@ -60,10 +60,12 @@ class RunRecord:
         print("\n----- timings (ms) -----")
         for label, ms in self.data["timings_ms"].items():
             print(f"{label:>24}  {ms}")
-        if tokens := self.data.get("gemini_tokens"):
+        for key, tokens in self.data.items():
+            if not key.endswith("_tokens"):
+                continue
             by_type = ", ".join(f"{k} {v}" for k, v in tokens["prompt_by_type"].items())
             print(
-                f"\nGemini tokens: prompt {tokens['prompt']} ({by_type}), "
-                f"reply {tokens['reply']}, thinking {tokens['thinking']}"
+                f"\n{key.removesuffix('_tokens')} tokens: prompt {tokens['prompt']} "
+                f"({by_type}), reply {tokens['reply']}, thinking {tokens['thinking']}"
             )
         print(f"\nSaved to {self.dir.relative_to(HERE)}")

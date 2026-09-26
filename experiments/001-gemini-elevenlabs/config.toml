@@ -24,6 +24,9 @@ voice_id = "eadgjmk4R4uojdsheG9t"
 output_format = "pcm_24000"
 # Refuse to send more characters than this in one request, to protect the monthly quota.
 max_characters = 600
+# Send each sentence's ISO 639-1 language code. Only eleven_flash_v2_5 and eleven_turbo_v2_5
+# accept it; other models reject the request.
+send_language_code = false
 
 [microphone]
 sample_rate = 16000
@@ -44,6 +47,39 @@ index = 0
 warmup_frames = 10
 jpeg_quality = 85
 
+[languages]
+# Official language of every reply: "en", "fr", or "both".
+official = "en"
+# Also speak each sentence in the visitor's own language, when it is not already official.
+include_visitor_language = true
+# "official_first" or "visitor_first", within each sentence group.
+order = "official_first"
+
+[answer]
+# "translate": Gemini answers once, then one batched request translates the sentences.
+# "inline": the answer request returns every language at once.
+mode = "translate"
+# Longest answer, in characters of the first official language.
+max_characters = 280
+
+[tts]
+# Sentences synthesized at once, so later sentences are ready while earlier ones play.
+parallel = 2
+
+[bilingual]
+# A saved image to send with the question, e.g. "test-images/peace-tower.jpg"; "" sends none.
+image_file = ""
+
+[bilingualtest]
+# Seconds between cases, to stay under the free tier's per-minute request limit.
+pause_seconds = 4
+# The three exchanges from the concept sheet, typed in each visitor's language.
+cases = [
+  { name = "tour", image_file = "test-images/peace-tower.jpg", question = "هل يمكنك أن تأخذني في جولة في أرجاء مبنى البرلمان؟" },
+  { name = "painting", image_file = "test-images/jack-pine.jpg", question = "Cuéntame más sobre el artista de esta pintura del museo." },
+  { name = "poutine", image_file = "", question = "Poutine到底是什麼？" },
+]
+
 [prompts]
 # Files in prompts/, one per role.
 system = "system.md"
@@ -53,6 +89,11 @@ camera = "camera.md"
 translate = "translate.md"
 look = "look.md"
 typed_question = "typed_question.md"
+answer = "answer.md"
+answer_inline = "answer_inline.md"
+translate_sentences = "translate_sentences.md"
+image_note = "image_note.md"
+question_spoken = "question_spoken.md"
 
 [prompt_vars]
 # Values for the ${name} placeholders in the prompt files.
