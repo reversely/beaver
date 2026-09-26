@@ -1,0 +1,98 @@
+# Every setting the experiment uses. Override any value for one run with
+#   --set section.key=value     e.g. --set gemini.model=gemini-3.5-flash-lite
+# Run `run.py list` to see the Gemini models, ElevenLabs models, and voices your keys can use.
+
+[gemini]
+model = "gemini-3.8-flash"
+temperature = 0.7
+max_output_tokens = 1024
+# One of "minimal", "low", "medium", "high", or "" to use the model's default.
+thinking_level = "low"
+# Detail Gemini uses for images: "low", "medium", "high", or "" for the model's default.
+# Higher detail costs more image tokens.
+media_resolution = ""
+# Retries after a Gemini server error, such as 503 "high demand", and the wait between them.
+retries = 3
+retry_wait_seconds = 10
+
+[elevenlabs]
+# eleven_multilingual_v2 speaks French and English; step 5 needs a multilingual model.
+model = "eleven_multilingual_v2"
+# Chadwitch, a Canadian English (en-CA) voice. `run.py list` shows the others.
+voice_id = "eadgjmk4R4uojdsheG9t"
+# Raw PCM so the speakers play it directly. 44100 Hz PCM needs a Pro plan.
+output_format = "pcm_24000"
+# Refuse to send more characters than this in one request, to protect the monthly quota.
+max_characters = 600
+
+[microphone]
+sample_rate = 16000
+# 0 records until you press Enter; a positive number records that many seconds.
+record_seconds = 0
+# Sound device name or index; "" uses the system default.
+device = ""
+
+[speaker]
+device = ""
+# false skips playback and only saves the audio to the run folder.
+play = true
+
+[camera]
+# 0 is usually the built-in camera.
+index = 0
+# Frames to discard before the capture while auto-exposure settles.
+warmup_frames = 10
+jpeg_quality = 85
+
+[prompts]
+# Files in prompts/, one per role.
+system = "system.md"
+text = "text.md"
+voice = "voice.md"
+camera = "camera.md"
+translate = "translate.md"
+look = "look.md"
+typed_question = "typed_question.md"
+
+[prompt_vars]
+# Values for the ${name} placeholders in the prompt files.
+guide_name = "Beaver"
+answer_language = "English"
+max_sentences = 3
+camera_question = "What am I looking at, and what is its connection to Canada?"
+language_a = "English"
+language_b = "French"
+# step 1 fills ${question} from the command line; this is the fallback.
+question = "Why does Canada have two official languages?"
+
+[look]
+# Step 6 combines the question and a camera image in one request.
+# false sends the question without the image, for comparison.
+include_image = true
+# A saved image to use in place of the camera, e.g. "test-images/loonie.jpg"; "" uses the camera.
+image_file = ""
+
+[imagetest]
+# `run.py imagetest` sends each typed question with each image variant, skips speech, and writes
+# a report comparing replies, tokens, and timings. "none" sends no image; the other variants send
+# the image at that media_resolution ("default" is the model's own choice).
+variants = ["none", "low", "default", "high"]
+# The image to test with; "" captures one from the camera at the start.
+image_file = "test-images/loonie.jpg"
+# Seconds between requests, to stay under the free tier's per-minute request limit.
+pause_seconds = 4
+# kind groups the questions in the report: "refers" points at the image, "unrelated" does not,
+# and "vague" could go either way.
+questions = [
+  { kind = "refers", text = "What is this?" },
+  { kind = "refers", text = "How old is this, and where does it come from?" },
+  { kind = "unrelated", text = "Who was Louis Riel?" },
+  { kind = "unrelated", text = "Why does Canada have two official languages?" },
+  { kind = "vague", text = "Tell me more about it." },
+]
+
+[output]
+# Print every prompt and text sent to Gemini and ElevenLabs.
+show_prompts = true
+# Each run saves its prompts, reply, timings, and media under this folder (gitignored).
+runs_dir = "runs"
