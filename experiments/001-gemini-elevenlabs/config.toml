@@ -95,6 +95,7 @@ translate_sentences = "translate_sentences.md"
 image_note = "image_note.md"
 question_spoken = "question_spoken.md"
 notebook = "notebook.md"
+pick_pieces = "pick_pieces.md"
 
 [prompt_vars]
 # Values for the ${name} placeholders in the prompt files.

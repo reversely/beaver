@@ -14,6 +14,17 @@ from record import RunRecord
 from settings import HERE, render_prompt
 
 THEMES = ["civic", "history", "culture", "language"]
+# The pieces in ui/artifact-specs.js; tests/artifacts.test.mjs checks the two lists match.
+PIECES = [
+    "peace_tower",
+    "north_canoe",
+    "poutine",
+    "open_book",
+    "easel_jack_pine",
+    "flag",
+    "hockey",
+    "loonie",
+]
 _lock = threading.Lock()
 
 SCHEMA = {
@@ -29,6 +40,7 @@ SCHEMA = {
                 "title_en": {"type": "string"},
                 "title_fr": {"type": "string"},
                 "theme": {"type": "string", "enum": THEMES},
+                "artifact": {"type": "string", "enum": PIECES},
                 "year_start": {"type": "integer"},
                 "year_end": {"type": "integer"},
             },
@@ -37,6 +49,7 @@ SCHEMA = {
                 "title_en",
                 "title_fr",
                 "theme",
+                "artifact",
                 "year_start",
                 "year_end",
             ],
@@ -106,6 +119,7 @@ def summaries(notebooks: list[dict]) -> list[dict]:
             "title_en": n["title_en"],
             "title_fr": n["title_fr"],
             "theme": n["theme"],
+            "artifact": n.get("artifact"),
             "year_start": n["year_start"],
             "year_end": n["year_end"],
             "entries": len(n["entries"]),
@@ -164,6 +178,9 @@ def file_exchange(config: dict, record: RunRecord, result: dict) -> dict:
                 "entries": [],
             }
             notebooks.append(notebook)
+        # The schema's enum constrains Gemini; this check keeps an unlisted name out of the store.
+        if chosen["artifact"] in PIECES and not notebook.get("artifact"):
+            notebook["artifact"] = chosen["artifact"]
         years = [m["year"] for m in entry["moments"]]
         if years:
             notebook["year_start"] = min(notebook["year_start"], *years)
@@ -175,3 +192,38 @@ def file_exchange(config: dict, record: RunRecord, result: dict) -> dict:
         "new": chosen["id"] != notebook["id"],
     }
     return summaries([notebook])[0]
+
+
+def pick_missing_pieces(config: dict, record: RunRecord) -> dict:
+    """Ask Gemini once for a piece for every notebook that has none; return {id: piece}."""
+    with _lock:
+        notebooks = load(config)
+    missing = [n for n in notebooks if n.get("artifact") not in PIECES]
+    if not missing:
+        return {}
+    listing = "\n".join(
+        f"- id {n['id']}: {n['title_en']} ({n['theme']})" for n in missing
+    )
+    schema = {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+                "artifact": {"type": "string", "enum": PIECES},
+            },
+            "required": ["id", "artifact"],
+        },
+    }
+    prompt = render_prompt(config, "pick_pieces", {"notebooks": listing})
+    picks = json.loads(
+        gemini.ask(config, record, "", prompt, schema=schema, label="gemini_pieces")
+    )
+    chosen = {p["id"]: p["artifact"] for p in picks if p["artifact"] in PIECES}
+    with _lock:
+        notebooks = load(config)
+        for notebook in notebooks:
+            if notebook["id"] in chosen and notebook.get("artifact") not in PIECES:
+                notebook["artifact"] = chosen[notebook["id"]]
+        _save(config, notebooks)
+    return chosen

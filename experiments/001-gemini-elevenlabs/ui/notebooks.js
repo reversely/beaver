@@ -1,6 +1,6 @@
 // Notebook list in the sidebar and the notebook view. All notebook text is model output, so it
 // is set with textContent and never parsed as HTML.
-import { artifactImage } from "./artifacts.js";
+import { artifactImage, pieceFor } from "./artifacts.js";
 
 const list = document.getElementById("notebook-list");
 const emptyNote = document.getElementById("notebooks-empty");
@@ -43,7 +43,7 @@ export async function refreshNotebooks() {
     button.dataset.id = notebook.id;
     const image = el("img", "notebook-thumb");
     image.alt = "";
-    image.src = artifactImage(notebook.theme);
+    image.src = artifactImage(pieceFor(notebook));
     const text = el("span", "notebook-item-text");
     text.append(el("span", "notebook-item-title", notebook.title_en));
     const meta = el("span", "notebook-item-meta");
@@ -72,7 +72,7 @@ function header(notebook) {
   const head = el("header", "nb-head");
   const image = el("img", "nb-artifact");
   image.alt = "";
-  image.src = artifactImage(notebook.theme);
+  image.src = artifactImage(pieceFor(notebook));
   const titles = el("div", "nb-titles");
   titles.append(el("h1", "nb-title", notebook.title_en));
   const french = el("p", "nb-title-fr", notebook.title_fr);

@@ -76,9 +76,19 @@ language, up to `notebooks.max_concepts` concepts with a note on why each matter
 in Canada, and dated moments, which the prompt limits to years the model is certain of. The
 sidebar lists the notebooks; a notebook view shows the timeline in year order, vocabulary cards
 that switch language on click, the concepts, and the questions asked. `#notebook=<id>` links open a
-notebook directly. Each theme has a small low-poly piece (`ui/artifacts.js`): the Peace Tower,
-a canoe, a poutine bowl, and an open book. Notebooks persist in `notebooks/notebooks.json`
-(gitignored).
+notebook directly. Notebooks persist in `notebooks/notebooks.json` (gitignored).
+
+### Pieces
+
+Each notebook shows a low-poly piece that the notebook request picks from eight: `peace_tower`,
+`north_canoe`, `poutine`, `open_book`, `easel_jack_pine`, `flag`, `hockey`, and `loonie`. A
+notebook with no piece falls back to one per theme, and `run.py pickpieces` asks Gemini once to
+pick a piece for every notebook that has none. `artifacts.md` records each piece's real-world
+dimensions with a source and confidence for every value. `ui/artifact-specs.js` holds the same
+values in millimetres, and `ui/artifacts.js` builds each model from them, scaling to scene units
+once. `ui/pieces.html` shows all eight with their build times and dimension checks.
+`tests/artifacts.test.mjs` checks that the registry matches the spec, that every dimension check
+passes, and that the Python and JavaScript piece lists agree.
 
 The server listens on 127.0.0.1 only, serves audio only from inside `runs/`, accepts only the
 listed settings and values, and caps requests at 15 MB. API keys stay on the server.
@@ -133,6 +143,7 @@ Measured on 2026-09-26 on the MacBook, with the default `config.toml` unless not
 | 4 camera | | Not yet run |
 | 5 translate | | Not yet run |
 | imagetest | `gemini-3.5-flash-lite`, 5 questions x 4 image variants | See below |
+| Pieces | 8 pieces at 200 px, headless Chrome | 223 ms on a cold start, 96 ms on a second run; the first piece takes 74 ms for WebGL setup and the rest 1 to 8 ms each |
 
 ### Image test, 2026-09-26
 

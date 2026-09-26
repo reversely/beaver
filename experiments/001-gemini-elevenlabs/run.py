@@ -298,6 +298,16 @@ def step_bilingualtest(config, record, args):
     return report
 
 
+def step_pickpieces(config, record, args):
+    """Pick a piece for every notebook that has none, in one Gemini request."""
+    import notebooks
+
+    chosen = notebooks.pick_missing_pieces(config, record)
+    for notebook_id, piece in chosen.items():
+        print(f"  {notebook_id}: {piece}")
+    return f"{len(chosen)} notebooks given a piece"
+
+
 STEPS = {
     "text": (step_text, "1. Typed question to Gemini, text reply"),
     "speak": (step_speak, "2. Text to ElevenLabs speech, played aloud"),
@@ -308,6 +318,7 @@ STEPS = {
     "imagetest": (step_imagetest, "Questions with and without the image, compared"),
     "bilingual": (step_bilingual, "7. Sentence-by-sentence reply in each language"),
     "bilingualtest": (step_bilingualtest, "The concept-sheet cases through step 7"),
+    "pickpieces": (step_pickpieces, "Pick a piece for notebooks that have none"),
 }
 
 
