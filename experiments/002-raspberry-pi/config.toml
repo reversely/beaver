@@ -1,0 +1,115 @@
+# Every setting the experiment uses. Override any value for one run with
+#   --set section.key=value     e.g. --set trigger.modes='["button"]'
+# `run.py devices` lists the sound devices; `run.py mictest` measures the microphone level.
+
+[gemini]
+# Flash-Lite: experiment 001 hit gemini-3.8-flash's free-tier cap of 20 requests.
+model = "gemini-3.5-flash-lite"
+temperature = 0.7
+max_output_tokens = 1024
+# One of "minimal", "low", "medium", "high", or "" to use the model's default.
+thinking_level = "low"
+# "low" costs 260 image tokens; the model default costs 1080 (experiment 001 image test).
+media_resolution = "low"
+# Retries after a Gemini server error, such as 503 "high demand", and the wait between them.
+retries = 3
+retry_wait_seconds = 10
+
+[elevenlabs]
+model = "eleven_multilingual_v2"
+# Chadwitch, a Canadian English (en-CA) voice.
+voice_id = "eadgjmk4R4uojdsheG9t"
+# Raw PCM so the speaker plays it directly. 44100 Hz PCM needs a Pro plan.
+output_format = "pcm_24000"
+# Refuse to send more characters than this in one request, to protect the monthly quota.
+max_characters = 600
+
+[microphone]
+# Part of the sound device's name, as `run.py devices` prints it; "" uses the system default.
+device = ""
+# The I2S MEMS microphone delivers 32-bit samples at 48 kHz on two channels, with the signal on
+# one of them (set by the microphone's L/R pin). The capture rate must be a multiple of 16000.
+capture_rate = 48000
+channels = 2
+dtype = "int32"
+# The channel carrying the signal; `run.py mictest` shows which one it is.
+channel = 0
+# MEMS microphones record quietly; this boost applies before anything else sees the audio.
+gain_db = 20
+
+[speaker]
+device = ""
+# false skips playback and only saves the audio to the run folder.
+play = true
+# A short tone when a trigger fires, so the visitor knows the rover is listening.
+chime = true
+chime_hz = 880
+chime_seconds = 0.15
+
+[camera]
+# "picamera2" for the OV5647 camera module; "opencv" for a USB or laptop camera.
+backend = "picamera2"
+# picamera2 still size; the OV5647 supports 2592x1944, 1296x972, and 640x480 among others.
+width = 1296
+height = 972
+# Seconds the camera runs before the first capture while auto-exposure settles.
+warmup_seconds = 1.0
+jpeg_quality = 85
+# opencv backend only: camera index, 0 is usually the built-in camera.
+index = 0
+# A saved image to send in place of the camera, e.g. "test-images/loonie.jpg"; "" uses the camera.
+image_file = ""
+
+[trigger]
+# Any of "wakeword", "button", "enter". Each 80 ms of audio checks every listed trigger.
+modes = ["wakeword", "button"]
+# Longest question the rover records, in seconds.
+max_seconds = 15
+
+[wakeword]
+# A pre-trained openWakeWord name ("hey_jarvis", "alexa", "hey_mycroft", "hey_rhasspy") or a path
+# to a custom .onnx model. "hey_jarvis" stands in until a "hey beaver" model is trained.
+model = "hey_jarvis"
+# Score from 0 to 1 that counts as a detection; higher means fewer false triggers.
+threshold = 0.5
+# openWakeWord's built-in voice activity check, 0 to 1; 0 turns it off.
+vad_threshold = 0.0
+# Speex noise suppression, available on Linux only.
+noise_suppression = false
+
+[button]
+# Push-to-talk button between this GPIO pin (BCM numbering) and ground.
+pin = 25
+# Seconds of contact bounce to ignore.
+bounce_seconds = 0.05
+
+[endpoint]
+# After a wake word, recording stops once the visitor stays quiet this long.
+silence_seconds = 1.2
+# Audio quieter than this level (dBFS, after gain) counts as silence; `run.py mictest` helps set it.
+silence_dbfs = -45
+# Give up if the visitor has not started speaking within this many seconds of the wake word.
+no_speech_seconds = 5
+
+[look]
+# false sends the question without the image, for comparison.
+include_image = true
+
+[prompts]
+# Files in prompts/, one per role; copied unchanged from experiment 001.
+system = "system.md"
+text = "text.md"
+look = "look.md"
+typed_question = "typed_question.md"
+
+[prompt_vars]
+guide_name = "Beaver"
+answer_language = "English"
+max_sentences = 3
+question = "Why does Canada have two official languages?"
+
+[output]
+# Print every prompt and text sent to Gemini and ElevenLabs.
+show_prompts = true
+# Each run saves its prompts, reply, timings, and media under this folder (gitignored).
+runs_dir = "runs"
