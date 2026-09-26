@@ -1,0 +1,36 @@
+[project]
+name = "beaver"
+version = "0.1.0"
+description = "AI rover tour guide to Canadian culture: history, French/English translation, civic engagement, and education."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "detect-secrets>=1.5.0",
+    "pre-commit>=4.6.2",
+]
+pi = [
+    "elevenlabs>=2.69.0",
+    "google-genai>=2.25.0",
+    "numpy>=2.5.3",
+    "openwakeword>=0.6.0",
+    "python-dotenv>=1.2.3",
+    "scipy>=1.18.1",
+    "sounddevice>=0.5.6",
+]
+sandbox = [
+    "elevenlabs>=2.69.0",
+    "google-genai>=2.25.0",
+    "numpy>=2.5.3",
+    "opencv-python>=5.0.0.93",
+    "python-dotenv>=1.2.3",
+    "sounddevice>=0.5.6",
+]
+
+[tool.uv]
+# openwakeword requires tflite-runtime on Linux, which has no Python 3.13 builds. Experiment 002
+# runs openwakeword on onnxruntime instead. This override limits tflite-runtime to Python
+# versions below the project's 3.13 floor, so uv never installs it.
+override-dependencies = ["tflite-runtime; python_version < '3.12'"]
