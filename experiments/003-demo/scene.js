@@ -2,8 +2,6 @@
 // flat planes at different depths, and a perspective camera glides between views, so nearer
 // layers slide past faster than far ones. Nothing is lit or modelled: every pixel is painted.
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
 
 // Each plane is scaled by its depth, so from the base camera at the origin all layers line up
 // as the original painting.
@@ -33,19 +31,6 @@ const VIEWS = {
 // Slides where the maple branches frame the view.
 const FRAMED = new Set(["hello", "newcomer", "close"]);
 
-// Beaver's head: the rover's printed head shell (art/head.glb, millimetres), riding with the
-// camera like a foreground character. Pose per slide: position in camera space, turn (yaw, in
-// radians; positive turns toward the viewer's right), and size (scene units per millimetre).
-// Slides without a pose hide the head.
-const HEAD_POSES = {
-  hello: { pos: [1.9, -0.45, -6], yaw: -0.5, size: 0.026 },
-  pair: { pos: [-1.55, -1.05, -6], yaw: 0.8, size: 0.015 },
-  close: { pos: [1.9, -0.45, -6], yaw: -0.5, size: 0.026 },
-};
-// Hole positions on the face, in millimetres, measured by casting rays through the shell.
-const EYES = { y: 15.5, w: 26, h: 12 };
-const MOUTH = { y: -16, w: 24, h: 15 };
-
 // Multiplied over the orange leaf sprite for a spread of autumn colours.
 const LEAF_TINTS = ["#ffffff", "#f2a37c", "#e0604a", "#f5c26b"];
 
@@ -68,86 +53,6 @@ function paintedPlane(texture, depth) {
   );
   mesh.position.z = -depth;
   return mesh;
-}
-
-// The head is the one lit object: a soft warm key from the upper left, a sky fill, and a rim,
-// all riding with the camera so the lighting stays the same on every slide.
-async function buildHead(camera) {
-  const gltf = await new GLTFLoader().loadAsync("art/head.glb");
-  let geometry;
-  gltf.scene.traverse((o) => {
-    if (o.isMesh) geometry = o.geometry;
-  });
-  // Crisp edges on the shell's corners, smooth shading across its fillets.
-  geometry = toCreasedNormals(geometry, THREE.MathUtils.degToRad(35));
-  const shell = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ color: "#c98a5a", roughness: 0.78 }));
-
-  // Warm panels inside the hollow shell show through the eye and mouth holes.
-  const glow = (spec, colour) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(spec.w, spec.h), new THREE.MeshBasicMaterial({ color: colour }));
-    m.position.set(0, spec.y, 8);
-    return m;
-  };
-  const eyes = glow(EYES, "#ffe2b0");
-  const mouth = glow(MOUTH, "#5a2c16");
-
-  const model = new THREE.Group();
-  model.add(shell, eyes, mouth);
-  const rig = new THREE.Group();
-  rig.add(model);
-  rig.scale.setScalar(0.0001);
-  camera.add(rig);
-
-  const hemi = new THREE.HemisphereLight("#fff1dc", "#8a5236", 1.9);
-  const key = new THREE.DirectionalLight("#fff0da", 3);
-  key.position.set(-3, 4, 2);
-  const rim = new THREE.DirectionalLight("#ffb27a", 1.6);
-  rim.position.set(4, 2, -6);
-  camera.add(hemi, key, rim);
-
-  const quiet = new THREE.Color("#5a2c16");
-  const lit = new THREE.Color("#ffc98a");
-  let pose = null;
-  let talking = 0;
-  let talkingTarget = 0;
-  let blinkAt = 3;
-  const goal = { pos: new THREE.Vector3(0, -1, -6), yaw: 0, size: 0.0001 };
-
-  return {
-    pose(name) {
-      pose = HEAD_POSES[name] || null;
-      if (pose) {
-        goal.pos.set(...pose.pos);
-        goal.yaw = pose.yaw;
-        goal.size = pose.size;
-      } else {
-        goal.size = 0.0001;
-      }
-    },
-    talk(on) {
-      talkingTarget = on ? 1 : 0;
-    },
-    update(dt, t, still) {
-      const k = still ? 1 : 1 - Math.exp(-dt * 3);
-      rig.position.lerp(goal.pos, k);
-      rig.rotation.y += (goal.yaw - rig.rotation.y) * k;
-      rig.scale.setScalar(rig.scale.x + (goal.size - rig.scale.x) * k);
-      rig.visible = rig.scale.x > 0.001;
-      if (still) return;
-      // Idle: a slow bob and a small look around.
-      model.position.y = Math.sin(t * 1.1) * 1.2;
-      model.rotation.y = Math.sin(t * 0.45) * 0.08;
-      model.rotation.x = Math.sin(t * 0.7) * 0.03;
-      // The mouth glows while Beaver speaks, flickering like a voice meter.
-      talking += (talkingTarget - talking) * (1 - Math.exp(-dt * 10));
-      const voice = talking * (0.55 + 0.45 * Math.abs(Math.sin(t * 13) * Math.sin(t * 5.3)));
-      mouth.material.color.copy(quiet).lerp(lit, voice);
-      // A blink every few seconds.
-      blinkAt -= dt;
-      eyes.scale.y = blinkAt < 0.12 && blinkAt > 0 ? 0.1 : 1;
-      if (blinkAt <= 0) blinkAt = 3 + Math.random() * 3;
-    },
-  };
 }
 
 export async function createCity(canvas, { reducedMotion }) {
@@ -177,8 +82,6 @@ export async function createCity(canvas, { reducedMotion }) {
   branchPlane.renderOrder = 20;
   branchPlane.position.z = -4;
   camera.add(branchPlane);
-
-  const head = await buildHead(camera);
 
   const target = new THREE.Vector3(...VIEWS.hello);
   camera.position.copy(target);
@@ -256,7 +159,6 @@ export async function createCity(canvas, { reducedMotion }) {
         if (L.m.position.y < camera.position.y - 8) respawn(L, false);
       }
     }
-    head.update(dt, t, reducedMotion);
     branchMat.opacity = framed;
     branchPlane.visible = framed > 0.01;
     renderer.render(scene, camera);
@@ -277,11 +179,9 @@ export async function createCity(canvas, { reducedMotion }) {
   window.addEventListener("resize", aim);
 
   return {
-    talk: (on) => head.talk(on),
     goTo(name) {
       viewName = name;
       aim();
-      head.pose(name);
       framedTarget = FRAMED.has(name) ? 1 : 0;
     },
   };

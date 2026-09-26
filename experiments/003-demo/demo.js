@@ -228,9 +228,6 @@ function cycleGreetings() {
     el.dir = code === "ar" ? "rtl" : "ltr";
     void el.offsetWidth;
     el.classList.add("in");
-    // Beaver "says" each greeting: the mouth glows while the new greeting streams in.
-    city.talk?.(true);
-    setTimeout(() => city.talk?.(false), 900);
   }, 2600);
 }
 if (!reducedMotion) cycleGreetings();

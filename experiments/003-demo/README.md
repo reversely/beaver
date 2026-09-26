@@ -5,7 +5,7 @@
 | Status | Active |
 | Started | 2026-09-26 |
 | Builds on | [Experiment 001](../001-gemini-elevenlabs/README.md), [Experiment 002](../002-raspberry-pi/README.md) |
-| Tickets | [#9](https://github.com/reversely/beaver/issues/9), [#10](https://github.com/reversely/beaver/issues/10), [#11](https://github.com/reversely/beaver/issues/11) |
+| Tickets | [#9](https://github.com/reversely/beaver/issues/9), [#10](https://github.com/reversely/beaver/issues/10) |
 
 This folder is a static page that introduces Beaver on a laptop. It needs no API key and no
 server code. The sample conversation replays a recorded experiment 001 run; the "Hey Beaver..."
@@ -53,9 +53,6 @@ screen carries a `demo` tag.
 | `art/source/*.webp` | Three GPT Image 2 generations: the master painting, clouds, and maple branches |
 | `art/build_layers.py` | Cuts the sources into the layers below |
 | `art/*.webp` | Layers: `clouds`, `land`, `parliament`, `foreground` (branches), `leaf-2` (falling leaf) |
-| `art/source/head-*.stl.gz` | The rover's printed head, left and right halves (binary STL, millimetres, gzip) |
-| `art/build_head.py` | Merges the halves, faces them toward the viewer, and simplifies to `art/head.glb` |
-| `art/head.glb` | The head, 16,000 triangles |
 | `beaver-mark.png` | The Beaver mark from the concept sheet, used as the page icon; a placeholder until final branding |
 | `sample/` | Run `20260926-110552-ui`: question, sentences, timings, notebook entry, audio, camera frame |
 
@@ -86,26 +83,6 @@ base camera the layers reassemble the painting. The camera only pans and pushes 
 is clamped so the visible area stays inside the land painting at any window shape. Parliament sits
 1.6 units in front of the land, so the refilled strip behind it shows only as a thin sliver.
 
-## Mascot
-
-The rover's printed head shell stands in for Beaver on the intro, pairing, and closing slides.
-`build_head.py` merges the two printed halves (about 82,000 triangles), simplifies them to 16,000,
-centres them, and turns the face, which points down -z in the print files, toward the viewer.
-
-```
-uv run --with trimesh --with fast-simplification --with numpy \
-    python experiments/003-demo/art/build_head.py
-```
-
-In `scene.js` the head rides with the camera like a foreground character and eases to a pose per
-slide: large and turned toward the greeting on the intro and closing slides, small and turned
-toward the laptop's QR code on the pairing slide, and hidden elsewhere. It is the only lit object:
-a warm key light, a sky fill, and a rim light move with the camera. The shell is hollow and open
-at the back, so two flat panels inside it show through the holes: a warm panel behind the eyes
-(measured by casting rays through the face at x ±7.5 mm, y 15.5 mm) that blinks every few seconds,
-and a panel behind the mouth window (x -10 to 10 mm, y -22 to -10 mm) that glows while each
-greeting streams in.
-
 ## Design
 
 Text sits either on the painted sky in deep maroon, or on dark maroon surfaces in near-white; the
@@ -125,6 +102,6 @@ greeting cycle, and the screen animations.
 
 | Test | Setting | Measurement |
 |---|---|---|
-| Frame rate | Chrome, Apple A18 Pro GPU, 1440 x 900, 5 s on the first slide with the head shown | 60.2 frames per second; longest frame 17 ms |
+| Frame rate | Chrome, Apple A18 Pro GPU, 1440 x 900, 5 s on the first slide | 60.1 frames per second; longest frame 17 ms |
 | Layout audit | 1024, 1280, 1440, 1920 px, first slide | 0 fails, 0 warnings |
 | Slide screenshots | 1024 x 700, 1440 x 900, 1920 x 1080 | Every setup screen fits its laptop; the camera never shows past the painting's edge |
