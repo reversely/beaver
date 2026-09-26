@@ -49,6 +49,13 @@ def turn(config, record, microphone, triggers, camera, typed=None):
             (wav, "audio/wav", f"{path.name}: {seconds:.1f} s of microphone audio")
         ]
     question_end = time.perf_counter()
+    reply = ask_with_frame(config, record, camera, question)
+    speak(config, record, reply, question_end)
+    return reply
+
+
+def ask_with_frame(config, record, camera, question):
+    """Send the question with a fresh camera frame, when there is a camera, and return the reply."""
     image = []
     if camera:
         with record.timed("camera"):
@@ -62,7 +69,6 @@ def turn(config, record, microphone, triggers, camera, typed=None):
         config, record, system, render_prompt(config, "look"), image + question
     )
     print(f"\n----- reply -----\n{reply}")
-    speak(config, record, reply, question_end)
     return reply
 
 
@@ -111,6 +117,41 @@ def cmd_loop(config, args):
                     print(f"Turn failed: {error}")
         except KeyboardInterrupt:
             print("\nStopped.")
+
+
+def cmd_phone(config, args):
+    """Take questions from a phone's browser; answer through the rover's camera and speaker."""
+    from camera import Camera
+    from phone import serve, wav_seconds
+
+    camera = Camera(config) if config["look"]["include_image"] else None
+
+    def answer(wav, upload_ms, respond):
+        record = RunRecord(config, "phone")
+        question_end = time.perf_counter()
+        record.data["timings_ms"]["upload"] = upload_ms
+        try:
+            path = record.save_file("question.wav", wav)
+            question = [
+                (
+                    wav,
+                    "audio/wav",
+                    f"{path.name}: {wav_seconds(wav):.1f} s of phone microphone audio",
+                )
+            ]
+            reply = ask_with_frame(config, record, camera, question)
+            respond(reply)
+            speak(config, record, reply, question_end)
+        except (SystemExit, Exception) as error:
+            record.finish(error=f"{type(error).__name__}: {error}")
+            raise
+        record.finish(reply=reply)
+
+    try:
+        serve(config, answer)
+    finally:
+        if camera:
+            camera.close()
 
 
 def cmd_text(config, args):
@@ -213,6 +254,7 @@ COMMANDS = {
         cmd_look,
         "one question with a camera frame; typed words skip the microphone",
     ),
+    "phone": (cmd_phone, "questions from a phone's browser, answered on the rover"),
     "text": (cmd_text, "typed question to Gemini, text reply"),
     "speak": (cmd_speak, "text to ElevenLabs, played on the speaker"),
     "snap": (cmd_snap, "save one camera frame"),

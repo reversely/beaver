@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Beaver</title>
+    <link rel="stylesheet" href="phone.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Beaver</h1>
+      <p id="status" role="status" aria-live="polite">
+        Hold the button while you ask your question. Beaver answers through the rover's speaker.
+      </p>
+      <button id="talk" type="button">Hold to talk</button>
+      <section id="answer" hidden>
+        <h2>Beaver's answer</h2>
+        <p id="reply"></p>
+      </section>
+    </main>
+    <script src="phone.js"></script>
+  </body>
+</html>

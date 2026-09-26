@@ -26,6 +26,14 @@ if [ ! -d .venv ]; then
 fi
 UV_PYTHON_DOWNLOADS=never uv sync --group pi
 
+# cloudflared opens the tunnel for `run.py phone`; the static binary needs no apt repository.
+if ! command -v cloudflared >/dev/null && [ ! -x "$HOME/.local/bin/cloudflared" ]; then
+  mkdir -p "$HOME/.local/bin"
+  curl -fsSL -o "$HOME/.local/bin/cloudflared" \
+    https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64
+  chmod +x "$HOME/.local/bin/cloudflared"
+fi
+
 # Fetch the stand-in wake word model and openWakeWord's feature models.
 uv run --group pi python -c \
   "from openwakeword import utils; utils.download_models(model_names=['hey_jarvis'])"

@@ -94,6 +94,21 @@ silence_dbfs = -45
 # Give up if the visitor has not started speaking within this many seconds of the wake word.
 no_speech_seconds = 5
 
+[phone]
+# `run.py phone`: the visitor's phone records the question in its browser.
+port = 8770
+# "cloudflare" opens a Cloudflare quick tunnel, reachable from any network; "none" serves HTTPS on
+# the local network with the certificate below, for a phone hotspot (see README).
+tunnel = "cloudflare"
+# The cloudflared program; setup-pi.sh installs it to ~/.local/bin.
+cloudflared = "cloudflared"
+tunnel_timeout_seconds = 30
+# Largest question upload; 1 MiB holds 32 s of 16 kHz 16-bit mono audio.
+max_upload_bytes = 1048576
+# tunnel = "none" only: certificate and key files, relative to this folder.
+certfile = ""
+keyfile = ""
+
 [look]
 # false sends the question without the image, for comparison.
 include_image = true

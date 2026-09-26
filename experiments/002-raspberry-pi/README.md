@@ -70,6 +70,7 @@ Each command tests one part before the full loop depends on it. All commands run
 | `look "What is this?"` | One turn with a typed question and a camera frame. |
 | `look` | One turn with a trigger and a spoken question. |
 | `loop` | Answers questions until Ctrl-C. |
+| `phone` | Answers questions spoken into a visitor's phone; see below. |
 
 ## Triggers
 
@@ -87,6 +88,43 @@ folder loads through `wakeword.model = "hey_beaver.onnx"`.
 
 openWakeWord's authors report that "a single core of a Raspberry Pi 3 can run 15-20 openWakeWord
 models simultaneously in real-time". `wakewordtest` measures the cost on this Pi 5.
+
+## The phone as the microphone
+
+`run.py phone` lets a visitor ask questions through the browser on their own phone. The Pi's
+built-in Bluetooth pairs with headsets such as AirPods Max but delivers no microphone audio, so
+the phone's microphone stands in for one.
+
+1. The Pi starts a web server on `phone.port` and a Cloudflare quick tunnel to it, then prints a
+   QR code and an HTTPS address in the terminal. The address holds a random session token; the
+   server answers 403 to any request without it, and a new token replaces it at every start.
+2. The visitor scans the code and holds the button on the page while asking the question. The
+   browser records the microphone, converts the recording to 16 kHz mono WAV, and uploads it.
+3. The Pi captures a camera frame, sends the audio and the frame to Gemini, returns the reply text
+   to the phone, and speaks the reply through the rover's speaker. It answers one question at a
+   time and tells a second phone to wait.
+
+A quick tunnel needs no Cloudflare account and connects outward over TCP 443, so it works on
+eduroam, which blocks connections between devices. Its address changes at every start. In one of
+three tests, eduroam's DNS servers had not resolved a new `trycloudflare.com` address two minutes
+after 1.1.1.1 did, so a phone on mobile data gives the more dependable test.
+
+### Phone hotspot
+
+Without a tunnel, the Pi and the phone join the phone's hotspot, and the Pi serves HTTPS itself,
+because phone browsers only open the microphone on HTTPS pages. On the Pi, from this folder:
+
+```
+nmcli device wifi connect "<hotspot name>" password "<hotspot password>"
+openssl req -x509 -newkey rsa:2048 -nodes -days 30 -subj "/CN=beaver" \
+  -keyout phone-key.pem -out phone-cert.pem
+uv run --group pi python run.py phone --set phone.tunnel=none \
+  --set phone.certfile=phone-cert.pem --set phone.keyfile=phone-key.pem
+```
+
+The certificate is self-signed, so the phone shows a warning the first time; "Show Details",
+then "visit this website" on iPhone, or "Advanced", then "Proceed" on Android, opens the page.
+Git ignores `*.pem` files.
 
 ## Configuration and prompts
 
@@ -117,7 +155,8 @@ requirement away, and this experiment runs openWakeWord on onnxruntime.
 | Resampling, synthetic tones | Laptop | 48 kHz int32 stereo to 16 kHz | 1 kHz tone kept at -9.0 dBFS; 20 kHz tone reduced to -73.1 dBFS |
 | `look "What is this?"` | Laptop | Lucky Loonie photo, speaker off | Gemini 1.9 s, ElevenLabs first audio 3.8 s, question end to speech 6.0 s; prompt 580 tokens (text 320, image 260) |
 | `wakewordtest` | Laptop | `hey_jarvis`, built-in microphone, 10 s | 4.4 ms per 80 ms frame; process CPU 11% of one core |
-| Everything | Pi 5 | | Not yet run |
+| `phone`, question from the laptop through the tunnel | Pi 5 | 1.7 s spoken question (macOS `say`), five dollar bill in front of the camera | Upload read 3 ms, camera 61 ms, Gemini 2018 ms, ElevenLabs first audio 3133 ms, question end to speech 5.4 s; reply text reached the caller 2.3 s after upload; prompt 619 tokens (image 266, text 311, audio 42) |
+| The other commands | Pi 5 | | Not yet recorded here |
 
 Observations:
 

@@ -1,0 +1,115 @@
+:root {
+  --field: #f6f4ef;
+  --ink: #1f1a16;
+  --ink-2: #57504a;
+  --accent: #9a4e27;
+  --accent-ink: #ffffff;
+  --live: #9f0a28;
+  --card: #ffffff;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --field: #16130f;
+    --ink: #f3ede6;
+    --ink-2: #bdb3a9;
+    --accent: #c4692f;
+    --accent-ink: #16130f;
+    --live: #e0566c;
+    --card: #221d18;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--field);
+  color: var(--ink);
+  font: 17px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+main {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 2rem 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--ink-2);
+}
+
+#status {
+  margin: 0;
+  min-height: 3em;
+  color: var(--ink-2);
+}
+
+#talk {
+  width: min(60vw, 14rem);
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: inherit;
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform 120ms ease-out, background-color 120ms ease-out;
+}
+
+#talk.is-recording {
+  background: var(--live);
+  transform: scale(1.06);
+}
+
+#talk:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+#talk:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+}
+
+#answer {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--card);
+  text-align: left;
+}
+
+#reply {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #talk {
+    transition: none;
+  }
+}

@@ -39,3 +39,6 @@ experiments/*/notebooks/
 
 # Downloaded translation models
 experiments/*/models/
+
+# TLS certificates and keys, such as the phone hotspot certificate for experiment 002.
+*.pem
