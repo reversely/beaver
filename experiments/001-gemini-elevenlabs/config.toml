@@ -123,6 +123,8 @@ pick_pieces = "pick_pieces.md"
 guide_name = "Beaver"
 answer_language = "English"
 max_sentences = 3
+# Longest sentence the system prompt asks for; short sentences translate and speak better.
+max_words = 20
 camera_question = "What am I looking at, and what is its connection to Canada?"
 language_a = "English"
 language_b = "French"

@@ -180,7 +180,13 @@ Gemini translations read fluently and keep the English name in brackets, as in
 - Swahili: "fresh cheese curds topped with warm brown gravy" became "curds safi cheese kuchorea na
   gravy joto kahawia", leaving English words in place.
 
-The spelled-out year comes from `prompts/system.md`, which asks Gemini to write numbers and dates
+After this comparison, `prompts/system.md` changed to ask for years and numbers as digits and for
+sentences under `prompt_vars.max_words` (20) words. Rerun on Argos, the same three cases produced
+sentences of 8 to 11 words, answers of 205 to 327 characters (down from 296 to 599), first audio in
+2.7 to 3.8 s, and a correct Spanish year ("en 1916"). The Arabic "البرلمان هيل" and the doubled
+Chinese "奶酪奶酪" remained.
+
+The spelled-out year came from the earlier `prompts/system.md`, which asks Gemini to write numbers and dates
 the way a person would say them. Sentence-level translation models read "nineteen seventeen" as
 words, so the Spanish rendering fails where Gemini's own translation wrote 1917.
 
