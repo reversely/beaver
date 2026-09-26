@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beaver demo</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inria+Sans:wght@300;400;700&family=Inria+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "reveal": "https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.esm.js"
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+</head>
+<body>
+  <canvas class="city" id="city" aria-hidden="true"></canvas>
+
+  <!-- The laptop stays fixed while the setup slides scroll past; each slide picks its screen. -->
+  <div class="stage" id="stage" hidden>
+    <figure class="laptop" aria-label="Operator screens on a laptop">
+      <div class="lid">
+        <div class="screen">
+          <div class="app">
+            <header class="app-bar">
+              <span class="app-name">beaver</span>
+              <span class="tag tag-demo">demo</span>
+            </header>
+
+            <section class="app-view" data-screen="signin">
+              <h3>Sign in</h3>
+              <label class="app-field">
+                <span>Email</span>
+                <input type="email" placeholder="name@school.ca" tabindex="-1">
+              </label>
+              <button class="app-button" type="button" tabindex="-1">Continue</button>
+              <p class="app-note">Demo mode needs no account</p>
+            </section>
+
+            <section class="app-view" data-screen="site">
+              <h3>Site</h3>
+              <label class="app-field">
+                <span>Site name</span>
+                <input type="text" value="Demo classroom" tabindex="-1" readonly>
+              </label>
+              <div class="app-field">
+                <span>Reply in</span>
+                <div class="seg"><span>English</span><span>Français</span><span class="on">Both</span></div>
+              </div>
+              <div class="app-row">
+                <span>Add the visitor's language</span>
+                <span class="toggle on" aria-label="on"></span>
+              </div>
+              <div class="app-field">
+                <span>Topics</span>
+                <div class="chips">
+                  <span class="chip on">History</span><span class="chip on">Languages</span><span class="chip on">Civic life</span><span class="chip on">Places</span><span class="chip on">Art</span>
+                </div>
+              </div>
+              <div class="app-row">
+                <span>Voice</span>
+                <span class="app-value">Chadwitch en-CA</span>
+              </div>
+              <button class="app-button" type="button" tabindex="-1">Save</button>
+            </section>
+
+            <section class="app-view" data-screen="pair">
+              <h3>Pair rover</h3>
+              <div class="qr" data-qr="beaver-demo:pair:ROVER-1"></div>
+              <p class="app-note">Hold this code up to the rover camera</p>
+              <div class="app-row">
+                <span>Rover 1</span>
+                <span class="tag" data-status="pair">waiting</span>
+              </div>
+            </section>
+
+            <section class="app-view" data-screen="deploy">
+              <h3>Deploy</h3>
+              <dl class="summary">
+                <dt>Site</dt><dd>Demo classroom</dd>
+                <dt>Reply in</dt><dd>English and French</dd>
+                <dt>Visitor language</dt><dd>on</dd>
+                <dt>Topics</dt><dd>5</dd>
+                <dt>Voice</dt><dd>Chadwitch en-CA</dd>
+                <dt>Rover</dt><dd>Rover 1</dd>
+              </dl>
+              <div class="progress"><span data-progress="deploy"></span></div>
+              <div class="app-row">
+                <button class="app-button" type="button" tabindex="-1">Deploy</button>
+                <span class="tag" data-status="deploy">ready</span>
+              </div>
+            </section>
+
+            <section class="app-view" data-screen="session">
+              <h3>Visitor session</h3>
+              <div class="session">
+                <div class="qr" data-qr="beaver-demo:join:BVR-4K7"></div>
+                <div class="session-code">
+                  <span class="app-label">Session code</span>
+                  <strong>BVR-4K7</strong>
+                  <span class="app-note">Visitors scan to join</span>
+                </div>
+              </div>
+              <button class="app-button app-button-quiet" type="button" tabindex="-1">End session</button>
+            </section>
+          </div>
+        </div>
+      </div>
+      <div class="base"></div>
+    </figure>
+
+    <!-- One rover: the laptop pairs it, and visitor phones join its session. -->
+    <svg class="links" viewBox="0 0 420 64" role="img" aria-label="Laptop to rover to visitor phones">
+      <line class="link" data-link="pair" x1="70" y1="22" x2="190" y2="22" />
+      <line class="link" data-link="session" x1="230" y1="22" x2="350" y2="22" />
+      <circle class="node" data-node="laptop" cx="50" cy="22" r="10" />
+      <circle class="node" data-node="rover" cx="210" cy="22" r="10" />
+      <circle class="node" data-node="phones" cx="370" cy="22" r="10" />
+      <text x="50" y="54">Laptop</text>
+      <text x="210" y="54">Rover</text>
+      <text x="370" y="54">Phones</text>
+    </svg>
+  </div>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <section data-view="hero" class="slide-hero">
+        <div class="card card-hero">
+          <h1 class="wordmark">beaver</h1>
+          <p class="lead">A rover that answers questions about Canada in English and French</p>
+          <p class="lead lead-fr" lang="fr">Un robot guide qui répond aux questions sur le Canada en français et en anglais</p>
+          <p class="hint">Scroll or press the arrow keys</p>
+        </div>
+      </section>
+
+      <section data-view="rover">
+        <div class="card">
+          <h2>Rover</h2>
+          <p>Beaver runs on a Raspberry Pi 5 rover with a camera, a microphone, and a speaker. A visitor asks a question aloud, and the rover answers aloud in each language the site has chosen. The same guide runs in a web browser for classrooms without a rover.</p>
+          <ul class="features">
+            <li>Questions by voice or keyboard</li>
+            <li>A camera frame sent with each question</li>
+            <li>Replies in English, French, or both</li>
+            <li>The visitor's own language added to each sentence</li>
+            <li>A notebook of vocabulary and concepts from each exchange</li>
+            <li>A wake word or a button to start listening</li>
+          </ul>
+        </div>
+      </section>
+
+      <section data-view="knows">
+        <div class="card">
+          <h2>Knowledge</h2>
+          <p>Beaver answers with Gemini under a guide prompt that sets its topics and rules.</p>
+          <div class="chips chips-large">
+            <span class="chip">Canadian history</span><span class="chip">French and English</span><span class="chip">Civic life</span><span class="chip">Places</span><span class="chip">People</span><span class="chip">Institutions</span>
+          </div>
+          <h3>Guide prompt rules</h3>
+          <ul class="features">
+            <li>At most 3 short sentences, written to be heard</li>
+            <li>Say so when unsure of a fact</li>
+            <li>Never invent dates, names, or figures</li>
+            <li>Answer a question outside these topics briefly, then suggest a Canadian one</li>
+          </ul>
+          <h3>Tested questions</h3>
+          <ul class="asked">
+            <li><span lang="ar" dir="rtl">هل يمكنك أن تأخذني في جولة في أرجاء مبنى البرلمان؟</span><span class="gloss">Can you take me on a tour of Parliament? Arabic</span></li>
+            <li><span lang="zh">Poutine到底是什麼？</span><span class="gloss">What exactly is poutine? Chinese</span></li>
+            <li><span lang="es">Cuéntame más sobre el artista de esta pintura del museo.</span><span class="gloss">Tell me more about the artist of this painting. Spanish</span></li>
+            <li><span>Why does Canada have two official languages?</span><span class="gloss">English, answered on the rover</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section data-view="signin" data-screen="signin">
+        <div class="card card-step">
+          <ol class="steps" aria-label="Setup steps"><li class="on">Sign in</li><li>Site</li><li>Pair</li><li>Deploy</li><li>Session</li></ol>
+          <h2>Sign in</h2>
+          <p>A teacher or museum guide signs in on a laptop with a school or museum email.</p>
+        </div>
+      </section>
+
+      <section data-view="site" data-screen="site">
+        <div class="card card-step">
+          <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="on">Site</li><li>Pair</li><li>Deploy</li><li>Session</li></ol>
+          <h2>Site</h2>
+          <p>The operator names the site and picks the reply languages, the topics, and the voice.</p>
+        </div>
+      </section>
+
+      <section data-view="pair" data-screen="pair" data-link="pair">
+        <div class="card card-step">
+          <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="on">Pair</li><li>Deploy</li><li>Session</li></ol>
+          <h2>Pairing</h2>
+          <p>The laptop shows a QR code, and the operator holds it up to the rover's camera. The rover reads the code and joins this site.</p>
+        </div>
+      </section>
+
+      <section data-view="deploy" data-screen="deploy" data-link="pair">
+        <div class="card card-step">
+          <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="done">Pair</li><li class="on">Deploy</li><li>Session</li></ol>
+          <h2>Deployment</h2>
+          <p>The rover downloads the site settings and says in each chosen language that it is ready.</p>
+        </div>
+      </section>
+
+      <section data-view="session" data-screen="session" data-link="session">
+        <div class="card card-step">
+          <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="done">Pair</li><li class="done">Deploy</li><li class="on">Session</li></ol>
+          <h2>Visitor session</h2>
+          <p>Visitors scan the session QR code or type its code on their phones. Each visitor's questions and notebook stay with that session.</p>
+        </div>
+      </section>
+
+      <section data-view="conversation">
+        <div class="card card-wide" id="conversation">
+          <h2>Sample conversation</h2>
+          <p class="meta" data-bind="recorded"></p>
+          <div class="exchange">
+            <figure class="frame">
+              <img src="sample/frame.jpg" alt="Camera frame of a landscape painting on a screen" width="1024" height="576">
+              <figcaption>Camera frame</figcaption>
+            </figure>
+            <div class="turns">
+              <div class="question">
+                <span class="who">Visitor</span>
+                <p lang="es" data-bind="question"></p>
+                <p class="gloss">Tell me about this painting. Spanish</p>
+              </div>
+              <div class="reply">
+                <div class="reply-head">
+                  <span class="who">Beaver</span>
+                  <button class="play" type="button" id="play-reply">Play reply</button>
+                </div>
+                <ol class="groups" id="groups"></ol>
+              </div>
+              <p class="meta" data-bind="timings"></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-view="notebook">
+        <div class="card card-wide" id="notebook">
+          <h2>Notebook</h2>
+          <p>After the reply, Beaver files the exchange into a notebook for review.</p>
+          <div class="nb-head">
+            <strong data-bind="nb-title"></strong>
+            <span lang="fr" data-bind="nb-title-fr"></span>
+            <span class="tag" data-bind="nb-theme"></span>
+          </div>
+          <table class="vocab">
+            <thead><tr><th>English</th><th>Français</th><th>Español</th><th>Meaning</th></tr></thead>
+            <tbody id="vocab"></tbody>
+          </table>
+          <div class="concepts" id="concepts"></div>
+        </div>
+      </section>
+
+      <section data-view="close" class="slide-hero">
+        <div class="card card-hero">
+          <h1 class="wordmark">beaver</h1>
+          <p class="lead">Your guide to Canada</p>
+          <p class="lead lead-fr" lang="fr">Votre guide du Canada</p>
+          <button class="app-button" type="button" id="restart">Start over</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <button class="autoplay" type="button" id="autoplay" aria-pressed="false">Play demo</button>
+
+  <script type="module" src="demo.js"></script>
+</body>
+</html>

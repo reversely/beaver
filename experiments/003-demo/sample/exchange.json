@@ -1,0 +1,99 @@
+{
+  "run": "20260926-110552-ui",
+  "date": "2026-09-26",
+  "question": "Háblame de esta pintura.",
+  "visitor_language": {
+    "name": "Spanish",
+    "code": "es"
+  },
+  "timings_ms": {
+    "text_ready": 6224,
+    "first_audio_ready": 8261
+  },
+  "model": "gemini-3.8-flash",
+  "sentences": [
+    {
+      "group": 0,
+      "code": "en",
+      "text": "This vibrant landscape resembles the modernist style popularized by Canada's famous Group of Seven in the early twentieth century."
+    },
+    {
+      "group": 0,
+      "code": "fr",
+      "text": "Ce paysage vibrant rappelle le style moderniste popularisé par le célèbre Groupe des sept (Group of Seven) du Canada au début du XXe siècle."
+    },
+    {
+      "group": 0,
+      "code": "es",
+      "text": "Este vibrante paisaje recuerda el estilo modernista popularizado por el famoso Grupo de los Siete (Group of Seven) de Canadá a principios del siglo XX."
+    },
+    {
+      "group": 1,
+      "code": "en",
+      "text": "These artists traveled across the Canadian wilderness to capture rugged scenery in bold, expressive colors."
+    },
+    {
+      "group": 1,
+      "code": "fr",
+      "text": "Ces artistes ont parcouru la nature sauvage canadienne pour capturer des paysages accidentés avec des couleurs vives et expressives."
+    },
+    {
+      "group": 1,
+      "code": "es",
+      "text": "Estos artistas viajaron por la naturaleza salvaje canadiense para capturar paisajes escarpados con colores llamativos y expresivos."
+    },
+    {
+      "group": 2,
+      "code": "en",
+      "text": "I can tell you more about Canadian landscape art."
+    },
+    {
+      "group": 2,
+      "code": "fr",
+      "text": "Je peux vous en dire plus sur l'art du paysage canadien."
+    },
+    {
+      "group": 2,
+      "code": "es",
+      "text": "Puedo contarte más sobre el arte del paisaje canadiense."
+    }
+  ],
+  "notebook": {
+    "title_en": "Canadian Landscape Art and the Group of Seven",
+    "title_fr": "L'art du paysage canadien et le Groupe des Sept",
+    "theme": "culture",
+    "vocabulary": [
+      {
+        "en": "landscape",
+        "fr": "paysage",
+        "visitor": "paisaje",
+        "meaning": "A depiction of natural inland scenery in art."
+      },
+      {
+        "en": "wilderness",
+        "fr": "nature sauvage",
+        "visitor": "naturaleza virgen",
+        "meaning": "An uncultivated, wild natural region."
+      },
+      {
+        "en": "rugged",
+        "fr": "accidenté",
+        "visitor": "escarpado",
+        "meaning": "Having a rough, uneven, and wild terrain."
+      },
+      {
+        "en": "Group of Seven",
+        "fr": "Groupe des Sept",
+        "visitor": "Grupo de los Siete",
+        "meaning": "A celebrated twentieth-century school of Canadian landscape painters."
+      }
+    ],
+    "concepts": [
+      {
+        "title": "The Group of Seven and Canadian Identity",
+        "summary": "The Group of Seven pioneered a distinct, modernist style to portray Canada's rugged wilderness using bold colors.",
+        "why_it_matters": "Their artwork helped shape Canadian visual culture and national identity through an appreciation of the northern landscape."
+      }
+    ]
+  }
+}
