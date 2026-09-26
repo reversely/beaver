@@ -42,6 +42,12 @@ device = ""
 # GPIO pin (BCM numbering) that powers the amplifier, driven high before playback. The Robot HAT v4
 # uses 20; -1 skips the step, such as on the laptop.
 enable_pin = 20
+# Scale each reply so its loudest sample reaches normalize_dbfs. ElevenLabs replies peak near
+# -8 dBFS, so this plays them about 7 dB louder. The run folder keeps the unscaled audio.
+normalize = true
+normalize_dbfs = -1.0
+# Upper limit on the gain, so a near-silent reply is not raised into noise.
+max_gain_db = 20.0
 # false skips playback and only saves the audio to the run folder.
 play = true
 # A short tone when a trigger fires, so the visitor knows the rover is listening.

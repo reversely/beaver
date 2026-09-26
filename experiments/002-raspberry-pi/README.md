@@ -137,6 +137,8 @@ one value for one run. Two defaults differ from experiment 001, based on its res
 
 `speaker.enable_pin` names the GPIO pin that powers the amplifier. The Robot HAT v4 powers its
 speaker only while GPIO 20 is high, so every command drives that pin high before it plays audio.
+`speaker.normalize` scales each reply so its loudest sample reaches `speaker.normalize_dbfs`,
+because the speaker mixer is already at 100% and ElevenLabs replies peak near -8 dBFS.
 
 The prompts in `prompts/` are unchanged copies from experiment 001. Each turn prints what it sends
 to Gemini and ElevenLabs and saves a run folder under `runs/` (gitignored) with `record.json`, the
