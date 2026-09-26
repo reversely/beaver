@@ -10,6 +10,7 @@ dependencies = []
 dev = [
     "detect-secrets>=1.5.0",
     "pre-commit>=4.6.2",
+    "ruff==0.16.9",
 ]
 pi = [
     "elevenlabs>=2.69.0",
@@ -34,3 +35,8 @@ sandbox = [
 # runs openwakeword on onnxruntime instead. This override limits tflite-runtime to Python
 # versions below the project's 3.13 floor, so uv never installs it.
 override-dependencies = ["tflite-runtime; python_version < '3.12'"]
+
+[tool.ruff]
+# Each experiment folder runs as its own script root, so its modules (record, gemini, ...) are
+# first-party imports there.
+src = [".", "experiments/*"]
