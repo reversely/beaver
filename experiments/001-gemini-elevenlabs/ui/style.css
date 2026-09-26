@@ -1,0 +1,252 @@
+/* Roles, not swatches. Measured contrast (WCAG) on --field / --surface / --tint:
+   --ink 13.7 / 14.6 / 12.3, --ink-2 6.9 / 7.3 / 6.2, --ink-3 4.3 / 4.6 / 3.9 (meta only),
+   --accent 7.2 / 7.7 / 6.5, white on --accent 7.8. The Parliament palette lives in scene.js. */
+:root {
+  --field: #faf6f0;
+  --surface: #fffdf9;
+  --tint: #f3e9dd;
+  --hairline: #e7dccd;
+  --ink: #3b211c;
+  --ink-2: #6b4f47;
+  --ink-3: #8a6e64;
+  --accent: #7b4428;
+  --accent-soft: #f0e0d2;
+  --error: #b3412f;
+  --radius: 14px;
+  --font: "Inria Sans", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--field);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  min-height: 100vh;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+/* Sidebar */
+.side {
+  padding: 36px 28px;
+  border-right: 1px solid var(--hairline);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.brand { display: flex; flex-direction: column; line-height: 1.05; }
+.brand-line { font-size: 17px; color: var(--ink-2); padding-left: 4px; }
+.brand-fr { font-style: italic; font-weight: 300; }
+.brand-word { font-size: 72px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+
+.panel h2 {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.field { margin-bottom: 16px; }
+.field-label { display: block; font-size: 15px; color: var(--ink-2); margin-bottom: 6px; }
+
+.seg {
+  display: flex;
+  background: var(--tint);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+.seg button {
+  flex: 1;
+  min-height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+.seg button[aria-checked="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(59, 33, 28, 0.12);
+}
+.seg button:focus-visible, .talk:focus-visible, .ask:focus-visible, .switch input:focus-visible + .switch-track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.switch { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; cursor: pointer; font-size: 15px; color: var(--ink-2); }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch-track {
+  flex: none;
+  width: 38px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--hairline);
+  position: relative;
+  transition: background 0.15s;
+}
+.switch-track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--surface);
+  transition: transform 0.15s;
+}
+.switch input:checked + .switch-track { background: var(--accent); }
+.switch input:checked + .switch-track::after { transform: translateX(16px); }
+
+.empty { color: var(--ink-3); font-size: 15px; margin: 0; }
+
+/* Main column */
+.main { padding: 28px 40px 64px; min-width: 0; }
+
+.hero {
+  position: relative;
+  height: 260px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  /* Sky from the Parliament photo: pale blue into sunset peach; the atmosphere layer. */
+  background: linear-gradient(180deg, #a9c3d6 0%, #cfdbe2 55%, #f1d3b3 100%);
+}
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero-title {
+  position: absolute;
+  left: 28px;
+  bottom: 18px;
+  margin: 0;
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--ink);
+  background: rgba(250, 246, 240, 0.88);
+  padding: 2px 16px 6px;
+  border-radius: 10px;
+}
+
+.composer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "talk typed" "talk camera" "status status";
+  gap: 12px 20px;
+  align-items: center;
+  margin: 24px 0 8px;
+}
+
+.talk {
+  grid-area: talk;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 6px 18px rgba(123, 68, 40, 0.28);
+  transition: transform 0.12s;
+  touch-action: none;
+  user-select: none;
+}
+.talk:active, .talk.is-recording { transform: scale(0.96); }
+.talk-dot { width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+.talk.is-recording .talk-dot { background: #f3b7a4; animation: pulse 1s ease-in-out infinite; }
+.talk:disabled { opacity: 0.55; cursor: progress; }
+
+.typed { grid-area: typed; display: flex; gap: 10px; }
+.typed input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.typed input::placeholder { color: var(--ink-3); }
+.typed input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ask {
+  min-height: 48px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ask:disabled { opacity: 0.55; cursor: progress; }
+
+.camera { grid-area: camera; display: flex; align-items: center; gap: 16px; }
+.camera .switch { margin: 0; }
+#camera-view { width: 120px; height: 68px; object-fit: cover; border-radius: 10px; background: var(--tint); }
+
+.status { grid-area: status; margin: 0; min-height: 24px; font-size: 14px; color: var(--ink-3); }
+.status.is-error { color: var(--error); }
+
+/* Conversation */
+.thread { display: flex; flex-direction: column; gap: 18px; margin-top: 12px; }
+.thread-empty { padding: 28px 0; }
+
+.turn {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  padding: 22px 26px;
+}
+.turn-question { margin: 0; font-size: 22px; font-weight: 700; color: var(--ink); }
+.turn-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 16px; }
+.tag {
+  font-size: 13px;
+  color: var(--ink-2);
+  background: var(--tint);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.group {
+  padding: 8px 14px;
+  border-left: 3px solid transparent;
+  border-radius: 0 8px 8px 0;
+  transition: background 0.2s, border-color 0.2s;
+}
+.group + .group { margin-top: 6px; }
+.group.is-speaking { background: var(--accent-soft); border-left-color: var(--accent); }
+.line { margin: 0; color: var(--ink-2); }
+.line.is-visitor { font-weight: 700; color: var(--ink); }
+.line.is-speaking { color: var(--ink); }
+.line.is-pending { color: var(--ink-3); }
+
+@keyframes pulse { 50% { opacity: 0.35; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .talk.is-recording .talk-dot { animation: none; }
+  .group, .switch-track, .switch-track::after { transition: none; }
+}

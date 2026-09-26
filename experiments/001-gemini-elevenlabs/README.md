@@ -51,6 +51,24 @@ run.py imagetest --set gemini.model=gemini-3.5-flash-lite
 Delshaw, CC BY 2.0: the Lucky Loonie display at the Hockey Hall of Fame, with a visitor's finger
 pointing at it.
 
+## Desktop interface
+
+```
+uv run --group sandbox python experiments/001-gemini-elevenlabs/run.py serve
+```
+
+`serve` opens a local page at `http://127.0.0.1:8765` (`server.port`). The page takes a question by
+holding the talk button or by typing, can attach a frame from the browser camera, and plays the
+reply sentence by sentence while highlighting the sentence being spoken. The settings panel sets
+`languages.official`, `languages.include_visitor_language`, `languages.order`, and `answer.mode`;
+changes persist in `settings.local.json` (gitignored). The header's low-poly Parliament Hill
+(`ui/scene.js`, three.js) takes its colours from a photo of the Hill: sandstone, copper-green
+roofs, the Library's slate roof, and an evening sky. The page chrome stays brown on warm white; the
+contrast ratios of its colour tokens are recorded at the top of `ui/style.css`.
+
+The server listens on 127.0.0.1 only, serves audio only from inside `runs/`, accepts only the
+listed settings and values, and caps requests at 15 MB. API keys stay on the server.
+
 ## Configuration and prompts
 
 `config.toml` holds every model ID, voice ID, device, limit, and prompt value, with a comment on each.

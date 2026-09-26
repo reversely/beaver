@@ -132,6 +132,10 @@ questions = [
   { kind = "vague", text = "Tell me more about it." },
 ]
 
+[server]
+# `run.py serve` opens the desktop interface at http://127.0.0.1:<port>.
+port = 8765
+
 [output]
 # Print every prompt and text sent to Gemini and ElevenLabs.
 show_prompts = true

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beaver</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <div class="app">
+    <aside class="side">
+      <div class="brand">
+        <span class="brand-line">your guide to Canada</span>
+        <span class="brand-word">beaver</span>
+        <span class="brand-line brand-fr">votre guide du Canada</span>
+      </div>
+
+      <section class="panel" aria-labelledby="settings-heading">
+        <h2 id="settings-heading">Settings</h2>
+
+        <div class="field">
+          <span class="field-label" id="official-label">Reply in</span>
+          <div class="seg" role="radiogroup" aria-labelledby="official-label" data-setting="languages.official">
+            <button type="button" role="radio" data-value="en">English</button>
+            <button type="button" role="radio" data-value="fr">Français</button>
+            <button type="button" role="radio" data-value="both">Both</button>
+          </div>
+        </div>
+
+        <label class="switch">
+          <input type="checkbox" data-setting="languages.include_visitor_language">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span>Include my language</span>
+        </label>
+
+        <div class="field">
+          <span class="field-label" id="order-label">Order</span>
+          <div class="seg" role="radiogroup" aria-labelledby="order-label" data-setting="languages.order">
+            <button type="button" role="radio" data-value="official_first">Official first</button>
+            <button type="button" role="radio" data-value="visitor_first">Mine first</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-label" id="mode-label">Translation</span>
+          <div class="seg" role="radiogroup" aria-labelledby="mode-label" data-setting="answer.mode">
+            <button type="button" role="radio" data-value="translate">Separate step</button>
+            <button type="button" role="radio" data-value="inline">In the answer</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="notebooks-heading">
+        <h2 id="notebooks-heading">Notebooks</h2>
+        <p class="empty">Notebooks fill as you ask questions</p>
+      </section>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <canvas id="scene" aria-hidden="true"></canvas>
+        <h1 class="hero-title">Hey Beaver…</h1>
+      </header>
+
+      <section class="composer" aria-label="Ask">
+        <button type="button" class="talk" id="talk">
+          <span class="talk-dot" aria-hidden="true"></span>
+          <span class="talk-label">Hold to talk</span>
+        </button>
+        <form class="typed" id="typed">
+          <input id="typed-input" type="text" autocomplete="off" placeholder="Type a question in any language" aria-label="Question">
+          <button type="submit" class="ask">Ask</button>
+        </form>
+        <div class="camera">
+          <label class="switch">
+            <input type="checkbox" id="camera-toggle">
+            <span class="switch-track" aria-hidden="true"></span>
+            <span>Show Beaver the camera</span>
+          </label>
+          <video id="camera-view" muted playsinline hidden></video>
+        </div>
+        <p class="status" id="status" role="status"></p>
+      </section>
+
+      <section class="thread" id="thread" aria-live="polite">
+        <p class="empty thread-empty" id="thread-empty">Ask about anything you see around Ottawa</p>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="scene.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -30,3 +30,6 @@ experiments/*/runs/
 
 # Downloaded test images, kept local for licensing
 experiments/*/test-images/
+
+# Settings saved from the experiment 001 web interface
+experiments/*/settings.local.json

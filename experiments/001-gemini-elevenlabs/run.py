@@ -309,8 +309,16 @@ STEPS = {
     "bilingual": (step_bilingual, "7. Sentence-by-sentence reply in each language"),
     "bilingualtest": (step_bilingualtest, "The concept-sheet cases through step 7"),
 }
-# Account queries that make no run folder.
-QUERIES = {"list": step_list, "usage": step_usage}
+
+
+def step_serve(config, args):
+    from server import serve
+
+    serve(config, config["server"]["port"])
+
+
+# Commands that make no run folder of their own.
+QUERIES = {"list": step_list, "usage": step_usage, "serve": step_serve}
 
 
 def main():
