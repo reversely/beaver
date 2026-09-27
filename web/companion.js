@@ -1,5 +1,5 @@
 // Beaver on the home page (#48): the model from beaver.js, drawn in a fixed corner on every slide.
-// Beaver turns slowly on the spot and wags his tail, his mouth follows his clips, a drag on his
+// Beaver sways slowly through 180 degrees and wags his tail, his mouth follows his clips, a drag on his
 // head aims it, and a drag anywhere else turns him. With reduced motion he stays still and the
 // canvas redraws only on a mouth change or a drag.
 import * as THREE from "three";
@@ -45,14 +45,21 @@ export function createCompanion(canvas) {
   };
   new ResizeObserver(redraw).observe(canvas);
 
-  // A slow turn, one revolution every 20 seconds, paused while dragged and for a moment after.
-  const SPIN = (Math.PI * 2) / 20;
+  // A slow sway, 90 degrees either side of facing the camera, one full sway every 16 seconds;
+  // paused while dragged and for a moment after, then it carries on from wherever he was left.
+  const SWAY = Math.PI / 2;
+  const SWAY_SPEED = (Math.PI * 2) / 16;
+  // Beaver faces +x; this turn points his face at the camera.
+  beaver.rotation.y = -Math.atan2(camera.position.z, camera.position.x);
+  let phase = 0;
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let last = null;
   let resumeAt = 0;
   function spin(now) {
     if (last !== null && now >= resumeAt && dragX === null && body.enabled) {
-      beaver.rotation.y += (SPIN * (now - last)) / 1000;
+      const step = (SWAY_SPEED * (now - last)) / 1000;
+      beaver.rotation.y += SWAY * (Math.sin(phase + step) - Math.sin(phase));
+      phase += step;
     }
     if (last !== null) {
       beaver.userData.update(now / 1000);
