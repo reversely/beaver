@@ -12,8 +12,8 @@ From the laptop, copy the repo (including `.env`, which holds the API keys) to t
 setup script there:
 
 ```
-rsync -av --exclude .venv --exclude .git --exclude 'runs/' ~/Repos/beaver/ pi@100.126.130.50:~/beaver/
-ssh pi@100.126.130.50 'cd ~/beaver && bash src/beaver/rover/setup-pi.sh'
+rsync -av --exclude .venv --exclude .git --exclude 'runs/' ~/Repos/beaver/ pi@100.99.246.84:~/beaver/
+ssh pi@100.99.246.84 'cd ~/beaver && bash src/beaver/rover/setup-pi.sh'
 ```
 
 The script installs `picamera2`, `gpiozero`, `lgpio`, and PortAudio with apt, creates the

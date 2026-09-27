@@ -181,7 +181,7 @@ max_concepts = 2
 # interval while run.py serve runs). The Pi cannot open connections to the laptop, so this app
 # pulls over SSH with the key already set up for the Pi.
 enabled = true
-host = "pi@100.126.130.50"
+host = "pi@100.99.246.84"
 remote_runs = "~/beaver/src/beaver/rover/runs"
 # Gitignored; one folder per rover turn, with a filed.json marker once it is in a notebook.
 local_dir = "rover-runs"

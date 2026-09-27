@@ -100,8 +100,12 @@ The Pi joins eduroam through a NetworkManager profile named `eduroam`. Eduroam b
 name lookup and connections between devices, so the laptop reaches the Pi through Tailscale:
 
 - The Pi belongs to another Tailscale account and is shared into this laptop's account at
-  `100.126.130.50`. Tailscale SSH is off on the Pi, so SSH goes to the Pi's own OpenSSH server as
-  `pi`, with the laptop's key in `~/.ssh/authorized_keys`.
+  `100.99.246.84`, as `raspberry-1`. Tailscale SSH is off on the Pi, so SSH goes to the Pi's own
+  OpenSSH server as `pi`, with the laptop's key in `~/.ssh/authorized_keys`.
+- A new SD card installs Tailscale afresh, with a new address, in whichever account signs it in.
+  The card that replaced a failed one on 2026-09-27 joined the other account, where this laptop
+  could not see it ("peer not found") until the owner shared it in from that account's admin
+  console. The old card's `raspberry` at `100.126.130.50` stays listed, offline.
 - The Pi cannot open a connection back to the laptop, so the desktop app pulls the rover's turns.
 - On a guest network such as "RMUS Office_Guest", Tailscale reached the Pi only through a relay
   whose public address changed twice within a minute on 2026-09-27; each change dropped the open SSH
@@ -114,8 +118,8 @@ name lookup and connections between devices, so the laptop reaches the Pi throug
 From the laptop, copy the repo (including `.env`) to the Pi, then run the setup script on the Pi:
 
 ```
-rsync -av --exclude .venv --exclude .git --exclude 'runs/' ~/Repos/beaver/ pi@100.126.130.50:~/beaver/
-ssh pi@100.126.130.50 'cd ~/beaver && bash src/beaver/rover/setup-pi.sh'
+rsync -av --exclude .venv --exclude .git --exclude 'runs/' ~/Repos/beaver/ pi@100.99.246.84:~/beaver/
+ssh pi@100.99.246.84 'cd ~/beaver && bash src/beaver/rover/setup-pi.sh'
 ```
 
 `setup-pi.sh` installs `picamera2`, `gpiozero`, `lgpio`, and PortAudio with apt, creates the
