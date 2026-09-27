@@ -57,7 +57,7 @@ class Routes(unittest.TestCase):
             self.assertEqual(self.request(path)[0], 404, path)
 
     def test_rover_control_needs_the_local_host_and_header(self):
-        state = {"state": "stopped", "address": None, "log": []}
+        state = {"state": "stopped", "address": None, "error": None, "note": None}
         with mock.patch.object(
             server.rover_phone, "start", return_value=state
         ) as start:
@@ -87,6 +87,48 @@ class Routes(unittest.TestCase):
             }
         )
         self.assertTrue(state["qr_svg"].startswith("<svg"))
+
+
+CAMERA = "[4:33:16.285700128] [1822]  INFO RPI pisp.cpp:1502 Sensor: /base/axi - Selected sensor format"
+
+
+class RoverStatus(unittest.TestCase):
+    def parse(self, alive="", address="", code="", before_boot="", log=""):
+        return server.rover_phone.parse_status(
+            f"{alive}\n---\n{address}\n---\n{code}\n---\n{before_boot}\n---\n{log}"
+        )
+
+    def test_camera_lines_after_a_clean_stop_are_not_an_error(self):
+        state = self.parse(
+            log=f"Waiting for questions (Ctrl-C stops).\n\nStopped.\n{CAMERA}"
+        )
+        self.assertEqual(
+            (state["state"], state["error"], state["note"]), ("stopped", None, None)
+        )
+
+    def test_a_failed_exit_reports_the_servers_last_line(self):
+        log = f"Traceback (most recent call last):\n  File x\nSystemExit: cloudflared did not connect in time\n{CAMERA}"
+        state = self.parse(code="1", log=log)
+        self.assertEqual(
+            state["error"], "SystemExit: cloudflared did not connect in time"
+        )
+
+    def test_a_signal_is_named_instead_of_the_last_log_line(self):
+        state = self.parse(code="137", log="Waiting for questions (Ctrl-C stops).")
+        self.assertEqual(state["error"], "ended by signal 9")
+
+    def test_a_server_cut_off_by_a_reboot_is_a_note(self):
+        state = self.parse(before_boot="4200", log=CAMERA)
+        self.assertEqual(
+            (state["error"], state["note"]), (None, server.rover_phone.REBOOTED)
+        )
+
+    def test_running_and_starting(self):
+        self.assertEqual(self.parse(alive="RUNNING")["state"], "starting")
+        running = self.parse(
+            alive="RUNNING", address="https://a.trycloudflare.com/?t=x"
+        )
+        self.assertEqual(running["state"], "running")
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):

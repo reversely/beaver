@@ -283,7 +283,13 @@ def make_handler(app: App):
                 detail = (getattr(error, "stderr", "") or "").strip()
                 print(f"Rover not reachable over SSH: {detail or error}")
                 self._json(
-                    HTTPStatus.OK, {"state": "unreachable", "address": None, "log": []}
+                    HTTPStatus.OK,
+                    {
+                        "state": "unreachable",
+                        "address": None,
+                        "error": None,
+                        "note": None,
+                    },
                 )
 
         def do_POST(self):

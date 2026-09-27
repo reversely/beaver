@@ -18,9 +18,13 @@ let polling = null;
 function show(state) {
   status.classList.remove("is-error");
   status.textContent = MESSAGES[state.state];
-  if (state.state === "stopped" && state.log?.length) {
-    status.textContent = `The phone page stopped: ${state.log.at(-1)}`;
+  // The server reports an error only when the phone page exited on its own with a failure, and a
+  // note when the rover restarted under it.
+  if (state.error) {
+    status.textContent = `The phone page stopped: ${state.error}`;
     status.classList.add("is-error");
+  } else if (state.note) {
+    status.textContent = state.note;
   }
   mirror();
   link.hidden = state.state !== "running";
