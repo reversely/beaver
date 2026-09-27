@@ -29,7 +29,9 @@ const VIEWS = {
   documents: [1, 2, -6],
   conversation: [-7.5, -2.5, -5],
   notebook: [-10, -1, -3],
-  rover: [6, 1.5, -6],
+  "rover-take": [6, 1.5, -6],
+  "rover-world": [4.5, 3.6, -6],
+  "rover-steps": [-4, 2.5, -4],
   close: [2, 1, -2],
 };
 // Slides where the maple branches frame the view.

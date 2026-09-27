@@ -24,7 +24,7 @@
   <canvas class="city" id="city" aria-hidden="true"></canvas>
   <canvas class="companion" id="companion" aria-hidden="true"></canvas>
 
-  <!-- The laptop stays fixed across the five feature slides; each slide picks its screen. -->
+  <!-- The laptop stays fixed across the desktop app's slides; each slide picks its screen. -->
   <div class="stage" id="stage" hidden>
     <figure class="laptop" aria-label="Beaver on a laptop">
       <div class="lid">
@@ -142,15 +142,6 @@
                 <div class="concepts" id="concepts"></div>
               </section>
 
-              <section class="app-view" data-screen="rover">
-                <h3>Rover</h3>
-                <div class="app-card app-rover">
-                  <p class="app-note">Scan with the phone's camera</p>
-                  <div class="app-qr" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="132" height="132" class="segno"><g transform="scale(4)"><path fill="#0e1715" d="M0 0h33v33h-33z"/><path class="qrline" stroke="#f4efe6" d="M2 2.5h7m1 0h3m3 0h1m1 0h1m1 0h1m3 0h7m-29 1h1m5 0h1m1 0h1m7 0h1m2 0h2m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m1 0h3m3 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h2m1 0h2m1 0h1m1 0h4m2 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m4 0h1m2 0h1m1 0h2m2 0h1m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-17 1h4m3 0h1m-20 1h1m2 0h9m2 0h2m1 0h1m1 0h1m1 0h1m2 0h1m1 0h3m-29 1h1m2 0h1m1 0h1m1 0h1m2 0h1m3 0h2m2 0h2m3 0h2m1 0h2m-27 1h1m2 0h1m1 0h1m4 0h2m2 0h3m5 0h1m2 0h1m-27 1h1m2 0h1m1 0h1m1 0h6m1 0h1m2 0h1m2 0h3m1 0h2m2 0h1m-27 1h2m2 0h1m2 0h1m2 0h1m2 0h2m1 0h3m1 0h1m5 0h1m-24 1h1m3 0h1m1 0h1m1 0h1m1 0h4m2 0h8m-28 1h4m1 0h1m1 0h2m1 0h2m1 0h2m3 0h1m1 0h4m1 0h1m1 0h1m-28 1h1m1 0h1m1 0h1m3 0h1m2 0h1m1 0h3m2 0h2m3 0h1m1 0h1m1 0h1m-29 1h2m1 0h1m1 0h2m1 0h1m1 0h1m1 0h3m6 0h1m1 0h1m1 0h1m-26 1h2m3 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h4m3 0h1m1 0h2m-28 1h2m1 0h5m3 0h2m2 0h3m1 0h1m4 0h2m2 0h1m-29 1h2m1 0h3m3 0h1m2 0h2m1 0h1m2 0h2m2 0h5m-27 1h4m1 0h4m2 0h1m1 0h1m1 0h1m1 0h1m1 0h9m-20 1h1m1 0h2m2 0h2m4 0h1m3 0h2m-26 1h7m1 0h1m1 0h2m2 0h3m1 0h3m1 0h1m1 0h2m-26 1h1m5 0h1m1 0h2m5 0h1m1 0h1m1 0h2m3 0h1m2 0h2m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1m1 0h8m1 0h1m-28 1h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h8m6 0h1m-29 1h1m1 0h3m1 0h1m5 0h1m2 0h1m1 0h1m1 0h2m2 0h2m1 0h3m-29 1h1m5 0h1m3 0h2m2 0h2m2 0h1m3 0h1m2 0h2m1 0h1m-29 1h7m1 0h5m1 0h3m2 0h2m1 0h3"/></g></svg></div>
-                  <span class="app-link">Open the phone page</span>
-                  <span class="app-btn">Stop</span>
-                </div>
-              </section>
             </div>
           </div>
         </div>
@@ -158,6 +149,43 @@
       <div class="base"></div>
     </figure>
 
+  </div>
+
+  <!-- The phone on the rover slides: the rover's phone page (src/beaver/rover/phone), drawn in HTML. -->
+  <div class="phone-stage" id="phone-stage" hidden>
+    <figure class="phone" aria-label="The rover's phone page on a phone">
+      <div class="phone-screen">
+          <div class="phone-view" data-phone="take">
+            <h3>Beaver</h3>
+            <div class="ph-language"><span>Language</span><span class="ph-select">Detect automatically</span></div>
+            <span class="ph-locate">Use my location</span>
+            <p class="ph-status">Hold the button while you ask your question. Beaver answers through the rover's speaker.</p>
+            <span class="ph-talk">Hold to talk</span>
+          </div>
+          <div class="phone-view" data-phone="world">
+            <h3>Beaver</h3>
+            <div class="ph-language"><span>Language</span><span class="ph-select">العربية</span></div>
+            <span class="ph-locate">Use my location</span>
+            <p class="ph-status">Beaver is answering through the rover's speaker.</p>
+            <span class="ph-talk">Hold to talk</span>
+            <section class="ph-answer">
+              <h4>Beaver's answer</h4>
+              <p lang="ar" dir="rtl">ما تنظر إليه هو برج السلام (Peace Tower) في أوتاوا. هل تود معرفة المزيد عن التاريخ أو الهندسة المعمارية؟</p>
+            </section>
+          </div>
+          <div class="phone-view" data-phone="steps">
+            <h3>Beaver</h3>
+            <div class="ph-language"><span>Language</span><span class="ph-select">Español</span></div>
+            <span class="ph-locate">Use my location</span>
+            <p class="ph-status">Beaver is answering through the rover's speaker.</p>
+            <span class="ph-talk">Hold to talk</span>
+            <section class="ph-answer">
+              <h4>Beaver's answer</h4>
+              <p lang="es">Solicite OHIP en persona en un centro de ServiceOntario. Lleve el formulario de registro y tres documentos: uno de su estatus, uno de su domicilio en Ontario y uno de su identidad. No hay período de espera.</p>
+            </section>
+          </div>
+      </div>
+    </figure>
   </div>
 
   <div class="reveal">
@@ -259,6 +287,38 @@
         </div>
       </section>
 
+      <section data-view="rover-take" data-phone="take">
+        <div class="card card-side">
+          <h2>Take Beaver out with you</h2>
+          <p>Start the rover from the desktop app and scan its code. Your phone becomes Beaver's microphone, and Beaver answers out loud through the rover.</p>
+        </div>
+      </section>
+
+      <section data-view="rover-world" data-phone="world">
+        <div class="card card-side">
+          <h2>Around the city</h2>
+          <p>Point the rover at what you see and ask in your language. Beaver looks through its camera and answers.</p>
+          <p class="sample" lang="ar" dir="rtl">هل يمكنك أن تأخذني في جولة في أرجاء مبنى البرلمان؟</p>
+          <p class="sample-en">Can you give me a tour of the Parliament grounds?</p>
+        </div>
+      </section>
+
+      <section data-view="rover-steps" data-phone="steps">
+        <div class="card card-side">
+          <h2>Procedures, step by step</h2>
+          <p>Ask how something works here, and Beaver walks you through it.</p>
+          <p class="sample" lang="es">¿Cómo obtengo mi tarjeta de salud de Ontario?</p>
+          <p class="sample-en">How do I get an Ontario health card?</p>
+        </div>
+      </section>
+
+      <section data-view="notebook" data-screen="notebook" data-stage="wide">
+        <div class="card card-side">
+          <h2>Notebooks</h2>
+          <p>At home, the desktop app keeps what the rover heard. Every question, from the rover or typed at home, becomes a notebook of new words and big ideas in three languages.</p>
+        </div>
+      </section>
+
       <section data-view="duties" data-screen="duties" data-stage="wide">
         <div class="card card-side">
           <h2>Deadlines and duties</h2>
@@ -279,20 +339,6 @@
           <p>Point Beaver at a painting and ask in Spanish. Beaver answers sentence by sentence in English, French, and Spanish, so every new word comes with its translation.</p>
           <button class="app-button" type="button" id="play-reply">Play reply</button>
           <p class="meta" data-bind="recorded"></p>
-        </div>
-      </section>
-
-      <section data-view="notebook" data-screen="notebook" data-stage="wide">
-        <div class="card card-side">
-          <h2>Notebooks</h2>
-          <p>Every conversation becomes a notebook of new words and big ideas, in all three languages, to look back on later.</p>
-        </div>
-      </section>
-
-      <section data-view="rover" data-screen="rover" data-stage="wide">
-        <div class="card card-side">
-          <h2>Rover</h2>
-          <p>Take Beaver out with you. Ask through your phone, and Beaver answers through the rover's speaker, looking through its camera at what you see.</p>
         </div>
       </section>
 

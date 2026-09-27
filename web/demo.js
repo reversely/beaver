@@ -18,6 +18,7 @@ const sound = createSound({ voice: companion.speak });
 setupStory(sound);
 
 const stage = document.getElementById("stage");
+const phoneStage = document.getElementById("phone-stage");
 const LANG_NAMES = { en: "English", fr: "Français", es: "Español" };
 // The app's sidebar topic that each laptop screen belongs to.
 const SCREEN_TOPICS = { duties: "duties", documents: "documents", conversation: "ask", notebook: "notebooks", rover: "rover" };
@@ -29,7 +30,10 @@ function showSlide(slide) {
   city.goTo(currentView);
   const screen = slide.dataset.screen;
   stage.hidden = !screen;
-  document.body.dataset.companion = screen || slide.dataset.view === "hey" ? "corner" : "open";
+  const phone = slide.dataset.phone;
+  phoneStage.hidden = !phone;
+  document.querySelectorAll(".phone-view").forEach((v) => v.classList.toggle("on", v.dataset.phone === phone));
+  document.body.dataset.companion = screen || phone || slide.dataset.view === "hey" ? "corner" : "open";
   stage.classList.toggle("wide", slide.dataset.stage === "wide");
   if (screen) {
     document.querySelectorAll(".app-view").forEach((v) => v.classList.toggle("on", v.dataset.screen === screen));
