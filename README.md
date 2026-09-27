@@ -17,7 +17,8 @@ app on a laptop. It is built for one person with one rover and one laptop.
 
 | Part | Folder | What it does |
 |---|---|---|
-| Rover | `src/beaver/rover` | A visitor asks through the phone page, because the rover has no microphone of its own. The rover transcribes the question on the Pi, redacts personal information, sends Gemini the redacted text with a camera frame, speaks the reply through ElevenLabs on its speaker, and saves the turn to a run folder. |
+| Rover | `src/beaver/rover` | Hears a spoken question, takes a camera frame, speaks the answer on its own speaker, and saves each turn to a run folder. |
+| Guard proxy | `src/beaver/rover` | Runs on the rover between it and the AI services: turns the recording into text, removes personal information before Gemini sees the question, and checks the answer before ElevenLabs speaks it. |
 | Desktop app | `src/beaver/desktop` | A local web page at `http://127.0.0.1:8765/app/`, beside the home page at `/`. It starts the rover's phone page and shows its QR code, takes questions by voice or typing, replies sentence by sentence in each chosen language, and files every exchange into notebooks. Every 60 seconds it pulls the rover's new turns and files them too. |
 | Home page | `web` | A static page for a laptop at a table: a spoken walk through the concept sheet, the "Hey Beaver..." exchanges, and the desktop app's screens. |
 | Shared core | `src/beaver/core` | Config loading, run records, the Gemini and ElevenLabs calls, and the prompts both apps use. |
