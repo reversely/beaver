@@ -134,10 +134,21 @@ function start() {
   const hill = parliament();
   scene.add(hill);
 
+  // At desktop widths the canvas starts after the "Hey Beaver…" card instead of running under it
+  // (#20). The island is about 1.55 times as wide as the canvas is tall, so a narrower canvas
+  // zooms out until it fits. Phones keep the full-width canvas behind their smaller title.
+  const title = document.querySelector(".hero-title");
+  const ISLAND_ASPECT = 1.65;
+  const DESKTOP = window.matchMedia("(min-width: 900px)");
+
   function resize() {
+    const left = DESKTOP.matches && title ? title.offsetLeft + title.offsetWidth + 16 : 0;
+    canvas.style.left = `${left}px`;
+    canvas.style.width = `calc(100% - ${left}px)`;
     const { clientWidth: w, clientHeight: h } = canvas;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
+    camera.zoom = left ? Math.min(1, camera.aspect / ISLAND_ASPECT) : 1;
     camera.updateProjectionMatrix();
   }
 
@@ -156,10 +167,11 @@ function start() {
     if (!reducedMotion) requestAnimationFrame(frame);
   }
 
+  // Observe the header, not the canvas: resize() changes the canvas's own width.
   new ResizeObserver(() => {
     resize();
     if (reducedMotion) frame();
-  }).observe(canvas);
+  }).observe(canvas.parentElement);
   resize();
   frame();
 }
