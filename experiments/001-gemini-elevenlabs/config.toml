@@ -116,6 +116,7 @@ translate_sentences = "translate_sentences.md"
 image_note = "image_note.md"
 question_spoken = "question_spoken.md"
 notebook = "notebook.md"
+rover_question = "rover_question.md"
 pick_pieces = "pick_pieces.md"
 
 [prompt_vars]
@@ -164,6 +165,18 @@ enabled = true
 store = "notebooks/notebooks.json"
 max_vocabulary = 4
 max_concepts = 2
+
+[sync]
+# Pull the rover's turns from the Pi and file them into the notebooks (run.py sync, and every
+# interval while run.py serve runs). The Pi cannot open connections to the laptop, so this app
+# pulls over SSH with the key already set up for the Pi.
+enabled = true
+host = "pi@100.126.130.50"
+remote_runs = "~/beaver/experiments/002-raspberry-pi/runs"
+# Gitignored; one folder per rover turn, with a filed.json marker once it is in a notebook.
+local_dir = "rover-runs"
+interval_seconds = 60
+connect_timeout_seconds = 8
 
 [server]
 # `run.py serve` opens the desktop interface at http://127.0.0.1:<port>.

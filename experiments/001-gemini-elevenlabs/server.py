@@ -252,6 +252,10 @@ def make_handler(app: App):
 
 def serve(config: dict, port: int) -> None:
     app = App(config)
+    if config["sync"]["enabled"]:
+        from rover_sync import start_background
+
+        start_background(config)
     server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(app))
     print(f"Beaver is running at http://127.0.0.1:{port} (Ctrl-C stops it)")
     try:

@@ -352,11 +352,20 @@ def step_serve(config, args):
     serve(config, config["server"]["port"])
 
 
+def step_sync(config, args):
+    """Pull the rover's turns and file the new ones into the notebooks, once."""
+    from rover_sync import sync_once
+
+    result = sync_once(config)
+    print(f"Rover sync: {result['filed']} filed, {result['failed']} failed")
+
+
 # Commands that make no run folder of their own.
 QUERIES = {
     "list": step_list,
     "usage": step_usage,
     "serve": step_serve,
+    "sync": step_sync,
     "getmodels": step_getmodels,
 }
 

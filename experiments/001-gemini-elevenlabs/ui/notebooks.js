@@ -189,6 +189,7 @@ function questions(notebook) {
     question.dir = "auto";
     question.lang = entry.visitor_language.code;
     item.append(question, el("p", "question-answer", entry.answer));
+    if (entry.source === "rover") item.append(el("span", "tag question-source", "rover"));
     items.append(item);
   }
   node.append(items);

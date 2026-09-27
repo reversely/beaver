@@ -42,3 +42,6 @@ experiments/*/models/
 
 # TLS certificates and keys, such as the phone hotspot certificate for experiment 002.
 *.pem
+
+# Rover turns pulled by the desktop app for its notebooks
+experiments/*/rover-runs/

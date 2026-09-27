@@ -127,6 +127,35 @@ notebook, and `pieces.html`.
 The server listens on 127.0.0.1 only, serves audio only from inside `runs/`, accepts only the
 listed settings and values, and caps requests at 15 MB. API keys stay on the server.
 
+## Rover sync
+
+The rover (experiment 002) answers on its own and saves each turn to a run folder on the Pi. The
+desktop app pulls those folders and files each answered turn into the same notebooks as its own
+exchanges, so every memory lives in `notebooks/notebooks.json` on the laptop.
+
+```
+uv run --group sandbox python experiments/001-gemini-elevenlabs/run.py sync
+```
+
+`run.py sync` runs one pass; `run.py serve` also runs a pass every `sync.interval_seconds` (60)
+while it serves. Run the command only while `serve` is stopped, so two passes never file at once.
+
+- The Pi cannot open connections to the laptop (a test TCP connection over Tailscale failed while
+  the laptop reached the Pi over SSH), so the laptop pulls. `rsync` copies `record.json`,
+  `question.wav`, and `frame.jpg` from `sync.remote_runs` on `sync.host` into `rover-runs/`
+  (gitignored), over SSH with the key already set up for the Pi. No port opens on either machine.
+- The rover's run folders are the outbox. When the laptop is off or the Pi is unreachable, the
+  rover keeps answering, and the next pass picks up everything it missed.
+- A turn is filed when it has question audio, a reply, and no error. One Gemini call
+  (`prompts/rover_question.md`) writes down the spoken question and names its language; then
+  `notebooks.file_exchange` files it with `source: "rover"`. The notebook view tags those entries
+  `rover`.
+- Each filed folder gets `filed.json` (the notebook id and this app's run folder for the filing
+  prompts), so a turn is never filed twice. A turn that fails to file is retried on the next pass.
+
+First run: 4 of the rover's 10 run folders were answered phone turns and were filed in 18 s (two
+Gemini calls each); a second pass filed nothing and took 1.2 s.
+
 ## Configuration and prompts
 
 `config.toml` holds every model ID, voice ID, device, limit, and prompt value, with a comment on each.

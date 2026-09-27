@@ -164,6 +164,8 @@ def file_exchange(config: dict, record: RunRecord, result: dict) -> dict:
         "vocabulary": reply["vocabulary"][: settings["max_vocabulary"]],
         "concepts": reply["concepts"][: settings["max_concepts"]],
         "moments": reply["moments"],
+        # "desktop" for this app's own exchanges, "rover" for turns pulled from the Pi.
+        "source": result.get("source", "desktop"),
     }
     chosen = reply["notebook"]
     with _lock:
