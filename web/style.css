@@ -58,8 +58,14 @@ html, body {
 }
 .companion.is-turning { cursor: grabbing; }
 body[data-companion="middle"] .companion { right: 35vw; top: 50%; width: 30vw; height: 16vw; transform: translateY(-20%); }
-/* In the corner he stands behind the cards and takes no clicks, so a card's links stay usable. */
-body[data-companion="corner"] .companion { right: calc(100vw - 8px - 300px); top: calc(100vh - 64px - 160px); width: 300px; height: 160px; transform: none; z-index: 0; pointer-events: none; }
+/* In the corner he stands over the card's lower edge but below its last line of text, above the
+   Play button, and takes no clicks. demo.js sets --corner-room to the height between that line
+   and the Play button; he shrinks only when that is under 160px. */
+body[data-companion="corner"] .companion {
+  --corner-height: min(160px, var(--corner-room, 160px));
+  right: calc(100vw - 8px - var(--corner-height) * 1.875); top: calc(100vh - 60px - var(--corner-height));
+  width: calc(var(--corner-height) * 1.875); height: var(--corner-height); transform: none; pointer-events: none;
+}
 @media (max-width: 700px) {
   .companion, body[data-companion="corner"] .companion, body[data-companion="middle"] .companion { right: calc(100vw - 8px - 140px); top: calc(100vh - 60px - 105px); width: 140px; height: 105px; transform: none; }
 }

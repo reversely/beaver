@@ -23,6 +23,15 @@ const LANG_NAMES = { en: "English", fr: "Français", es: "Español" };
 // The app's sidebar topic that each laptop screen belongs to.
 const SCREEN_TOPICS = { duties: "duties", documents: "documents", conversation: "ask", notebook: "notebooks", rover: "rover" };
 
+// The room between a card's last line of text and the Play button, so the corner Beaver never
+// covers the card's text.
+function fitCorner(slide) {
+  const lines = [...slide.querySelectorAll(".card > *")].filter((line) => !line.hidden);
+  const textBottom = Math.max(0, ...lines.map((line) => line.getBoundingClientRect().bottom)) + 8;
+  const room = Math.max(innerHeight - 60 - textBottom, 90);
+  document.body.style.setProperty("--corner-room", `${Math.round(room)}px`);
+}
+
 function showSlide(slide) {
   sound.stop();
   // A story page's view follows its current line; any other page has one view.
@@ -34,6 +43,9 @@ function showSlide(slide) {
   phoneStage.hidden = !phone;
   document.querySelectorAll(".phone-view").forEach((v) => v.classList.toggle("on", v.dataset.phone === phone));
   document.body.dataset.companion = phone ? "middle" : screen ? "corner" : "open";
+  fitCorner(slide);
+  // Measure again once the scroll to this slide has settled.
+  setTimeout(() => fitCorner(slide), 700);
   stage.classList.toggle("wide", slide.dataset.stage === "wide");
   if (screen) {
     document.querySelectorAll(".app-view").forEach((v) => v.classList.toggle("on", v.dataset.screen === screen));
