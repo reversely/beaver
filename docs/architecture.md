@@ -1,100 +1,64 @@
 # Architecture
 
-Beaver has one person, one rover, and one desktop app. The rover answers questions on its own and
-never waits on the laptop; the laptop collects what the rover heard and keeps every notebook.
+![Parts of Beaver: on the rover, local processing puts a guard proxy between the rover and the remote AI services; the proxy sends Gemini clean text and a photo and sends ElevenLabs the checked answer; the desktop app sends Gemini and ElevenLabs its own questions and copies each saved rover turn over SSH every 60 seconds](img/how-it-works-parts.svg)
 
-## Rover
+The rover answers questions without the laptop. The desktop app pulls each rover turn afterwards
+and files it into a notebook.
 
-The rover runs `src/beaver/rover/run.py` on a Raspberry Pi 5. Its hardware has a camera and a
-speaker but no microphone (see [hardware.md](hardware.md)), so questions arrive from a phone:
+## A rover turn
 
-1. `run.py phone` starts a web server on port 8770 and a Cloudflare quick tunnel to it, then prints
-   the page's HTTPS address and a QR code of it in the terminal. The address carries a random token
-   that changes at every start; the server answers 403 to any request without it.
-2. The person picks their language on the phone page (English, French, Spanish, Arabic, Chinese,
-   Punjabi, Tagalog, or Ukrainian) and holds the button while asking. The browser records the
-   phone's microphone, converts it to 16 kHz mono WAV, and uploads it through the tunnel with the
-   language. The rover accepts only a language from its fixed list.
-3. The rover transcribes the question on the Pi with Whisper base in that language, and the guard
-   redacts personal information from the transcript. The rover takes a camera frame and sends
-   Gemini the redacted text and the frame, never the audio. It redacts the reply, shortens it at a
-   sentence end if it is over the ElevenLabs limit, returns it to the phone, and speaks it through
-   ElevenLabs on its speaker. It answers one question at a time.
+The rover has no microphone ([hardware.md](hardware.md)), so the visitor asks through their phone.
 
-The tunnel exists because phone browsers open the microphone only on HTTPS pages, and because
-eduroam blocks connections between devices on the same network. A quick tunnel connects outward
-over port 443 and needs no Cloudflare account.
+1. `run.py phone` serves a page on port 8770 through a Cloudflare quick tunnel and prints its
+   address as a QR code. The address carries a token that changes at every start; requests without
+   it get 403.
+2. The visitor picks one of eight languages and holds the button to ask. The phone uploads 16 kHz
+   mono WAV.
+3. On the Pi, Whisper transcribes the question and the guard proxy replaces personal information.
+4. Gemini receives the clean text and a camera frame, never the audio.
+5. The guard proxy checks the answer, ElevenLabs speaks it, and the mouth screen moves with it.
 
-Every turn saves a folder under `src/beaver/rover/runs/` on the Pi: `record.json` (the config used,
-everything sent to Gemini and ElevenLabs, the reply, token counts, and timings), `question.wav`,
-`frame.jpg`, and `reply.wav`. These folders are the rover's outbox for sync.
+![Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard proxy replaces personal information, so Gemini receives clean text and a photo; the proxy checks the answer before ElevenLabs converts it into speech](img/how-it-works-privacy.svg)
 
-## Desktop app
+[how-it-works.md](how-it-works.md) lists what the guard proxy replaces and checks.
 
-The desktop app runs `src/beaver/desktop/run.py serve`, which serves the demo at
-`http://127.0.0.1:8765` and the app's page at `/app/`. Its Rover panel starts the rover's phone page
-over SSH and shows the address and QR code. The app takes a question by voice or typing, with an optional frame from the
-laptop camera, transcribes and guards it on the laptop (see Guard), and answers sentence by sentence in English, French, or both, optionally adding the
-visitor's own language to each sentence. After each answer, one Gemini request files the exchange
-into a notebook: a title in English and French, a theme, a span of years, vocabulary in three
-languages, concepts, and dated moments. All notebooks live in one file,
-`src/beaver/desktop/notebooks/notebooks.json`, which git ignores.
+## What each part keeps
+
+| Part | Location | Contents |
+|---|---|---|
+| Rover turn | `src/beaver/rover/runs/<time>-<kind>/` on the Pi | `record.json` (config, requests, reply, tokens, timings, which guard rules fired), `question.wav`, `frame.jpg`, `reply.wav` |
+| Pulled turn | `src/beaver/desktop/rover-runs/` on the laptop | The turn's `record.json` and `frame.jpg`, plus `filed.json` once filed |
+| Notebooks | `src/beaver/desktop/notebooks/notebooks.json` | Every exchange by topic: bilingual title, theme, years, vocabulary in three languages, concepts, dated moments |
+
+All three are gitignored. The question audio never leaves the Pi.
 
 ## Sync
 
-The desktop app pulls the rover's turns; the rover never pushes. The Pi reaches the internet and the
-laptop reaches the Pi over SSH through Tailscale, but a test TCP connection from the Pi to the laptop
-failed, so the connection runs laptop to Pi.
-
-- Every 60 seconds while `serve` runs, and once on `run.py sync`, `rsync` over SSH copies each new
-  run folder's `record.json` and `frame.jpg` into `src/beaver/desktop/rover-runs/` (gitignored).
-  No port opens on either machine.
-- A turn with a redacted question, a language, a reply, and no error is filed from its
-  `record.json`, with the same notebook filing as the desktop's own exchanges, marking the entry
-  `source: "rover"`. The notebook view tags those entries `rover`. The question audio stays on the
-  Pi. A turn where the rover asked the visitor to choose a language or ask again is not filed.
-- A turn saved before on-board transcription has no redacted question, so the sync also pulls its
-  `question.wav`, and one Gemini request writes down the question and names its language.
-- A `filed.json` marker in each pulled folder keeps a turn from being filed twice. When the laptop
-  is off or the Pi is unreachable, the rover keeps answering and the next pass catches up.
+The Pi cannot open a connection to the laptop, so the laptop pulls. Every 60 seconds while
+`run.py serve` runs, and once on `run.py sync`, `rsync` over SSH copies new turns. A turn with a
+clean question and a reply is filed like a desktop exchange and tagged `rover`; `filed.json` stops a
+second filing. When the laptop is off, the rover keeps answering and the next pass catches up.
 
 ## Shared core
 
-`src/beaver/core` holds the modules both apps use, installed as the `beaver` package:
+`src/beaver/core`, installed as the `beaver` package:
 
 | Module | Role |
 |---|---|
-| `settings.py` | Loads an app's `config.toml`, applies `--set section.key=value` overrides, records the app's folder, and fills prompt placeholders from `[prompt_vars]` |
-| `record.py` | One run folder per turn, under the app's own `runs/` |
-| `gemini.py` | Gemini requests with text, audio, or image parts, optional JSON-schema replies, a label per call for timings and tokens, and retries on server errors |
-| `speech.py` | ElevenLabs text to speech; refuses text over `elevenlabs.max_characters` before anything is sent or logged |
-| `prompts/` | The system, look, text, and typed-question prompts; an app's own `prompts/` folder is searched first |
-
-The system prompt asks for at most 3 sentences, each one idea under 20 words, with years and
-numbers written as digits.
-
-## Guard
-
-`src/beaver/core/guard.py` finds personal information (emails, phone numbers, postal codes,
-addresses, social insurance numbers, Quebec and Ontario health card numbers, and payment card
-numbers) and over-long text, replaces findings with a spoken phrase such as "a phone number", and
-cuts text at a sentence end. It runs on the machine that heard the question: on the Pi for every
-phone turn, and on the laptop for every question asked in the desktop app. It runs on the
-transcript before Gemini receives it, and on the reply before it is spoken or saved. The run record
-keeps the redacted question, the chosen language, and which rules fired, never the unredacted text.
-
-Both apps transcribe a spoken question with `src/beaver/core/transcribe.py` (Whisper base) before
-the guard sees it, so Gemini receives text and never audio. The desktop app detects the language
-among the rover's eight and asks the visitor to ask again or type when Whisper is under 0.7.
-
-The rover still saves the question audio (`question.wav`) in its run folder on the Pi; the desktop
-app files the redacted transcript and never pulls that audio.
+| `settings.py` | Loads an app's `config.toml` and `--set` overrides; fills prompt placeholders |
+| `record.py` | One run folder per turn |
+| `gemini.py` | Gemini requests with text, audio, or image parts, JSON replies, and retries |
+| `speech.py` | ElevenLabs speech; refuses text over `elevenlabs.max_characters` before sending |
+| `guard.py` | The guard proxy's replacements and length check |
+| `transcribe.py` | Whisper base transcription and language detection |
+| `languages.py` | The phone page's eight languages, by code and English name |
+| `prompts/` | Shared prompts; an app's own `prompts/` folder is searched first |
 
 ## Security
 
-- The Gemini and ElevenLabs keys live only in `.env` at the repo root on each machine and never
-  reach a browser, a record, or a log.
-- The desktop page listens on 127.0.0.1 only, serves audio only from inside its `runs/` folder,
-  accepts only its listed settings and values, and caps requests at 15 MB.
-- The phone page answers only requests carrying the token from its current start.
-- Sync uses the laptop's existing SSH key for the Pi and opens no port.
+| Surface | Rule |
+|---|---|
+| API keys | Only in `.env` on each machine; never in a browser, record, or log |
+| Desktop page | Listens on 127.0.0.1; serves audio only from its `runs/` folder; caps requests at 15 MB |
+| Phone page | Answers only requests with the current start's token |
+| Sync | Uses the laptop's SSH key; opens no port on either machine |
