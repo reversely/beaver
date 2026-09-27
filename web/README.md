@@ -1,7 +1,7 @@
 # Home page
 
 A static page that introduces Beaver on a laptop at a table. It tells the concept sheet's two
-paragraphs one line per page, plays the "Hey Beaver..." exchanges aloud, and shows the desktop
+paragraphs one line per page, plays three example exchanges aloud, and shows the desktop
 app's five features: Deadlines and duties, Documents, Ask Beaver, Notebooks, and Rover. It needs no API key and no server code: every spoken
 line is a saved MP3, and the Ask and Notebook screens replay one recorded desktop-app exchange.
 
@@ -36,9 +36,8 @@ paragraph while that line is current.
 | Page | Concept sheet text, one line per step | Interaction |
 |---|---|---|
 | Hello | "Hi, I'm Beaver" in eight languages; "the newcomer's field guide to Canada"; "votre guide du Canada" | The greeting streams in one language at a time |
-| Newcomer | Being a newcomer in Canada can be **overwhelming**. / With **two national languages** / to a rich legacy of **arts**, **history** and **cultural references**, / there's a lot to learn. | On the second line, **English** and **Français** buttons play Beaver saying hello in each. On the third, each highlighted word opens its "Hey Beaver..." exchange (arts: the painting, history: Parliament, cultural references: poutine) and plays it |
+| Newcomer | Being a newcomer in Canada can be **overwhelming**. / With **two national languages** / to a rich legacy of **arts**, **history** and **cultural references**, / there's a lot to learn. | On the second line, **English** and **Français** buttons play Beaver saying hello in each. On the third, each highlighted word opens its exchange (arts: the painting, history: Parliament, cultural references: poutine) and plays it |
 | Beaver | **Beaver** is a friendly multilingual robot pet / that can act as your guide to the **context** behind the things you see every day, / transitioning fluidly between a speaker's **native language, French & English**. | On the last line, a diagram carries one sentence from Chinese to French to English; each card plays its language, and **Hear all three** plays them in order |
-| Hey Beaver... | The three exchanges | The play button between question and answer plays the question in the visitor's language, then each answer line; any single line plays on its own; the line being spoken is highlighted |
 | Deadlines and duties, Documents | What each feature does | |
 | Ask Beaver, Notebooks | A recorded desktop-app exchange and its notebook entry | **Play reply** |
 | Rover | What the rover does | |

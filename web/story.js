@@ -20,7 +20,7 @@ export function setupStory(sound) {
 function openExchange(word, sound) {
   const story = word.closest(".story");
   const slot = story.querySelector(".ex-slot");
-  const exchange = document.getElementById(`ex-${word.dataset.ex}`).cloneNode(true);
+  const exchange = document.getElementById("exchanges").content.getElementById(`ex-${word.dataset.ex}`).cloneNode(true);
   exchange.removeAttribute("id");
   slot.replaceChildren(exchange);
   story.querySelectorAll(".word").forEach((w) => w.classList.toggle("on", w === word));

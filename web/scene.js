@@ -24,7 +24,6 @@ const VIEWS = {
   "beaver-1": [5.5, 4.4, -8],
   "beaver-2": [4.5, 3.6, -5],
   "beaver-3": [3.5, 2.6, -2],
-  hey: [-6, -1.6, -3],
   duties: [-4, 2.5, -6],
   documents: [1, 2, -6],
   conversation: [-7.5, -2.5, -5],
