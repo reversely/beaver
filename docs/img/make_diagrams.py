@@ -139,11 +139,10 @@ def parts():
     return svg(
         1290,
         590,
-        "The parts of Beaver. On the rover, a local guard proxy sits between the rover and the "
-        "AI services: it turns the spoken question into text and removes personal information "
-        "before Gemini sees it, and checks the answer before ElevenLabs speaks it. The desktop "
-        "app asks Gemini and ElevenLabs its own questions without the proxy yet, and pulls each "
-        "rover turn over SSH every 60 seconds.",
+        "Parts of Beaver: on the rover, local processing puts a guard proxy between the rover"
+        " and the remote AI services; the proxy sends Gemini clean text and a photo and sends"
+        " ElevenLabs the checked answer; the desktop app sends Gemini its own questions unfil"
+        "tered and copies each saved rover turn over SSH every 60 seconds.",
         "".join(b),
     )
 
@@ -211,11 +210,10 @@ def privacy():
     return svg(
         1480,
         770,
-        "The guard proxy. The spoken question stays on the rover: Whisper turns it into text "
-        "and the guard proxy removes personal information, so Gemini receives only clean text "
-        "and a camera frame. The proxy checks the answer before ElevenLabs speaks it. Questions "
-        "asked in the desktop app reach Gemini as recorded, because the proxy does not cover "
-        "them yet.",
+        "Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard "
+        "proxy replaces personal information, so Gemini receives clean text and a photo; the "
+        "proxy checks the answer before ElevenLabs converts it into speech; questions from th"
+        "e desktop app reach Gemini unfiltered.",
         "".join(b),
     )
 
