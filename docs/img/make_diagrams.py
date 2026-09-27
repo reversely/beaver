@@ -50,7 +50,7 @@ def box(x, y, w, h, name, title, sub="", fill=FILL, stroke=INK):
         ),
         icon(name, cx, y + 20, color=stroke),
         (
-            f'<text x="{cx}" y="{y + 92}" text-anchor="middle" font-size="20" '
+            f'<text x="{cx}" y="{y + (92 if sub else 100)}" text-anchor="middle" font-size="20" '
             f'font-weight="600" fill="{INK}">{escape(title)}</text>'
         ),
     ]
@@ -116,26 +116,26 @@ def parts():
     """The rover and its local guard proxy, the remote AI services, and the laptop."""
     w, h = 220, 140
     b = [
-        zone(30, 150, 580, 220, "ON THE ROVER, LOCAL", "#e9f5ec", "#1a7f37"),
-        box(50, 205, w, h - 15, "robot", "Rover", "hears, sees, speaks"),
-        box(350, 205, w, h - 15, "shield-lock", "Guard proxy", "cleans before sending"),
-        box(710, 40, w, h, "sparkles", "Gemini", "writes the answer"),
-        box(710, 340, w, h, "speakerphone", "ElevenLabs", "speaks the answer"),
-        box(1030, 190, w, h, "device-laptop", "Desktop app", "laptop, notebooks"),
+        zone(30, 150, 580, 220, "Local Processing", "#e9f5ec", "#1a7f37"),
+        box(50, 205, w, h - 15, "robot", "Rover"),
+        box(350, 205, w, h - 15, "shield-lock", "Guard proxy"),
+        box(710, 40, w, h, "sparkles", "Gemini"),
+        box(710, 340, w, h, "speakerphone", "ElevenLabs"),
+        box(1030, 190, w, h, "device-laptop", "Desktop app"),
     ]
     b.append(arrow([(270, 268), (348, 268)], both=True))
     b.append(label(309, 248, ["question"]))
     b.append(label(309, 296, ["answer"]))
     b.append(arrow([(570, 235), (708, 130)], both=True))
-    b.append(label(625, 150, ["text without", "personal info"], anchor="end"))
+    b.append(label(625, 150, ["clean text,", "photo"], anchor="end"))
     b.append(arrow([(570, 300), (708, 390)], both=True))
-    b.append(label(625, 395, ["checked answer"], anchor="end"))
+    b.append(label(625, 395, ["answer to speak"], anchor="end"))
     b.append(arrow([(1028, 225), (932, 130)], both=True))
-    b.append(label(982, 142, ["its own questions,", "no proxy yet"], anchor="start"))
+    b.append(label(982, 142, ["questions,", "unfiltered"], anchor="start"))
     b.append(arrow([(1028, 295), (932, 390)], both=True))
-    b.append(label(982, 382, ["each sentence"], anchor="start"))
+    b.append(label(982, 382, ["answer to speak"], anchor="start"))
     b.append(arrow([(160, 330), (160, 560), (1140, 560), (1140, 332)]))
-    b.append(label(650, 550, ["pulls each saved turn over SSH, every 60 s"]))
+    b.append(label(650, 550, ["saved turns, copied over SSH every 60 s"]))
     return svg(
         1290,
         590,
@@ -153,33 +153,33 @@ def privacy():
     w, h = 190, 130
     y_out, y_pi = 70, 330
     b = [
-        zone(250, 20, 1210, 230, "SENT TO REMOTE SERVICES", "#fff4e0", "#8a5a00"),
-        zone(250, 280, 1210, 230, "STAYS ON THE ROVER", "#e9f5ec", "#1a7f37"),
+        zone(250, 20, 1210, 230, "Remote Services", "#fff4e0", "#8a5a00"),
+        zone(250, 280, 1210, 230, "Local Processing", "#e9f5ec", "#1a7f37"),
         zone(
             20,
             560,
             1440,
             190,
-            "DESKTOP APP QUESTIONS: NO GUARD PROXY YET",
+            "Desktop App: No Guard Proxy Yet",
             "#fdeceb",
             "#b42318",
         ),
-        box(30, y_pi, w, h, "microphone", "Question", "spoken to the rover"),
-        box(275, y_pi, w, h, "file-music", "Recording", "kept, never synced"),
-        box(505, y_pi, w, h, "text-recognition", "Transcribe", "asks if unsure"),
-        box(735, y_pi, w, h, "shield-lock", "Clean question", "guard proxy"),
-        box(965, y_pi, w, h, "shield-check", "Check answer", "guard proxy"),
-        box(1195, y_pi, w + 50, h, "volume", "Speaker", "on the rover"),
-        box(850, y_out, w, h, "sparkles", "Gemini", "clean text, no audio"),
-        box(1195, y_out, w + 50, h, "speakerphone", "ElevenLabs", "checked answer"),
+        box(30, y_pi, w, h, "microphone", "Question"),
+        box(275, y_pi, w, h, "file-music", "Recording"),
+        box(505, y_pi, w, h, "text-recognition", "Transcribe"),
+        box(735, y_pi, w, h, "shield-lock", "Guard proxy"),
+        box(965, y_pi, w, h, "shield-check", "Guard proxy"),
+        box(1195, y_pi, w + 50, h, "volume", "Speaker"),
+        box(850, y_out, w, h, "sparkles", "Gemini"),
+        box(1195, y_out, w + 50, h, "speakerphone", "ElevenLabs"),
         box(
             275,
             600,
             w,
             h,
             "device-laptop",
-            "Laptop",
-            "mic or typing",
+            "Desktop app",
+            "",
             "#ffffff",
             "#b42318",
         ),
@@ -190,7 +190,7 @@ def privacy():
             h,
             "sparkles",
             "Gemini",
-            "gets the recording",
+            "",
             "#ffffff",
             "#b42318",
         ),
@@ -200,14 +200,14 @@ def privacy():
     b.append(arrow([(465, mid), (503, mid)]))
     b.append(arrow([(695, mid), (733, mid)]))
     b.append(arrow([(830, y_pi), (890, y_out + h + 2)]))
-    b.append(label(848, 272, ["clean text + frame"], anchor="end"))
+    b.append(label(848, 272, ["clean text, photo"], anchor="end"))
     b.append(arrow([(1000, y_out + h), (1060, y_pi - 2)]))
     b.append(label(1042, 272, ["answer"], anchor="start"))
     b.append(arrow([(1155, y_pi + 30), (1230, y_out + h + 2)]))
     b.append(arrow([(1340, y_out + h), (1340, y_pi - 2)]))
-    b.append(label(1350, 280 - 12, ["audio"], anchor="start"))
+    b.append(label(1350, 268, ["speech"], anchor="start"))
     b.append(arrow([(465, 665), (848, 665)], color="#b42318", dash=True))
-    b.append(label(656, 650, ["sent as recorded"], color="#b42318"))
+    b.append(label(656, 650, ["unfiltered question"], color="#b42318"))
     return svg(
         1480,
         770,
