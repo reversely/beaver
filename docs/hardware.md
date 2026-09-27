@@ -21,10 +21,13 @@ installer adds `hifiberry-dac` to `/boot/firmware/config.txt`; switching it to
 The camera is detected only at boot (`camera_auto_detect=1`). After reseating the ribbon, with the
 power off, `rpicam-hello --list-cameras` should list the OV5647.
 
-A power cut during a package install can leave truncated files in uv's cache on the Pi, which
-later installs reuse. A truncated native library makes Python die on import with a bus error
+A power cut during a package install can leave truncated files, both in the environment and in
+uv's cache on the Pi, which later installs reuse. Linux had not yet written the new files to the SD
+card when the power went. A truncated native library makes Python die on import with a bus error
 (exit 135): `tokenizers.abi3.so` was cut to exactly 4,194,304 bytes of its 11,079,248, and `av`
-also failed on import until the same reinstall. `uv cache clean <package>` and a reinstall fix it. Install with
+also failed on import until the same reinstall. A second cut left two of `av`'s libraries at exactly
+4,194,304 bytes again; comparing every installed file with the hash in its package's `RECORD` found
+them, and a reinstall followed by `sync` fixed them. `uv cache clean <package>` and a reinstall fix it. Install with
 `UV_CONCURRENT_INSTALLS=1` and `nice -n 19` to keep the load low.
 
 The Pi boots the 4 KB-page kernel, `kernel8.img`, selected by `kernel=kernel8.img` at the end of
@@ -52,7 +55,10 @@ under a package install and a Gemini request.
 That cable does not explain every drop. At about 01:06 on 2026-09-27, with the cable out and the
 readings above, the Pi went unreachable a few minutes into a Whisper benchmark (two threads,
 `nice -n 19`) and stayed unreachable for more than 10 minutes. Every earlier drop also came during
-sustained CPU load, so CPU-heavy work on the Pi waits until the cause is found.
+sustained CPU load. A later full Whisper run on HAT battery (two threads, `nice -n 19`) finished
+without a drop: the input stayed at or above 5.11 V, `get_throttled` read `0x0`, and the CPU
+reached 69.2 °C with no fan. The Pi has no cooler; heavier work would call for the Pi 5 Active
+Cooler.
 
 ## Network access
 
@@ -63,6 +69,10 @@ name lookup and connections between devices, so the laptop reaches the Pi throug
   `100.126.130.50`. Tailscale SSH is off on the Pi, so SSH goes to the Pi's own OpenSSH server as
   `pi`, with the laptop's key in `~/.ssh/authorized_keys`.
 - The Pi cannot open a connection back to the laptop, so the desktop app pulls the rover's turns.
+- On a guest network such as "RMUS Office_Guest", Tailscale reached the Pi only through a relay
+  whose public address changed twice within a minute on 2026-09-27; each change dropped the open SSH
+  sessions while the Pi kept running. Run long jobs detached (`nohup setsid`) with their output in a
+  file, so a dropped session does not stop them.
 - The phone reaches the rover through the Cloudflare quick tunnel, from eduroam or mobile data.
 
 ## Setup

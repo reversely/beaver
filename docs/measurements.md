@@ -93,6 +93,22 @@ The rover's `look` reply on the laptop placed the Lucky Loonie at "the 1996 Salt
 Olympics"; those Games took place in 2002, which the same model stated correctly in the desktop
 image test.
 
+## On-board transcription
+
+faster-whisper 1.2.1 with int8 weights on the Pi 5, two threads at `nice -n 19`, on HAT battery with
+no fan, transcribing the rover's four recorded phone questions (1.7 to 6.8 s of audio). Each time
+covers one question, after the model loaded.
+
+| Model | Load | Time per question | English questions | Chinese question ("你可以帮我介绍一下Emily Carr") |
+|---|---|---|---|---|
+| tiny | 1.8 s | 1.7 s | Correct, "Emily Carre" | Heard as English: "You can just follow me on social media.com" |
+| base | 2.3 s | 3.2 to 3.4 s | Correct | Heard as English (confidence 0.40) |
+| small | 6.6 s | 9.9 to 10.3 s | Correct | Correct language (zh, 0.87): "你可以幫我介紹一下Emily Carm" |
+
+During the run the CPU peaked at 69.2 °C, the 5 V input stayed at or above 5.11 V, and
+`get_throttled` read `0x0`. Only `small` understood the Chinese question, and it adds about 10 s
+before Gemini receives the question.
+
 ## Sync
 
 The first `run.py sync` filed 4 of the rover's 10 run folders (the answered phone turns, one asked
