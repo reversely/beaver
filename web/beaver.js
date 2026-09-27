@@ -176,26 +176,40 @@ function mouthFrame(openness) {
   for (const x of [5, 6, 7]) mirror(x, 6);
   for (const x of [8, 9, 10, 11]) mirror(x, 7);
   for (let x = 11; x <= 29; x++) set(x, 8);
+  const teeth = new Uint8Array(W * H);
   for (const [left, right] of [[11, 19], [21, 29]]) {
     for (let y = 8; y <= 20; y++) {
       for (let x = left; x <= right; x++) {
         if (y === 20 && (x === left || x === right)) continue;
         set(x, y);
+        teeth[y * W + x] = 1;
       }
     }
   }
   if (openness > 0.05) {
-    // As on the rover: the lower lip starts at each end of the top lip, runs down the sides, and
-    // lies flat under the teeth, dropping with the speech.
-    const bottom = 21 + openness * 2;
+    // As on the rover: the top lip and teeth never change. The lower lip starts at each end of the
+    // top lip, runs down the sides, and drops from behind the teeth to below them with the speech.
+    // The buck teeth jut out in front, so the lip is hidden over them and one dot around them.
+    const bottom = 18 + openness * 5;
     const [first, last, top] = [5, W - 1 - 5, 6];
     const mid = (first + last) / 2;
     const half = (last - first) / 2;
     const row = (x) => Math.round(bottom - (bottom - top) * (Math.abs(x - mid) / half) ** 5);
+    const behindTeeth = (x, y) => {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const [nx, ny] = [x + dx, y + dy];
+          if (nx >= 0 && nx < W && ny >= 0 && ny < H && teeth[ny * W + nx]) return true;
+        }
+      }
+      return false;
+    };
     for (let x = first; x <= last; x++) {
       // Fill down to the next column toward the middle, so the steep sides stay joined.
       const inner = row(x < mid ? x + 1 : x > mid ? x - 1 : x);
-      for (let y = Math.min(row(x), inner); y <= Math.max(row(x), inner); y++) set(x, y);
+      for (let y = Math.min(row(x), inner); y <= Math.max(row(x), inner); y++) {
+        if (!behindTeeth(x, y)) set(x, y);
+      }
     }
   }
   return lit;
