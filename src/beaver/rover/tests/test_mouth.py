@@ -33,6 +33,19 @@ class Frames(unittest.TestCase):
         self.assertFalse(np.array_equal(closed, open_))
         self.assertLess(np.nonzero(open_)[0].min(), np.nonzero(closed)[0].min())
 
+    def test_lip_and_teeth_never_change(self):
+        # Every frame keeps the rest picture, and nothing new lights up beside the teeth, since the
+        # lower lip passes behind them.
+        rest = frame(0)
+        near = np.zeros_like(rest)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                near |= np.roll(np.roll(rest, dy, 0), dx, 1)
+        for step in range(1, 17):
+            drawn = frame(step / 16)
+            self.assertTrue((drawn >= rest).all())
+            self.assertLessEqual(int((drawn & ~rest & near).sum()), 4)
+
     def test_centred(self):
         columns = np.nonzero(frame(0.5).any(axis=0))[0]
         self.assertLessEqual(abs((W - 1 - columns.max()) - columns.min()), 1)

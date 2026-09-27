@@ -42,16 +42,20 @@ TOOTH_GAP_COL = 23
 # The picture's lit cells span columns 3 to 44 and rows 3 to 24; each cell is SCALE dots square.
 FIRST_COL, LAST_COL, FIRST_ROW = 3, 44, 3
 SCALE = 1.5
-# Grid rows below the teeth that the lower lip drops through, from just under them to fully open.
-LIP_CLOSED_ROW = TEETH_ROWS[1] + 2
+# Grid rows the lower lip drops through: from behind the teeth, a little open, to fully open.
+LIP_CLOSED_ROW = TEETH_ROWS[1] - 4
 LIP_OPEN_ROW = FIRST_ROW + int(VISIBLE / SCALE) - 1
 
 
 def _picture(openness: float) -> set[tuple[int, int]]:
-    """The lit (column, row) cells of the grid picture at this openness."""
-    cells = set()
+    """The lit (column, row) cells of the grid picture at this openness.
+
+    The top lip and teeth are the same in every frame. The buck teeth jut out in front, so the
+    lower lip passes behind them: it is hidden over the teeth and one cell around them."""
+    lip = set()
     for col, row in LIP_LINE:
-        cells |= {(col, row), (GRID_COLS - 1 - col, row)}
+        lip |= {(col, row), (GRID_COLS - 1 - col, row)}
+    teeth = set()
     left, right = TEETH_COLS
     top, bottom = TEETH_ROWS
     for row in range(top, bottom + 1):
@@ -60,22 +64,26 @@ def _picture(openness: float) -> set[tuple[int, int]]:
             corner = row == bottom and col in (left, right, TOOTH_GAP_COL + 1)
             gap = col == TOOTH_GAP_COL and row > top
             if not (corner or gap):
-                cells.add((col, row))
-    if openness > 0:
-        # The lower lip: flat under the teeth, rising steeply to meet the lip line at each corner.
-        lip_row = LIP_CLOSED_ROW + (LIP_OPEN_ROW - LIP_CLOSED_ROW) * openness
-        mid = (FIRST_COL + LAST_COL) / 2
-        half = (LAST_COL - FIRST_COL) / 2
-        rows = {
-            col: round(lip_row - (lip_row - FIRST_ROW) * (abs(col - mid) / half) ** 5)
-            for col in range(FIRST_COL, LAST_COL + 1)
-        }
-        for col, row in rows.items():
-            # Fill down to the next column's row so steep sides stay joined.
-            nearer = rows.get(col + 1 if col < mid else col - 1, row)
-            for fill in range(min(row, nearer), max(row, nearer) + 1):
-                cells.add((col, fill))
-    return cells
+                teeth.add((col, row))
+    if openness <= 0:
+        return lip | teeth
+    # The lower lip: flat across the middle, rising steeply to meet the top lip at each corner.
+    lip_row = LIP_CLOSED_ROW + (LIP_OPEN_ROW - LIP_CLOSED_ROW) * openness
+    mid = (FIRST_COL + LAST_COL) / 2
+    half = (LAST_COL - FIRST_COL) / 2
+    rows = {
+        col: round(lip_row - (lip_row - FIRST_ROW) * (abs(col - mid) / half) ** 5)
+        for col in range(FIRST_COL, LAST_COL + 1)
+    }
+    lower = set()
+    for col, row in rows.items():
+        # Fill down to the next column's row so steep sides stay joined.
+        nearer = rows.get(col + 1 if col < mid else col - 1, row)
+        lower |= {(col, fill) for fill in range(min(row, nearer), max(row, nearer) + 1)}
+    behind = {
+        (c + dc, r + dr) for c, r in teeth for dc in (-1, 0, 1) for dr in (-1, 0, 1)
+    }
+    return lip | teeth | (lower - behind)
 
 
 def frame(openness: float) -> np.ndarray:
