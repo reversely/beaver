@@ -1,7 +1,7 @@
 import Reveal from "reveal";
 import { createCity } from "./scene.js";
 import { createSound } from "./sound.js";
-import { setupStory } from "./story.js";
+import { setupStory, storyStep } from "./story.js";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // The painted layers load in the background; slides work straight away and the scene joins in.
@@ -43,7 +43,8 @@ const SCRIPTS = {
 
 function showSlide(slide) {
   sound.stop();
-  currentView = slide.dataset.view;
+  // A story page's view follows its current line; any other page has one view.
+  currentView = storyStep(slide) || slide.dataset.view;
   city.goTo(currentView);
   clearTimers();
   const screen = slide.dataset.screen;
@@ -223,10 +224,14 @@ await Reveal.initialize({
   transition: "none",
 });
 Reveal.on("slidechanged", (e) => showSlide(e.currentSlide));
+// Revealing or hiding a story line is a step within the page, not a new page.
+Reveal.on("fragmentshown", () => showSlide(Reveal.getCurrentSlide()));
+Reveal.on("fragmenthidden", () => showSlide(Reveal.getCurrentSlide()));
 showSlide(Reveal.getCurrentSlide());
 loadSample();
 
-// Autoplay advances one slide every 8 s and loops, for an unattended laptop.
+// Autoplay takes one step every 8 s (a page, or the next line of a story page) and loops, for an
+// unattended laptop.
 const autoplay = document.getElementById("autoplay");
 let autoTimer = null;
 function setAutoplay(on) {

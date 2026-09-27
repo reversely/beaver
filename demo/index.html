@@ -123,48 +123,36 @@
         </div>
       </section>
 
-      <!-- The two paragraphs from the concept sheet, told one line per page. Each page clones its
-           paragraph from a template and shows the lines up to its own; demo.js sets the states. -->
-      <template id="para-newcomer">
-        <p class="story-para">
-          <span class="beat" data-beat="1">Being a newcomer in Canada can be <mark>overwhelming</mark>.</span>
-          <span class="beat" data-beat="2">With <mark>two national languages</mark></span>
-          <span class="beat" data-beat="3">to a rich legacy of <button type="button" class="word" data-ex="q2">arts</button>, <button type="button" class="word" data-ex="q1">history</button> and <button type="button" class="word" data-ex="q3">cultural references</button>,</span>
-          <span class="beat" data-beat="4">there's a lot to learn.</span>
-        </p>
-      </template>
-      <template id="para-beaver">
-        <p class="story-para">
-          <span class="beat" data-beat="1"><mark>Beaver</mark> is a friendly multilingual robot pet</span>
-          <span class="beat" data-beat="2">that can act as your guide to the <mark>context</mark> behind the things you see every day,</span>
-          <span class="beat" data-beat="3">transitioning fluidly between a speaker's <mark>native language, French &amp; English</mark>.</span>
-        </p>
-      </template>
-
-      <section data-view="newcomer-1" class="slide-scrim"><div class="story" data-para="newcomer" data-beat="1"></div></section>
-      <section data-view="newcomer-2" class="slide-scrim">
-        <div class="story" data-para="newcomer" data-beat="2">
-          <div class="extra">
+      <!-- The concept sheet's two paragraphs, one page each. Lines after the first are reveal.js
+           fragments: each step reveals the next line in place, below the earlier ones, and
+           story.js marks the current line and shows the extra that belongs to it. -->
+      <section data-view="newcomer" class="slide-scrim">
+        <div class="story" data-para="newcomer">
+          <p class="story-para">
+            <span class="beat" data-beat="1">Being a newcomer in Canada can be <mark>overwhelming</mark>.</span>
+            <span class="beat fragment" data-beat="2">With <mark>two national languages</mark></span>
+            <span class="beat fragment" data-beat="3">to a rich legacy of <button type="button" class="word" data-ex="q2">arts</button>, <button type="button" class="word" data-ex="q1">history</button> and <button type="button" class="word" data-ex="q3">cultural references</button>,</span>
+            <span class="beat fragment" data-beat="4">there's a lot to learn.</span>
+          </p>
+          <div class="extra" data-for="2">
             <button type="button" class="say" data-clips="hi-en"><span class="say-lang">English</span><span class="say-text">Hi, I'm Beaver.</span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg></button>
             <button type="button" class="say" data-clips="hi-fr" lang="fr"><span class="say-lang">Français</span><span class="say-text">Bonjour, je suis Beaver.</span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg></button>
           </div>
-        </div>
-      </section>
-      <section data-view="newcomer-3" class="slide-scrim">
-        <div class="story" data-para="newcomer" data-beat="3">
-          <div class="extra">
+          <div class="extra" data-for="3">
             <p class="hint">Tap arts, history, or cultural references to ask Beaver</p>
             <div class="ex-slot"></div>
           </div>
         </div>
       </section>
-      <section data-view="newcomer-4" class="slide-scrim"><div class="story" data-para="newcomer" data-beat="4"></div></section>
 
-      <section data-view="beaver-1" class="slide-scrim"><div class="story" data-para="beaver" data-beat="1"></div></section>
-      <section data-view="beaver-2" class="slide-scrim"><div class="story" data-para="beaver" data-beat="2"></div></section>
-      <section data-view="beaver-3" class="slide-scrim">
-        <div class="story" data-para="beaver" data-beat="3">
-          <div class="extra">
+      <section data-view="beaver" class="slide-scrim">
+        <div class="story" data-para="beaver">
+          <p class="story-para">
+            <span class="beat" data-beat="1"><mark>Beaver</mark> is a friendly multilingual robot pet</span>
+            <span class="beat fragment" data-beat="2">that can act as your guide to the <mark>context</mark> behind the things you see every day,</span>
+            <span class="beat fragment" data-beat="3">transitioning fluidly between a speaker's <mark>native language, French &amp; English</mark>.</span>
+          </p>
+          <div class="extra" data-for="3">
             <!-- One sentence in a speaker's native language, then French, then English. -->
             <div class="flow" role="group" aria-label="One sentence in three languages">
               <button type="button" class="node" data-clip="a3-zh-1"><span class="node-role">native language</span><span class="node-text" lang="zh-Hant">Poutine（起司肉汁薯條）是起源於加拿大魁北克省的國民級經典美食！</span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg></button>

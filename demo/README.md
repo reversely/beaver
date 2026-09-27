@@ -16,20 +16,18 @@ advances one slide every 8 seconds and loops.
 
 ## Pages
 
-Every word on the story pages is the concept sheet's own text. The two paragraphs are told one
-line per page: the current line is set large with its key words highlighted, and the earlier lines
-of the paragraph stay above it, smaller and dimmed.
+Every word on the story pages is the concept sheet's own text. Each of the two paragraphs has one
+page. The first line shows when the page opens; each step (scroll, arrow key, or autoplay) reveals
+the next line below the earlier ones, which stay in place and dim. The story sits at a fixed height
+on the page, so no line moves or changes size between steps, and every sentence appears on one page.
+The extra that belongs to a line (the hello buttons, the exchange slot, the diagram) shows below the
+paragraph while that line is current.
 
-| Page | Concept sheet text | Interaction |
+| Page | Concept sheet text, one line per step | Interaction |
 |---|---|---|
 | Hello | "Hi, I'm Beaver" in eight languages; "the newcomer's field guide to Canada"; "votre guide du Canada" | The greeting streams in one language at a time |
-| Newcomer 1 | Being a newcomer in Canada can be **overwhelming**. | |
-| Newcomer 2 | With **two national languages** | **English** and **Français** buttons play Beaver saying hello in each |
-| Newcomer 3 | to a rich legacy of **arts**, **history** and **cultural references**, | Each word opens its "Hey Beaver..." exchange (arts: the painting, history: Parliament, cultural references: poutine) and plays it |
-| Newcomer 4 | there's a lot to learn. | |
-| Beaver 1 | **Beaver** is a friendly multilingual robot pet | |
-| Beaver 2 | that can act as your guide to the **context** behind the things you see every day, | |
-| Beaver 3 | transitioning fluidly between a speaker's **native language, French & English**. | A diagram carries one sentence from Chinese to French to English; each card plays its language, and **Hear all three** plays them in order |
+| Newcomer | Being a newcomer in Canada can be **overwhelming**. / With **two national languages** / to a rich legacy of **arts**, **history** and **cultural references**, / there's a lot to learn. | On the second line, **English** and **Français** buttons play Beaver saying hello in each. On the third, each highlighted word opens its "Hey Beaver..." exchange (arts: the painting, history: Parliament, cultural references: poutine) and plays it |
+| Beaver | **Beaver** is a friendly multilingual robot pet / that can act as your guide to the **context** behind the things you see every day, / transitioning fluidly between a speaker's **native language, French & English**. | On the last line, a diagram carries one sentence from Chinese to French to English; each card plays its language, and **Hear all three** plays them in order |
 | Hey Beaver... | The three exchanges | The play button between question and answer plays the question in the visitor's language, then each answer line; any single line plays on its own; the line being spoken is highlighted |
 | Site, Deploy | Your settings on the laptop and sending them to the rover | The deploy progress changes on a timer |
 | Ask, Notebook | A recorded desktop-app exchange and its notebook entry | **Play reply** |
