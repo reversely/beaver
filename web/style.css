@@ -420,6 +420,13 @@ a.app-button { text-decoration: none; }
 /* On the answer slides the page scrolls down to the answer, as it does on a phone. */
 .phone-view:has(.ph-answer) { justify-content: flex-end; }
 .phone-view:has(.ph-answer) .ph-talk { width: 30%; }
+/* Demo mode (#51): a badge on the drawn phone and laptop, and a link to the real app on each card,
+   shown only on the laptop's server. */
+.laptop, .phone { position: relative; }
+.demo-badge { position: absolute; z-index: 1; top: -0.9em; left: 50%; transform: translateX(-50%); padding: 0.25em 0.8em; border-radius: 999px; background: var(--maroon); color: #fff; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.card .try { margin: 1.1em 0 0; font-size: 1em; }
+.card .try a { display: inline-block; min-height: 24px; padding: 0.2em 0; color: var(--accent-text); font-weight: 600; pointer-events: auto; }
+
 /* The sample question on a rover card, since the phone page shows only the reply. */
 .card .sample { margin: 1em 0 0.1em; font-family: var(--display); font-weight: 700; color: var(--ink); font-size: 1.2em; }
 .card .sample-en { margin: 0; font-size: 0.95em; color: var(--ink-3); }
