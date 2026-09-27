@@ -183,11 +183,17 @@ function mouthFrame(openness) {
     }
   }
   if (openness > 0.05) {
-    const depth = 21 + Math.round(openness * 2);
-    for (let x = 11; x <= 29; x++) {
-      // The lip rises at its ends toward the teeth's outer edges.
-      const end = Math.min(x - 11, 29 - x);
-      set(x, end === 0 ? depth - 1 : depth);
+    // As on the rover: the lower lip starts at each end of the top lip, runs down the sides, and
+    // lies flat under the teeth, dropping with the speech.
+    const bottom = 21 + openness * 2;
+    const [first, last, top] = [5, W - 1 - 5, 6];
+    const mid = (first + last) / 2;
+    const half = (last - first) / 2;
+    const row = (x) => Math.round(bottom - (bottom - top) * (Math.abs(x - mid) / half) ** 5);
+    for (let x = first; x <= last; x++) {
+      // Fill down to the next column toward the middle, so the steep sides stay joined.
+      const inner = row(x < mid ? x + 1 : x > mid ? x - 1 : x);
+      for (let y = Math.min(row(x), inner); y <= Math.max(row(x), inner); y++) set(x, y);
     }
   }
   return lit;
