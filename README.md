@@ -10,7 +10,7 @@ questions asked on the rover. It is built for one person with one rover and one 
 | Part | Folder | What it does |
 |---|---|---|
 | Rover | `src/beaver/rover` | A visitor asks through the phone page, because the rover has no microphone of its own. The rover takes a camera frame, asks Gemini, speaks the reply through ElevenLabs on its speaker, and saves the turn to a run folder. |
-| Desktop app | `src/beaver/desktop` | A local web page at `http://127.0.0.1:8765`. It takes questions by voice or typing, replies sentence by sentence in each chosen language, and files every exchange into notebooks. Every 60 seconds it pulls the rover's new turns and files them too. |
+| Desktop app | `src/beaver/desktop` | A local web page at `http://127.0.0.1:8765/app/`, beside the demo at `/`. It starts the rover's phone page and shows its QR code, takes questions by voice or typing, replies sentence by sentence in each chosen language, and files every exchange into notebooks. Every 60 seconds it pulls the rover's new turns and files them too. |
 | Demo page | `demo` | A static page for a laptop at a table: a spoken walk through the concept sheet, the "Hey Beaver..." exchanges, and the desktop app's screens. |
 | Shared core | `src/beaver/core` | Config loading, run records, the Gemini and ElevenLabs calls, and the prompts both apps use. |
 
@@ -47,7 +47,7 @@ ELEVENLABS_API_KEY=...
 
 | Part | Command | Guide |
 |---|---|---|
-| Desktop app | `uv run --group desktop python src/beaver/desktop/run.py serve` | [`src/beaver/desktop/README.md`](src/beaver/desktop/README.md) |
+| Desktop app and demo | `uv run --group desktop python src/beaver/desktop/run.py serve`, then open `http://127.0.0.1:8765` | [`src/beaver/desktop/README.md`](src/beaver/desktop/README.md) |
 | Rover, on the Pi | `uv run --group rover python src/beaver/rover/run.py phone` | [`src/beaver/rover/README.md`](src/beaver/rover/README.md) |
 | Demo page | `uv run python -m http.server 8766 -d demo`, then open `http://127.0.0.1:8766` | [`demo/README.md`](demo/README.md) |
 

@@ -16,7 +16,7 @@ uv run --group desktop python src/beaver/desktop/run.py <command> [words] [--set
 
 | Command | What it does |
 |---|---|
-| `serve` | Opens the page at `http://127.0.0.1:8765` and pulls the rover's turns every 60 seconds |
+| `serve` | Serves the demo at `http://127.0.0.1:8765` and this app at `/app/`, and pulls the rover's turns every 60 seconds |
 | `sync` | Pulls the rover's turns once and files the new ones; run it only while `serve` is stopped |
 | `text` | Sends a typed question to Gemini and prints the reply |
 | `speak` | Sends text to ElevenLabs and plays the speech |
@@ -103,6 +103,20 @@ over SSH into `rover-runs/` (gitignored) and files the redacted question the rov
 board like any other exchange. For a turn saved before on-board transcription, the pass also pulls
 `question.wav` and writes the question down with one Gemini request (`prompts/rover_question.md`). A
 `filed.json` marker keeps a turn from being filed twice.
+
+## Rover panel
+
+**Start** runs `run.py phone` on `sync.host` over SSH, detached in its own process group, with
+`--set phone.print_address=false` so the address stays out of its log. The rover writes the phone
+page's address, token included, to `phone-address.txt`, readable only by the Pi's user; the panel
+reads it over SSH and shows it with a QR code that `segno` draws on this laptop. **Stop** sends the
+group SIGTERM, which ends the server and its Cloudflare tunnel and removes the file. From Start to
+the shown address took 9 to 10 s, most of it Whisper loading. `[rover]` sets the Pi's checkout
+and its `uv`.
+
+The rover routes answer only a request addressed to `127.0.0.1` or `localhost` on this port, and a
+start or stop also needs the page's `X-Beaver` header, so another website open in the laptop's
+browser cannot start the rover or read the token.
 
 ## Phone location
 

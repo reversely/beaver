@@ -12,6 +12,7 @@ import base64
 import copy
 import json
 import mimetypes
+import subprocess
 import threading
 import time
 from http import HTTPStatus
@@ -21,12 +22,15 @@ from pathlib import Path
 import bilingual
 import devices
 import notebooks
+import rover_phone
 from beaver.core.record import RunRecord
 from beaver.core.settings import render_prompt
 
 HERE = Path(__file__).parent
 
 UI = HERE / "ui"
+# The demo is the home page at /, and this app's page is at /app/.
+DEMO = HERE.parents[2] / "demo"
 # Settings changed on the page; gitignored, applied over config.toml at startup.
 LOCAL_SETTINGS = HERE / "settings.local.json"
 # Each setting the page may change, with the values it accepts.
@@ -168,6 +172,24 @@ def _inside(base: Path, relative: str) -> Path | None:
     return path if path.is_file() and path.is_relative_to(base.resolve()) else None
 
 
+def _page(base: Path, relative: str) -> Path | None:
+    """A file under `base`, with a folder path meaning its index.html."""
+    if relative == "" or relative.endswith("/"):
+        relative += "index.html"
+    return _inside(base, relative)
+
+
+def _rover_state(state: dict) -> dict:
+    """The Rover page's view of the phone server, with the address drawn as a QR code."""
+    if state["address"]:
+        import segno
+
+        state["qr_svg"] = segno.make(state["address"], error="l").svg_inline(
+            scale=5, dark="#2b1a14", light="#fffaf2"
+        )
+    return state
+
+
 def make_handler(app: App):
     runs = HERE / app.config["output"]["runs_dir"]
 
@@ -221,12 +243,55 @@ def make_handler(app: App):
                     self._json(HTTPStatus.OK, found[0])
                 else:
                     self.send_error(HTTPStatus.NOT_FOUND)
+            elif path == "/api/rover":
+                self._rover(rover_phone.status)
             elif path.startswith("/runs/"):
                 self._file(_inside(runs, path.removeprefix("/runs/")))
+            elif path == "/app":
+                self.send_response(HTTPStatus.MOVED_PERMANENTLY)
+                self.send_header("Location", "/app/")
+                self.end_headers()
+            elif path.startswith("/app/"):
+                self._file(_page(UI, path.removeprefix("/app/")))
             else:
-                self._file(_inside(UI, path.lstrip("/") or "index.html"))
+                self._file(_page(DEMO, path.lstrip("/")))
+
+        def _local(self) -> bool:
+            """A request this laptop's own page sent: to this server's own host name, which a
+            DNS-rebinding page cannot claim, and, for a POST, with the X-Beaver header, which a
+            cross-site form cannot send and a cross-site script cannot add without a preflight
+            this server never answers."""
+            port = self.server.server_address[1]
+            host_ok = self.headers.get("Host") in (
+                f"127.0.0.1:{port}",
+                f"localhost:{port}",
+            )
+            return host_ok and (
+                self.command == "GET" or self.headers.get("X-Beaver") == "1"
+            )
+
+        def _rover(self, action):
+            if not self._local():
+                self._json(
+                    HTTPStatus.FORBIDDEN, {"error": "rover control is local only"}
+                )
+                return
+            try:
+                self._json(HTTPStatus.OK, _rover_state(action(app.config)))
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
+                detail = getattr(error, "stderr", "") or ""
+                self._json(
+                    HTTPStatus.BAD_GATEWAY,
+                    {"error": detail.strip() or "the rover did not answer over SSH"},
+                )
 
         def do_POST(self):
+            if self.path == "/api/rover/start":
+                self._rover(rover_phone.start)
+                return
+            if self.path == "/api/rover/stop":
+                self._rover(rover_phone.stop)
+                return
             try:
                 payload = self._body()
             except ValueError as error:
@@ -263,7 +328,10 @@ def serve(config: dict, port: int) -> None:
 
         start_background(config)
     server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(app))
-    print(f"Beaver is running at http://127.0.0.1:{port} (Ctrl-C stops it)")
+    print(
+        f"Beaver is running at http://127.0.0.1:{port}, with the app at "
+        f"http://127.0.0.1:{port}/app/ (Ctrl-C stops it)"
+    )
     try:
         server.serve_forever()
     except KeyboardInterrupt:

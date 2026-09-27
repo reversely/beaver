@@ -48,3 +48,8 @@ src/beaver/*/rover-runs/
 
 # Statistics Canada boundary file for the phone-location lookup (run.py getplaces)
 src/beaver/*/places/
+
+# The rover's phone page address, which carries its token
+src/beaver/rover/phone-address.txt
+src/beaver/rover/phone.log
+src/beaver/rover/phone.pid

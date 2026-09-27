@@ -1,0 +1,72 @@
+// The Rover panel: start and stop the rover's phone page on the Pi and show its address.
+const status = document.getElementById("rover-status");
+const link = document.getElementById("rover-link");
+const qr = document.getElementById("rover-qr");
+const address = document.getElementById("rover-address");
+const toggle = document.getElementById("rover-toggle");
+
+const MESSAGES = {
+  stopped: "The phone page is off",
+  starting: "Starting the phone page",
+  running: "Scan with the phone's camera",
+};
+let polling = null;
+
+function show(state) {
+  status.classList.remove("is-error");
+  status.textContent = MESSAGES[state.state];
+  if (state.state === "stopped" && state.log?.length) {
+    status.textContent = `The phone page stopped: ${state.log.at(-1)}`;
+    status.classList.add("is-error");
+  }
+  link.hidden = state.state !== "running";
+  if (state.state === "running") {
+    // The SVG is built by segno on this laptop from the rover's address, not from page input.
+    qr.innerHTML = state.qr_svg;
+    address.href = state.address;
+  } else {
+    qr.replaceChildren();
+    address.removeAttribute("href");
+  }
+  toggle.hidden = false;
+  toggle.disabled = false;
+  toggle.textContent = state.state === "stopped" ? "Start" : "Stop";
+  toggle.dataset.action = state.state === "stopped" ? "start" : "stop";
+  clearTimeout(polling);
+  if (state.state === "starting") polling = setTimeout(refresh, 2000);
+}
+
+function fail(message) {
+  status.textContent = message;
+  status.classList.add("is-error");
+  toggle.hidden = false;
+  toggle.disabled = false;
+}
+
+async function call(path, method = "GET") {
+  const response = await fetch(path, { method, headers: method === "POST" ? { "X-Beaver": "1" } : {} });
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error || `rover request failed (${response.status})`);
+  return body;
+}
+
+async function refresh() {
+  try {
+    show(await call("/api/rover"));
+  } catch (error) {
+    fail(error.message);
+  }
+}
+
+toggle.addEventListener("click", async () => {
+  toggle.disabled = true;
+  status.classList.remove("is-error");
+  status.textContent = toggle.dataset.action === "start" ? MESSAGES.starting : "Stopping the phone page";
+  try {
+    show(await call(`/api/rover/${toggle.dataset.action}`, "POST"));
+  } catch (error) {
+    fail(error.message);
+  }
+});
+
+refresh();

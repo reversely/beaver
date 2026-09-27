@@ -31,8 +31,9 @@ everything sent to Gemini and ElevenLabs, the reply, token counts, and timings),
 
 ## Desktop app
 
-The desktop app runs `src/beaver/desktop/run.py serve`, a local web page at
-`http://127.0.0.1:8765`. It takes a question by voice or typing, with an optional frame from the
+The desktop app runs `src/beaver/desktop/run.py serve`, which serves the demo at
+`http://127.0.0.1:8765` and the app's page at `/app/`. Its Rover panel starts the rover's phone page
+over SSH and shows the address and QR code. The app takes a question by voice or typing, with an optional frame from the
 laptop camera, and answers sentence by sentence in English, French, or both, optionally adding the
 visitor's own language to each sentence. After each answer, one Gemini request files the exchange
 into a notebook: a title in English and French, a theme, a span of years, vocabulary in three

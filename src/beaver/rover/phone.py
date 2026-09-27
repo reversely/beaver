@@ -6,9 +6,11 @@ Every request except the page's script and style must carry the session token fr
 import hmac
 import io
 import json
+import os
 import re
 import secrets
 import shutil
+import signal
 import socket
 import ssl
 import subprocess
@@ -302,14 +304,37 @@ def serve(config: dict, answer, location: LastLocation | None = None) -> None:
     import segno
 
     url = f"{base}/?t={token}"
-    print("\nScan this code with the phone's camera, or open the address below.\n")
-    segno.make(url, error="l").terminal(compact=True)
-    print(f"\n{url}\n\nWaiting for questions (Ctrl-C stops).")
+    # The desktop app's Rover page reads the address from this file over SSH to show it.
+    address_file = HERE / settings["address_file"]
+    write_private(address_file, url)
+    # The desktop app stops the server with SIGTERM; end it the way Ctrl-C does.
+    signal.signal(signal.SIGTERM, _stop_once)
+    if settings["print_address"]:
+        print("\nScan this code with the phone's camera, or open the address below.\n")
+        segno.make(url, error="l").terminal(compact=True)
+        print(f"\n{url}\n")
+    print("Waiting for questions (Ctrl-C stops).")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nStopped.")
     finally:
+        address_file.unlink(missing_ok=True)
         server.server_close()
         if tunnel:
             tunnel.terminate()
+
+
+def _stop_once(signum, frame):
+    """Stop on the first SIGTERM and ignore the rest: the desktop signals the whole process
+    group and uv forwards its own copy, and a second one would cut the cleanup short."""
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    raise KeyboardInterrupt
+
+
+def write_private(path: Path, text: str) -> None:
+    """Write text to a file only this user can read, because the address carries the token."""
+    path.unlink(missing_ok=True)
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w") as file:
+        file.write(text)

@@ -56,6 +56,11 @@ the visitor to choose a language and sends nothing to Gemini. Tiny detects faste
 Chinese question as English with 0.79 (docs/measurements.md).
 It answers one question at a time and tells a second phone to wait.
 
+The server also writes the page's address to `phone-address.txt` (mode 600, gitignored) and
+removes it on exit, for the desktop app's Rover panel, which starts and stops the server over SSH
+and ends it with SIGTERM. `phone.print_address = false` leaves the address and QR code out of the
+terminal output.
+
 "Use my location" appears only on HTTPS pages, where browsers offer geolocation. A tap reads the
 phone's position once, rounds it to 2 decimals (about 1 km), and posts it to `/api/location` with
 the same token; the rover rounds again, refuses anything but two in-range numbers (400) or a body

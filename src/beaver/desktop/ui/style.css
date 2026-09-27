@@ -469,3 +469,10 @@ body {
   .vocab-grid { grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); }
   .vocab-word { font-size: 20px; }
 }
+
+/* Rover panel: the phone page's QR code and address. */
+.rover .empty { margin-bottom: 12px; }
+.rover .empty.is-error { color: var(--error); }
+.rover-link { display: grid; justify-items: start; gap: 10px; margin-bottom: 12px; }
+.rover-qr svg { display: block; width: 168px; height: auto; border-radius: 8px; }
+.rover-link a { color: var(--accent-text); font-size: 15px; }

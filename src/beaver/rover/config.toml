@@ -110,6 +110,12 @@ max_upload_bytes = 1048576
 # tunnel = "none" only: certificate and key files, relative to this folder.
 certfile = ""
 keyfile = ""
+# The page address, token included, for the desktop app's Rover page; readable only by the Pi's
+# user, relative to this folder, and removed when the server stops.
+address_file = "phone-address.txt"
+# false leaves the address and its QR code out of the terminal output, for a server the desktop
+# app starts, whose output goes to a log file.
+print_address = true
 
 [transcribe]
 # run.py phone transcribes each question on the Pi in the language the phone page sends, so the

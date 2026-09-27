@@ -178,6 +178,12 @@ local_dir = "rover-runs"
 interval_seconds = 60
 connect_timeout_seconds = 8
 
+[rover]
+# The Rover page starts the rover's phone page on sync.host over SSH and shows its address.
+# The repo checkout on the Pi, and uv there, which a non-interactive SSH shell has no PATH to.
+remote_dir = "~/beaver"
+uv = "~/.local/bin/uv"
+
 [server]
 # `run.py serve` opens the desktop interface at http://127.0.0.1:<port>.
 port = 8765

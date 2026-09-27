@@ -70,6 +70,16 @@
         </div>
       </details>
 
+      <section class="panel rover" id="rover" aria-labelledby="rover-heading">
+        <h2 id="rover-heading">Rover</h2>
+        <p class="empty" id="rover-status" role="status">Checking the rover</p>
+        <div class="rover-link" id="rover-link" hidden>
+          <div class="rover-qr" id="rover-qr"></div>
+          <a id="rover-address" target="_blank" rel="noreferrer">Open the phone page</a>
+        </div>
+        <button type="button" class="ask" id="rover-toggle" hidden>Start</button>
+      </section>
+
       <section class="panel" aria-labelledby="notebooks-heading">
         <h2 id="notebooks-heading">Notebooks</h2>
         <nav class="notebook-nav" aria-labelledby="notebooks-heading">
@@ -117,5 +127,6 @@
   <script src="background.js"></script>
   <script type="module" src="scene.js"></script>
   <script type="module" src="app.js"></script>
+  <script type="module" src="rover.js"></script>
 </body>
 </html>
