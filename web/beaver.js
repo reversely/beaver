@@ -1,8 +1,8 @@
 // Beaver, drawn part for part from the rover prototype's CAD model (#46): a base with an arch cut
 // out underneath, a humped shell on top of it, a flat cross-hatched oval tail, and a forward-tilted head,
 // overhanging the base on a flat bracket, with two dot eyes, a small hole on each side, and a cream arched
-// face plate that wraps the lower sides, holding the camera lens and the screen, which shows the rover's OLED
-// mouth and moves with speech through speakWith().
+// face plate that wraps the lower sides, holding the camera lens and the screen, which shows the prototype's
+// buck teeth and moves with speech through speakWith().
 //
 // The one change from the model is colour: the CAD render leaves the base, shell, tail, and bracket
 // uncoloured, and here they take the head's own brown. The other colours are sampled from the render
@@ -79,21 +79,56 @@ function headProfile() {
   return shape;
 }
 
-// The face plate: square at the bottom, rounded over the top, with a small dip at the centre of
-// its top edge as on the prototype.
-function plateShape(width, height) {
+// The face plate's outline seen from the front: square at the bottom, rounded over the top
+// corners, with a small dip at the centre of its top edge as on the prototype.
+function plateShape(width, height, radius) {
   const shape = new THREE.Shape();
   const r = width / 2;
   const top = height / 2;
   shape.moveTo(-r, -top);
   shape.lineTo(r, -top);
-  shape.lineTo(r, top - r);
-  shape.bezierCurveTo(r, top - r * 0.4, r * 0.5, top, 0.05, top - 0.005);
-  shape.quadraticCurveTo(0.015, top - 0.01, 0, top - 0.035);
-  shape.quadraticCurveTo(-0.015, top - 0.01, -0.05, top - 0.005);
-  shape.bezierCurveTo(-r * 0.5, top, -r, top - r * 0.4, -r, top - r);
+  shape.lineTo(r, top - radius);
+  shape.bezierCurveTo(r, top - radius * 0.3, r - radius * 0.4, top, r - radius, top);
+  shape.lineTo(0.06, top);
+  shape.quadraticCurveTo(0.015, top, 0, top - 0.035);
+  shape.quadraticCurveTo(-0.015, top, -0.06, top);
+  shape.lineTo(-r + radius, top);
+  shape.bezierCurveTo(-r + radius * 0.4, top, -r, top - radius * 0.3, -r, top - radius);
   shape.lineTo(-r, -top);
   return shape;
+}
+
+// The face plate as one piece: the front outline carried back along the head's sides, with
+// rounded edges where the front turns into the sides. Behind a thin front, everything above the
+// straight sides is cut away along a plane that falls toward the back, which leaves the rounded
+// top as the front plate alone and gives the side wings their sloping top edges. The piece is
+// solid; its hidden inside sits within the head. Local +z points out of the face, and the piece
+// runs back to z = -depth.
+function muzzleGeometry(width, height, radius, depth, backHeight) {
+  const bevel = 0.04;
+  const front = 0.05;
+  const geometry = new THREE.ExtrudeGeometry(plateShape(width, height, radius), {
+    depth,
+    bevelEnabled: true,
+    bevelThickness: bevel,
+    bevelSize: bevel,
+    bevelSegments: 6,
+    curveSegments: 40,
+    steps: 30,
+  });
+  geometry.translate(0, 0, -depth);
+  const bottom = -height / 2;
+  const wingTop = height / 2 - radius;
+  const position = geometry.attributes.position;
+  for (let i = 0; i < position.count; i++) {
+    const behind = -position.getZ(i);
+    if (behind <= front) continue;
+    const back = Math.min((behind - front) / (depth - front), 1);
+    const limit = wingTop - (wingTop - (bottom + backHeight)) * back;
+    if (position.getY(i) > limit) position.setY(i, limit);
+  }
+  geometry.computeVertexNormals();
+  return geometry;
 }
 
 // The tail's diagonal grooves, drawn once onto a canvas in the body's brown.
@@ -119,97 +154,70 @@ function grooveTexture() {
   return texture;
 }
 
-// The screen: the rover's 128x64 OLED mouth, ported from src/beaver/rover/mouth.py. frame() draws
-// the mouth as a visitor sees it, closed at openness 0 and fully open at 1; the rover turns it 180
-// degrees for its upside-down panel, which the model does not need.
-const OLED = { W: 128, H: 64, TOP: 17 };
-const VISIBLE = OLED.H - OLED.TOP;
-const CENTRE = (OLED.W - 1) / 2;
-const CORNER_X = 10;
-const CORNER_Y = 3;
-const CHEEK_DROP = 9;
-const LOWER_CLOSED_Y = 33;
-const OPEN_DROP = 11;
-const TOOTH_WIDTH = 18;
-const TOOTH_GAP = 2;
-const TOOTH_BOTTOM = 30;
-const TOOTH_RADIUS = 4;
+// The screen's picture, as the prototype shows it: a 41 by 24 grid of square dots with a short lip
+// stroke stepping down from each top corner to a straight line across the top of two square buck
+// teeth, which have a one-dot gap and rounded bottom corners. At rest nothing shows below the
+// teeth. While Beaver speaks, the rover's lower lip (src/beaver/rover/mouth.py) appears under the
+// teeth, as wide as the teeth, and drops with the speech's loudness.
+const GRID = { W: 41, H: 24 };
 
 function mouthFrame(openness) {
-  openness = Math.min(Math.max(openness, 0), 1);
-  const { W, H } = OLED;
+  const { W, H } = GRID;
   const lit = new Uint8Array(W * H);
-  const reach = (x) => Math.abs(x - CENTRE) / (CENTRE - CORNER_X);
-  const inside = (x) => reach(x) <= 1;
-  const cheek = (x) => CORNER_Y + CHEEK_DROP * Math.sin(Math.PI * Math.min(Math.max(1 - reach(x), 0), 1));
-  const bottom = LOWER_CLOSED_Y + OPEN_DROP * openness;
-  const lower = (x) => bottom - (bottom - CORNER_Y) * Math.min(Math.max(reach(x), 0), 1) ** 4;
-  const stroke = (curve) => {
-    for (let x = 0; x < W; x++) {
-      if (!inside(x)) continue;
-      const y0 = Math.round(curve(x));
-      const y1 = x + 1 < W && inside(x + 1) ? Math.round(curve(x + 1)) : y0;
-      for (let y = Math.min(y0, y1); y < Math.max(y0, y1) + 2; y++) if (y >= 0 && y < H) lit[y * W + x] = 1;
-    }
+  const set = (x, y) => {
+    if (x >= 0 && x < W && y >= 0 && y < H) lit[y * W + x] = 1;
   };
-  stroke(cheek);
-  stroke(lower);
-  const tooth = (left) => {
-    const right = left + TOOTH_WIDTH - 1;
-    for (let x = left; x <= right; x++) {
-      const top = Math.round(cheek(x)) + 3;
-      for (let y = top; y <= TOOTH_BOTTOM; y++) {
-        const dx = Math.max(left + TOOTH_RADIUS - x, x - (right - TOOTH_RADIUS), 0);
-        const dy = Math.max(y - (TOOTH_BOTTOM - TOOTH_RADIUS), 0);
-        if (dx * dx + dy * dy <= TOOTH_RADIUS * TOOTH_RADIUS) lit[y * W + x] = 1;
+  const mirror = (x, y) => {
+    set(x, y);
+    set(W - 1 - x, y);
+  };
+  for (const x of [5, 6, 7]) mirror(x, 6);
+  for (const x of [8, 9, 10, 11]) mirror(x, 7);
+  for (let x = 11; x <= 29; x++) set(x, 8);
+  for (const [left, right] of [[11, 19], [21, 29]]) {
+    for (let y = 8; y <= 20; y++) {
+      for (let x = left; x <= right; x++) {
+        if (y === 20 && (x === left || x === right)) continue;
+        set(x, y);
       }
     }
-  };
-  const left = W / 2 - TOOTH_GAP / 2 - TOOTH_WIDTH;
-  tooth(left);
-  tooth(left + TOOTH_WIDTH + TOOTH_GAP);
-  lit.fill(0, VISIBLE * W);
+  }
+  if (openness > 0.05) {
+    const depth = 21 + Math.round(openness * 2);
+    for (let x = 11; x <= 29; x++) {
+      // The lip rises at its ends toward the teeth's outer edges.
+      const end = Math.min(x - 11, 29 - x);
+      set(x, end === 0 ? depth - 1 : depth);
+    }
+  }
   return lit;
 }
 
-// The screen's canvas: the panel's dots, each a square in a 4-pixel cell, inside the black glass.
+// The screen's canvas: each dot a square in a 16-pixel cell, inside the black glass.
 function screenCanvas() {
-  const cell = 4;
-  const margin = { x: 16, y: 32 };
+  const cell = 16;
   const canvas = document.createElement("canvas");
-  canvas.width = OLED.W * cell + margin.x * 2;
-  canvas.height = OLED.H * cell + margin.y * 2;
+  canvas.width = GRID.W * cell;
+  canvas.height = GRID.H * cell;
   const context = canvas.getContext("2d");
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 4;
-  const drawn = new Map();
   let shown = -1;
-  // Openness is drawn in 1/16 steps, as on the rover, and each step's picture is kept.
+  // Openness is drawn in 1/16 steps, as on the rover.
   function show(openness) {
     const step = Math.round(Math.min(Math.max(openness, 0), 1) * 16);
     if (step === shown) return;
     shown = step;
-    if (!drawn.has(step)) {
-      const image = context.createImageData(canvas.width, canvas.height);
-      const lit = mouthFrame(step / 16);
-      for (let i = 3; i < image.data.length; i += 4) image.data[i] = 255;
-      for (let y = 0; y < OLED.H; y++) {
-        for (let x = 0; x < OLED.W; x++) {
-          if (!lit[y * OLED.W + x]) continue;
-          for (let py = 0; py < cell - 1; py++) {
-            for (let px = 0; px < cell - 1; px++) {
-              const at = ((margin.y + y * cell + py) * canvas.width + margin.x + x * cell + px) * 4;
-              image.data[at] = 214;
-              image.data[at + 1] = 232;
-              image.data[at + 2] = 255;
-            }
-          }
-        }
+    const lit = mouthFrame(step / 16);
+    context.fillStyle = "#000000";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#d6e8ff";
+    for (let y = 0; y < GRID.H; y++) {
+      for (let x = 0; x < GRID.W; x++) {
+        if (lit[y * GRID.W + x]) context.fillRect(x * cell + 3, y * cell + 3, cell - 6, cell - 6);
       }
-      drawn.set(step, image);
     }
-    context.putImageData(drawn.get(step), 0, 0);
     texture.needsUpdate = true;
   }
   show(0);
@@ -294,11 +302,6 @@ export function createBeaver() {
   bracket.position.set(-0.12, -0.45, 0);
   head.add(bracket);
   for (const side of [-1, 1]) {
-    // The face plate's side wing over the lower half of each side, in the plate's cream.
-    const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.42), matte(CREAM));
-    panel.position.set(0.12, -0.2, side * 0.517);
-    panel.rotation.y = side > 0 ? 0 : Math.PI;
-    head.add(panel);
     const hole = new THREE.Mesh(new THREE.CircleGeometry(0.02, 16), black);
     hole.position.set(-0.05, 0.08, side * 0.522);
     hole.rotation.y = side > 0 ? 0 : Math.PI;
@@ -307,26 +310,28 @@ export function createBeaver() {
 
   // The face, on the head's front: local +z points out of the face.
   const face = new THREE.Group();
-  face.position.set(0.39, 0, 0);
+  face.position.set(0.43, 0, 0);
   face.rotation.y = Math.PI / 2;
   head.add(face);
-  const plate = new THREE.Mesh(extrude(plateShape(0.78, 0.62), 0.04, 0.015), matte(CREAM));
-  plate.position.set(0, -0.1, 0.02);
+  // The plate spans the head's width plus the wings' thickness, from the head's bottom to just
+  // below the eyes, and wraps back half the head's length.
+  const plate = new THREE.Mesh(muzzleGeometry(1.04, 0.66, 0.34, 0.5, 0.26), matte(CREAM));
+  plate.position.set(0, -0.11, -0.03);
   face.add(plate);
   const lensRing = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.018, 12, 32), matte(LENS_RING));
-  lensRing.position.set(0, 0.06, 0.06);
+  lensRing.position.set(0, 0.08, 0.035);
   face.add(lensRing);
   const lens = new THREE.Mesh(new THREE.CircleGeometry(0.055, 32), black);
-  lens.position.set(0, 0.06, 0.058);
+  lens.position.set(0, 0.08, 0.033);
   face.add(lens);
   const oled = screenCanvas();
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.245), new THREE.MeshBasicMaterial({ map: oled.texture }));
   beaver.userData.mouth = oled.show;
-  screen.position.set(0, -0.2, 0.056);
+  screen.position.set(0, -0.2, 0.02);
   face.add(screen);
   for (const side of [-1, 1]) {
     const eye = new THREE.Mesh(new THREE.CircleGeometry(0.035, 20), black);
-    eye.position.set(side * 0.2, 0.3, 0.001);
+    eye.position.set(side * 0.2, 0.37, 0.001);
     face.add(eye);
   }
 
