@@ -1,8 +1,8 @@
 // Beaver, drawn part for part from the rover prototype's CAD model (#46): a base with an arch cut
 // out underneath, a humped shell on top of it, a flat cross-hatched oval tail, a small block under
 // the head, and a forward-tilted head with two dot eyes, a small hole on each side, and a cream arched
-// face plate that wraps the lower sides, holding the camera lens and the screen, which shows the prototype's
-// dot-matrix buck teeth.
+// face plate that wraps the lower sides, holding the camera lens and the screen, which shows the rover's OLED
+// mouth and moves with speech through speakWith().
 //
 // The one change from the model is colour: the CAD render leaves the base, shell, tail, and block
 // uncoloured, and here they take the head's own brown. The other colours are sampled from the render
@@ -119,49 +119,145 @@ function grooveTexture() {
   return texture;
 }
 
-// The screen's dot-matrix picture, as on the prototype: two buck teeth side by side under a mouth
-// line that rises to each top corner. Cells are lit on a 48 by 28 grid and drawn as square dots.
-function screenTexture() {
-  const cols = 48;
-  const rows = 28;
-  const lit = new Map();
-  const set = (col, row, level) => lit.set(`${col},${row}`, level);
-  // Mouth line: from each top corner down to the teeth's top edge.
-  const line = [[3, 3], [4, 3], [5, 4], [6, 4], [7, 4], [8, 5], [9, 5], [10, 5], [11, 6], [12, 6]];
-  for (const [col, row] of line) {
-    set(col, row, 1);
-    set(cols - 1 - col, row, 1);
-  }
-  // Teeth: two blocks with a one-cell gap, outlined bright, filled a little dimmer, with their
-  // bottom corners cut round.
-  for (const [left, right] of [[13, 23], [24, 34]]) {
-    for (let row = 7; row <= 24; row++) {
-      for (let col = left; col <= right; col++) {
-        const corner = row === 24 && (col === left || col === right);
-        if (corner) continue;
-        const edge = row === 7 || row === 24 || col === left || col === right || (row === 23 && (col === left + 1 || col === right - 1));
-        set(col, row, edge ? 1 : 0.72);
+// The screen: the rover's 128x64 OLED mouth, ported from src/beaver/rover/mouth.py. frame() draws
+// the mouth as a visitor sees it, closed at openness 0 and fully open at 1; the rover turns it 180
+// degrees for its upside-down panel, which the model does not need.
+const OLED = { W: 128, H: 64, TOP: 17 };
+const VISIBLE = OLED.H - OLED.TOP;
+const CENTRE = (OLED.W - 1) / 2;
+const CORNER_X = 10;
+const CORNER_Y = 3;
+const CHEEK_DROP = 9;
+const LOWER_CLOSED_Y = 33;
+const OPEN_DROP = 11;
+const TOOTH_WIDTH = 18;
+const TOOTH_GAP = 2;
+const TOOTH_BOTTOM = 30;
+const TOOTH_RADIUS = 4;
+
+function mouthFrame(openness) {
+  openness = Math.min(Math.max(openness, 0), 1);
+  const { W, H } = OLED;
+  const lit = new Uint8Array(W * H);
+  const reach = (x) => Math.abs(x - CENTRE) / (CENTRE - CORNER_X);
+  const inside = (x) => reach(x) <= 1;
+  const cheek = (x) => CORNER_Y + CHEEK_DROP * Math.sin(Math.PI * Math.min(Math.max(1 - reach(x), 0), 1));
+  const bottom = LOWER_CLOSED_Y + OPEN_DROP * openness;
+  const lower = (x) => bottom - (bottom - CORNER_Y) * Math.min(Math.max(reach(x), 0), 1) ** 4;
+  const stroke = (curve) => {
+    for (let x = 0; x < W; x++) {
+      if (!inside(x)) continue;
+      const y0 = Math.round(curve(x));
+      const y1 = x + 1 < W && inside(x + 1) ? Math.round(curve(x + 1)) : y0;
+      for (let y = Math.min(y0, y1); y < Math.max(y0, y1) + 2; y++) if (y >= 0 && y < H) lit[y * W + x] = 1;
+    }
+  };
+  stroke(cheek);
+  stroke(lower);
+  const tooth = (left) => {
+    const right = left + TOOTH_WIDTH - 1;
+    for (let x = left; x <= right; x++) {
+      const top = Math.round(cheek(x)) + 3;
+      for (let y = top; y <= TOOTH_BOTTOM; y++) {
+        const dx = Math.max(left + TOOTH_RADIUS - x, x - (right - TOOTH_RADIUS), 0);
+        const dy = Math.max(y - (TOOTH_BOTTOM - TOOTH_RADIUS), 0);
+        if (dx * dx + dy * dy <= TOOTH_RADIUS * TOOTH_RADIUS) lit[y * W + x] = 1;
       }
     }
-  }
-  for (let row = 8; row <= 24; row++) lit.delete(`23,${row}`);
+  };
+  const left = W / 2 - TOOTH_GAP / 2 - TOOTH_WIDTH;
+  tooth(left);
+  tooth(left + TOOTH_WIDTH + TOOTH_GAP);
+  lit.fill(0, VISIBLE * W);
+  return lit;
+}
 
-  const cell = 8;
+// The screen's canvas: the panel's dots, each a square in a 4-pixel cell, inside the black glass.
+function screenCanvas() {
+  const cell = 4;
+  const margin = { x: 16, y: 32 };
   const canvas = document.createElement("canvas");
-  canvas.width = cols * cell;
-  canvas.height = rows * cell;
+  canvas.width = OLED.W * cell + margin.x * 2;
+  canvas.height = OLED.H * cell + margin.y * 2;
   const context = canvas.getContext("2d");
-  context.fillStyle = "#000000";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  for (const [key, level] of lit) {
-    const [col, row] = key.split(",").map(Number);
-    context.fillStyle = `rgba(226, 230, 234, ${level})`;
-    context.fillRect(col * cell + 1, row * cell + 1, cell - 2, cell - 2);
-  }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 4;
-  return texture;
+  const drawn = new Map();
+  let shown = -1;
+  // Openness is drawn in 1/16 steps, as on the rover, and each step's picture is kept.
+  function show(openness) {
+    const step = Math.round(Math.min(Math.max(openness, 0), 1) * 16);
+    if (step === shown) return;
+    shown = step;
+    if (!drawn.has(step)) {
+      const image = context.createImageData(canvas.width, canvas.height);
+      const lit = mouthFrame(step / 16);
+      for (let i = 3; i < image.data.length; i += 4) image.data[i] = 255;
+      for (let y = 0; y < OLED.H; y++) {
+        for (let x = 0; x < OLED.W; x++) {
+          if (!lit[y * OLED.W + x]) continue;
+          for (let py = 0; py < cell - 1; py++) {
+            for (let px = 0; px < cell - 1; px++) {
+              const at = ((margin.y + y * cell + py) * canvas.width + margin.x + x * cell + px) * 4;
+              image.data[at] = 214;
+              image.data[at + 1] = 232;
+              image.data[at + 2] = 255;
+            }
+          }
+        }
+      }
+      drawn.set(step, image);
+    }
+    context.putImageData(drawn.get(step), 0, 0);
+    texture.needsUpdate = true;
+  }
+  show(0);
+  return { texture, show };
+}
+
+// Move the mouth with an <audio> element's speech, the way the rover's openness_track does: at the
+// rover's 12 frames a second, closed at or below -40 dBFS and fully open at or above -12 dBFS,
+// opening at once on a louder frame and closing over about three frames.
+const MOUTH = { fps: 12, quietDbfs: -40, loudDbfs: -12 };
+let audioContext = null;
+const sources = new WeakMap();
+
+export function speakWith(beaver, audio) {
+  audioContext ??= new AudioContext();
+  let source = sources.get(audio);
+  if (!source) {
+    source = audioContext.createMediaElementSource(audio);
+    source.connect(audioContext.destination);
+    sources.set(audio, source);
+  }
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 2048;
+  source.connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+  let level = 0;
+  const timer = setInterval(() => {
+    analyser.getFloatTimeDomainData(samples);
+    let sum = 0;
+    for (const sample of samples) sum += sample * sample;
+    const dbfs = 20 * Math.log10(Math.sqrt(sum / samples.length) + 1e-9);
+    const target = Math.min(Math.max((dbfs - MOUTH.quietDbfs) / (MOUTH.loudDbfs - MOUTH.quietDbfs), 0), 1);
+    level = target > level ? target : level + (target - level) * 0.4;
+    beaver.userData.mouth(level);
+  }, 1000 / MOUTH.fps);
+  // Both "pause" and "ended" fire when the clip finishes; the mouth closes once.
+  let stopped = false;
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    clearInterval(timer);
+    source.disconnect(analyser);
+    beaver.userData.mouth(0);
+  };
+  audio.addEventListener("ended", stop, { once: true });
+  audio.addEventListener("pause", stop, { once: true });
+  audioContext.resume();
+  return audio.play();
 }
 
 export function createBeaver() {
@@ -224,10 +320,9 @@ export function createBeaver() {
   const lens = new THREE.Mesh(new THREE.CircleGeometry(0.055, 32), black);
   lens.position.set(0, 0.06, 0.058);
   face.add(lens);
-  const screen = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.42, 0.245),
-    new THREE.MeshBasicMaterial({ map: screenTexture() }),
-  );
+  const oled = screenCanvas();
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.245), new THREE.MeshBasicMaterial({ map: oled.texture }));
+  beaver.userData.mouth = oled.show;
   screen.position.set(0, -0.2, 0.056);
   face.add(screen);
   for (const side of [-1, 1]) {

@@ -9,6 +9,12 @@
     html, body { margin: 0; height: 100%; background: #ececec; overflow: hidden; }
     canvas { display: block; width: 100vw; height: 100vh; touch-action: none; cursor: grab; }
     canvas:active { cursor: grabbing; }
+    .speak {
+      position: fixed; z-index: 1; left: 16px; bottom: 16px;
+      font: 600 15px system-ui, sans-serif; color: #fff; background: #2b2b2b;
+      border: 0; border-radius: 999px; padding: 12px 20px; cursor: pointer;
+    }
+    .speak:focus-visible { outline: 2px solid #2b2b2b; outline-offset: 3px; }
   </style>
   <script type="importmap">
     {
@@ -20,11 +26,13 @@
   </script>
 </head>
 <body>
-  <canvas id="stage" aria-label="Beaver, the mascot, turnable by dragging"></canvas>
+  <canvas id="stage" aria-label="Beaver, turnable by dragging"></canvas>
+  <button class="speak" type="button" id="speak">Hear Beaver</button>
+  <audio id="line" src="audio/hi-en.mp3" preload="auto"></audio>
   <script type="module">
     import * as THREE from "three";
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-    import { createBeaver } from "./beaver.js";
+    import { createBeaver, speakWith } from "./beaver.js";
 
     const canvas = document.getElementById("stage");
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -80,6 +88,13 @@
     }
     addEventListener("resize", resize);
     resize();
+
+    // Beaver's recorded hello, with the mouth following its loudness as the rover's does.
+    const line = document.getElementById("line");
+    document.getElementById("speak").addEventListener("click", () => {
+      line.currentTime = 0;
+      speakWith(beaver, line);
+    });
 
     renderer.setAnimationLoop(() => {
       controls.update();
