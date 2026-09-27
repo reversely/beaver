@@ -15,6 +15,11 @@ app on a laptop. It is built for one person with one rover and one laptop.
 
 ## Architecture
 
+Beaver meets the newcomer in two places. Out in the city, the rover answers a question about what
+they see, asked from their phone. At the laptop, the desktop app answers their longer
+questions and keeps every exchange from either place as notebooks. A guard proxy keeps their
+personal information from reaching the AI services.
+
 ### Parts and connections
 
 ![Parts of Beaver: on the rover, local processing puts a guard proxy between the rover and the remote AI services; the proxy sends Gemini clean text and a photo and sends ElevenLabs the checked answer; the desktop app sends Gemini and ElevenLabs its own questions and copies each saved rover turn over SSH every 60 seconds](docs/img/how-it-works-parts.svg)
@@ -37,8 +42,8 @@ language.
 
 ![Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard proxy replaces personal information, so Gemini receives clean text and a photo; the proxy checks the answer before ElevenLabs converts it into speech](docs/img/how-it-works-privacy.svg)
 
-The guard proxy is a local checkpoint on the rover between its microphone input and the remote AI
-services. It sends them text with personal information replaced and keeps the recording on the
+The guard proxy runs on the rover between its microphone input and the remote AI services. It
+sends them text with personal information replaced and keeps the recording on the
 rover.
 
 1. **Recording.** The rover stores the recording in its own run folder.
@@ -57,8 +62,8 @@ rover.
 The rover's saved record holds the clean question and the kinds of personal information the proxy
 replaced.
 
-For developers: the proxy is `src/beaver/core/guard.py`, transcription is
-`src/beaver/core/transcribe.py`, both shared by the rover and the desktop app, and [`docs/architecture.md`](docs/architecture.md) describes the network
+For developers: `src/beaver/core/guard.py` holds the proxy and `src/beaver/core/transcribe.py` the
+transcription, both shared by the rover and the desktop app, and [`docs/architecture.md`](docs/architecture.md) describes the network
 path and the files each part keeps.
 
 ## Beaver's face

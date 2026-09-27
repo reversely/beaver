@@ -9,7 +9,7 @@ The rover is a SunFounder PiCar-X built on a Raspberry Pi 5 and a SunFounder Rob
 | Computer | Raspberry Pi 5 Model B Rev 1.1, 4 GB, Raspberry Pi OS 64-bit (Debian 13, trixie), Python 3.13 |
 | HAT | SunFounder Robot HAT v4. It has no ID EEPROM, so the `robot_hat` library treats it as v4 |
 | Speaker | On the HAT, driven by the `hifiberry-dac` overlay (a PCM5102A DAC, playback only). The amplifier plays only while GPIO 20 is high; `speaker.enable_pin = 20` makes every rover command raise it before playback |
-| Microphone | None. The v4 HAT has no microphone, and Bluetooth headsets such as AirPods Max pair with the Pi but deliver no microphone audio. The phone page stands in (see [architecture.md](architecture.md#a-rover-turn)) |
+| Microphone | None. The v4 HAT has no microphone, and Bluetooth headsets such as AirPods Max pair with the Pi but deliver no microphone audio. The phone page stands in (see [architecture.md](architecture.md)) |
 | Camera | OV5647 (5 MP) on a CAM/DISP connector, through the Pi 5's narrow 22-pin adapter cable |
 | Button | The HAT's USER button on GPIO 25 (`button.pin`) |
 | Mouth screen | SSD1306 OLED, 128 by 64 dots, at I2C address `0x3C` on bus 1, mounted upside down (see below) |

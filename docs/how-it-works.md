@@ -26,8 +26,8 @@ language.
 
 ![Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard proxy replaces personal information, so Gemini receives clean text and a photo; the proxy checks the answer before ElevenLabs converts it into speech](img/how-it-works-privacy.svg)
 
-The guard proxy is a local checkpoint on the rover between its microphone input and the remote AI
-services. It sends them text with personal information replaced and keeps the recording on the
+The guard proxy runs on the rover between its microphone input and the remote AI services. It
+sends them text with personal information replaced and keeps the recording on the
 rover.
 
 1. **Recording.** The rover stores the recording in its own run folder.
@@ -46,6 +46,6 @@ rover.
 The rover's saved record holds the clean question and the kinds of personal information the proxy
 replaced.
 
-For developers: the proxy is `src/beaver/core/guard.py`, transcription is
-`src/beaver/core/transcribe.py`, both shared by the rover and the desktop app, and [architecture.md](architecture.md) describes the network
+For developers: `src/beaver/core/guard.py` holds the proxy and `src/beaver/core/transcribe.py` the
+transcription, both shared by the rover and the desktop app, and [architecture.md](architecture.md) describes the network
 path and the files each part keeps.
