@@ -46,11 +46,14 @@ laptop reaches the Pi over SSH through Tailscale, but a test TCP connection from
 failed, so the connection runs laptop to Pi.
 
 - Every 60 seconds while `serve` runs, and once on `run.py sync`, `rsync` over SSH copies each new
-  run folder's `record.json`, `question.wav`, and `frame.jpg` into
-  `src/beaver/desktop/rover-runs/` (gitignored). No port opens on either machine.
-- A turn with question audio, a reply, and no error is filed: one Gemini request writes down the
-  spoken question and names its language, then the same notebook filing as the desktop's own
-  exchanges runs, marking the entry `source: "rover"`. The notebook view tags those entries `rover`.
+  run folder's `record.json` and `frame.jpg` into `src/beaver/desktop/rover-runs/` (gitignored).
+  No port opens on either machine.
+- A turn with a redacted question, a language, a reply, and no error is filed from its
+  `record.json`, with the same notebook filing as the desktop's own exchanges, marking the entry
+  `source: "rover"`. The notebook view tags those entries `rover`. The question audio stays on the
+  Pi. A turn where the rover asked the visitor to choose a language or ask again is not filed.
+- A turn saved before on-board transcription has no redacted question, so the sync also pulls its
+  `question.wav`, and one Gemini request writes down the question and names its language.
 - A `filed.json` marker in each pulled folder keeps a turn from being filed twice. When the laptop
   is off or the Pi is unreachable, the rover keeps answering and the next pass catches up.
 
@@ -78,9 +81,8 @@ cuts text at a sentence end. It runs entirely on the Pi, on every phone turn: on
 before Gemini receives it, and on the reply before it is spoken or saved. The run record keeps the
 redacted question, the chosen language, and which rules fired, never the unredacted text.
 
-The rover still saves the question audio (`question.wav`) in its run folder, and the desktop app's
-sync pulls it and has Gemini transcribe it for the notebooks, so an unredacted question can reach
-Gemini from the laptop. Filing from the rover's redacted transcript instead is the next change.
+The rover still saves the question audio (`question.wav`) in its run folder on the Pi; the desktop
+app files the redacted transcript and never pulls that audio.
 
 ## Security
 

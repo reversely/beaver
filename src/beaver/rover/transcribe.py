@@ -7,18 +7,7 @@ for a Chinese one on the Pi 5 at two threads (docs/measurements.md).
 
 import io
 
-# The phone page's languages: code (as the page sends it and Whisper takes it) -> name in English.
-LANGUAGES = {
-    "en": "English",
-    "fr": "French",
-    "es": "Spanish",
-    "ar": "Arabic",
-    "zh": "Chinese",
-    "pa": "Punjabi",
-    "tl": "Tagalog",
-    "uk": "Ukrainian",
-}
-
+from beaver.core.languages import LANGUAGES
 
 # The phone page's choice that asks the rover to detect the language itself.
 AUTO = "auto"

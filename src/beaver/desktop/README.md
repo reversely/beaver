@@ -98,9 +98,11 @@ spec, that every dimension check passes, and that the Python and JavaScript piec
 ## Rover sync
 
 `serve` pulls the rover's turns every `sync.interval_seconds` (60), and `sync` pulls once. Each pass
-copies new run folders from `sync.remote_runs` on `sync.host` over SSH into `rover-runs/`
-(gitignored), writes down each spoken question with one Gemini request (`prompts/rover_question.md`),
-and files it like any other exchange. A `filed.json` marker keeps a turn from being filed twice.
+copies each new run folder's `record.json` and `frame.jpg` from `sync.remote_runs` on `sync.host`
+over SSH into `rover-runs/` (gitignored) and files the redacted question the rover wrote down on
+board like any other exchange. For a turn saved before on-board transcription, the pass also pulls
+`question.wav` and writes the question down with one Gemini request (`prompts/rover_question.md`). A
+`filed.json` marker keeps a turn from being filed twice.
 
 ## Phone location
 
