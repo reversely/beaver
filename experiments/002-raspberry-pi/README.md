@@ -144,6 +144,35 @@ The prompts in `prompts/` are unchanged copies from experiment 001. Each turn pr
 to Gemini and ElevenLabs and saves a run folder under `runs/` (gitignored) with `record.json`, the
 question audio, the camera frame, and the spoken reply.
 
+## Guard
+
+`guard.py` checks text for personal information and length, entirely on the Pi. It is the first
+part of the rover guard (plan: shorten long messages and redact personal information before
+anything leaves the Pi); the rover does not call it yet.
+
+- `check(text)` lists findings by rule and position and never holds the matched text.
+- `redact(text)` replaces each finding with a spoken phrase, such as "a phone number".
+- `shorten(text, limit)` cuts at the last sentence end within the limit, including Chinese and
+  Japanese full stops, and reports the share of text it dropped.
+
+| Rule | Matches | Check |
+|---|---|---|
+| `email` | `name@example.ca` | |
+| `health_card_qc` | Quebec RAMQ: four letters, eight digits | |
+| `health_card_on` | Ontario: ten digits as 4-3-3, optional version code | Luhn |
+| `payment_card` | 13 to 19 digits, unbroken or in groups of four | Luhn; a run of four-digit years is not a card |
+| `social_insurance` | nine digits as 3-3-3 | Luhn; never starts with 0 or 8 |
+| `phone` | North American numbers with an optional +1, international numbers with + | |
+| `postal_code` | `K1A 0A9` | |
+| `address` | "221 Rideau Street", "1234 rue Sainte-Catherine" | |
+
+Names are not covered: a pattern cannot tell a visitor's name from a historical figure's. The
+tests include answers full of years and dates that must pass unchanged:
+
+```
+uv run python -m unittest discover -s experiments/002-raspberry-pi/tests
+```
+
 ## Dependencies
 
 The `pi` dependency group holds this experiment's pip packages. openWakeWord requires
