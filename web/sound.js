@@ -3,7 +3,11 @@
 const BED_LEVEL = 0.22;
 const BED_UNDER_VOICE = 0.06;
 
-export function createSound() {
+// Clips whose id starts with "q" are the visitors' questions; every other clip is Beaver's.
+const isQuestion = (id) => id.startsWith("q");
+
+// voice(audio) plays one of Beaver's clips with Beaver's mouth moving; without it clips just play.
+export function createSound({ voice } = {}) {
   let ctx = null;
   let bed = null;
   let muted = false;
@@ -63,7 +67,7 @@ export function createSound() {
       await new Promise((done) => {
         audio.onended = done;
         audio.onerror = done;
-        audio.play().catch(done);
+        (voice && !isQuestion(id) ? voice(audio) : audio.play()).catch(done);
       });
       lines.forEach((el) => el.classList.remove("speaking"));
     }

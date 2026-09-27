@@ -46,6 +46,21 @@ html, body {
 .reveal-viewport { background: transparent !important; color: var(--ink); }
 /* The laptop sits outside .reveal, so it takes the page colour, not reveal's black default. */
 .stage { color: var(--ink); }
+
+/* Beaver (#48). On slides with open space on the right he stands there, over Parliament; where
+   the laptop or the Hey Beaver exchanges fill the right, he steps down to the lower left corner.
+   Dragging him turns him around. */
+.companion {
+  position: fixed; z-index: 3; right: 4vw; top: 50%; width: 34vw; height: 30vw; transform: translateY(-42%);
+  cursor: grab; touch-action: none;
+  transition: width 0.6s ease, height 0.6s ease, right 0.6s ease, top 0.6s ease, transform 0.6s ease;
+}
+.companion.is-turning { cursor: grabbing; }
+body[data-companion="corner"] .companion { right: calc(100vw - 8px - 240px); top: calc(100vh - 64px - 180px); width: 240px; height: 180px; transform: none; }
+@media (max-width: 700px) {
+  .companion, body[data-companion="corner"] .companion { right: calc(100vw - 8px - 140px); top: calc(100vh - 60px - 105px); width: 140px; height: 105px; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .companion { transition: none; } }
 /* Slide text grows with the window so wide screens keep a laptop's proportions. */
 .reveal { position: relative; z-index: 1; font-family: var(--sans); font-size: clamp(17px, 1.15vw, 23px); color: var(--ink); }
 .reveal .slides { text-align: left; }

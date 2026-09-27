@@ -2,6 +2,7 @@ import Reveal from "reveal";
 import { createCity } from "./scene.js";
 import { createSound } from "./sound.js";
 import { setupStory, storyStep } from "./story.js";
+import { createCompanion } from "./companion.js";
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 // The painted layers load in the background; slides work straight away and the scene joins in.
@@ -12,7 +13,8 @@ createCity(document.getElementById("city"), { reducedMotion }).then((c) => {
   city.goTo(currentView);
 });
 
-const sound = createSound();
+const companion = createCompanion(document.getElementById("companion"));
+const sound = createSound({ voice: companion.speak });
 setupStory(sound);
 
 const stage = document.getElementById("stage");
@@ -27,6 +29,7 @@ function showSlide(slide) {
   city.goTo(currentView);
   const screen = slide.dataset.screen;
   stage.hidden = !screen;
+  document.body.dataset.companion = screen || slide.dataset.view === "hey" ? "corner" : "open";
   stage.classList.toggle("wide", slide.dataset.stage === "wide");
   if (screen) {
     document.querySelectorAll(".app-view").forEach((v) => v.classList.toggle("on", v.dataset.screen === screen));
@@ -117,7 +120,7 @@ function wirePlayback(lines) {
       await new Promise((done) => {
         audio.onended = done;
         audio.onerror = done;
-        audio.play().catch(done);
+        companion.speak(audio).catch(done);
       });
       line.el.classList.remove("speaking");
     }
