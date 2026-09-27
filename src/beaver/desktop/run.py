@@ -353,6 +353,14 @@ def step_getmodels(config, args):
         print(f"  {line}")
 
 
+def step_getplaces(config, args):
+    """Download Statistics Canada's 2021 census subdivision boundaries for the phone-location
+    lookup (40 MB)."""
+    import place
+
+    print(f"Boundary file saved to {place.download(config)}")
+
+
 def step_serve(config, args):
     from server import serve
 
@@ -384,6 +392,7 @@ QUERIES = {
     "serve": step_serve,
     "sync": step_sync,
     "getmodels": step_getmodels,
+    "getplaces": step_getplaces,
 }
 
 

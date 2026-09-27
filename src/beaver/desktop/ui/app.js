@@ -59,6 +59,15 @@ document.querySelectorAll("input[data-setting]").forEach((input) => {
 
 fetch("/api/settings").then((r) => r.json()).then(showSettings);
 
+// The province and municipality mapped from the rover's phone location, refreshed after each sync.
+async function showPlace() {
+  const place = await fetch("/api/place").then((r) => r.json()).catch(() => ({}));
+  $("#place-field").hidden = !place.municipality;
+  if (place.municipality) $("#place-name").textContent = `${place.municipality}, ${place.province}`;
+}
+showPlace();
+setInterval(showPlace, 60000);
+
 // Settings start collapsed on narrow screens, where the sidebar stacks above the conversation.
 if (window.matchMedia("(max-width: 899px)").matches) $("#settings").open = false;
 

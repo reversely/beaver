@@ -206,6 +206,10 @@ def make_handler(app: App):
             path = self.path.split("?")[0]
             if path == "/api/settings":
                 self._json(HTTPStatus.OK, app.settings())
+            elif path == "/api/place":
+                import place
+
+                self._json(HTTPStatus.OK, place.last(app.config) or {})
             elif path == "/api/notebooks":
                 self._json(
                     HTTPStatus.OK, notebooks.summaries(notebooks.load(app.config))

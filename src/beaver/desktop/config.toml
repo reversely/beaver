@@ -187,3 +187,11 @@ port = 8765
 show_prompts = true
 # Each run saves its prompts, reply, timings, and media under this folder (gitignored).
 runs_dir = "runs"
+
+[places]
+# The phone's rounded location maps to a province and municipality on this laptop against Statistics
+# Canada's 2021 census subdivision digital boundary file (Statistics Canada Open Licence), which
+# `run.py getplaces` downloads into this gitignored folder.
+dir = "places"
+file = "lcsd000a21a_e"
+url = "https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/files-fichiers/lcsd000a21a_e.zip"

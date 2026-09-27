@@ -45,3 +45,6 @@ src/beaver/*/models/
 
 # Rover turns pulled by the desktop app for its notebooks
 src/beaver/*/rover-runs/
+
+# Statistics Canada boundary file for the phone-location lookup (run.py getplaces)
+src/beaver/*/places/

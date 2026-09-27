@@ -107,9 +107,35 @@ def _file_turn(config: dict, folder, rover: dict) -> dict:
     return summary
 
 
+def _latest_location(config: dict) -> tuple[dict, str] | None:
+    """The rounded location in the newest pulled record that has one, with its run folder name."""
+    for folder in sorted(_local_dir(config).iterdir(), reverse=True):
+        record_path = folder / "record.json"
+        if record_path.exists():
+            location = json.loads(record_path.read_text()).get("location")
+            if location:
+                return location, folder.name
+    return None
+
+
+def update_place(config: dict) -> None:
+    """Map the rover's newest location to a province and municipality, on this laptop only."""
+    import place
+
+    latest = _latest_location(config)
+    known = place.last(config)
+    if latest is None or (known and known["rover_run"] == latest[1]):
+        return
+    try:
+        place.remember(config, latest[0], latest[1])
+    except SystemExit as error:  # the boundary file is not downloaded yet
+        print(f"Phone location not mapped: {error}")
+
+
 def sync_once(config: dict) -> dict:
     """Pull, then file every pending turn. Returns counts; a failed turn is left for next time."""
     pull(config)
+    update_place(config)
     filed, failed = 0, 0
     for folder, rover in _pending(config):
         try:

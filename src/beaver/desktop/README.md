@@ -29,6 +29,7 @@ uv run --group desktop python src/beaver/desktop/run.py <command> [words] [--set
 | `imagetest` | Sends each question in `[imagetest]` with no image and at each image resolution, and writes `report.md` comparing replies, tokens, and timings |
 | `pickpieces` | Asks Gemini to pick a 3D piece for every notebook that has none |
 | `getmodels` | Downloads Argos translation models, for example `getmodels fr ar es zh-Hant` |
+| `getplaces` | Downloads Statistics Canada's 2021 census subdivision boundaries (40 MB) for the phone-location lookup |
 | `list` | Prints the Gemini models, ElevenLabs models, and voices the keys can use |
 | `usage` | Prints the ElevenLabs plan, characters used and remaining, and the reset date |
 
@@ -100,6 +101,21 @@ spec, that every dimension check passes, and that the Python and JavaScript piec
 copies new run folders from `sync.remote_runs` on `sync.host` over SSH into `rover-runs/`
 (gitignored), writes down each spoken question with one Gemini request (`prompts/rover_question.md`),
 and files it like any other exchange. A `filed.json` marker keeps a turn from being filed twice.
+
+## Phone location
+
+When a visitor taps "Use my location" on the rover's phone page, each later rover turn carries the
+phone's position rounded to 2 decimals (about 1 km). After each pull, the sync maps the newest one
+to a province and municipality with `place.py`, a point-in-polygon lookup against Statistics
+Canada's 2021 census subdivision digital boundary file, and Settings shows it as "from phone". The
+lookup runs on this laptop, so coordinates never reach a geocoding service; `run.py getplaces`
+downloads the file into `places/` (gitignored) once. The digital file keeps each subdivision's
+water, so a point on the Ottawa River still maps to Ottawa or Gatineau. A lookup took 8 to 18 ms,
+90 ms on the first read, and `place.py` loads only when first used.
+
+Source: Statistics Canada, 2021 Census Subdivision Boundary File (lcsd000a21a_e). Reproduced and
+distributed on an "as is" basis with the permission of Statistics Canada, under the Statistics
+Canada Open Licence.
 
 ## Configuration and prompts
 
