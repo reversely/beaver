@@ -354,9 +354,19 @@ def step_serve(config, args):
 
 def step_sync(config, args):
     """Pull the rover's turns and file the new ones into the notebooks, once."""
+    import subprocess
+
     from rover_sync import sync_once
 
-    result = sync_once(config)
+    try:
+        result = sync_once(config)
+    except subprocess.CalledProcessError as error:
+        detail = (
+            error.stderr.strip() or f"rsync exit {error.returncode}"
+        ).splitlines()[0]
+        raise SystemExit(
+            f"Rover sync skipped, {config['sync']['host']} unreachable: {detail}"
+        )
     print(f"Rover sync: {result['filed']} filed, {result['failed']} failed")
 
 
