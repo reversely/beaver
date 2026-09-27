@@ -501,3 +501,39 @@ button:focus-visible { outline: 3px solid var(--accent-text); outline-offset: 2p
   .beat.now mark { animation: none; background-size: 100% 100%; }
   .stage { transition: none; }
 }
+
+/* Phone layout. The floating menu takes the top 72px and Beaver stands between the Play and Sound
+   buttons at the bottom, so every slide keeps clear of both; iOS Safari's 100vh reaches under its
+   toolbar, so positions come from the bottom edge and heights use the dynamic viewport. The
+   laptop and the drawn phone are hidden: beside a full-width card there is no room for them. */
+@media (max-width: 700px) {
+  .reveal .slides section[data-view] { padding: 72px 16px 116px !important; align-items: flex-start; }
+  /* A column no wider than the screen, so the one-line .fit lines shrink to it rather than widen it. */
+  .hello { width: 100%; gap: 2vh; margin-top: 18vh; grid-template-columns: minmax(0, 1fr); }
+  .hello > * { min-width: 0; }
+  .tagline { font-size: 1.1em; }
+  .brand-fr { font-size: 1em; }
+  .story, .story:has(.flow) { width: 100%; margin-top: 0; }
+  .card, .card-side { width: 100%; max-height: calc(100dvh - 72px - 116px); }
+  .stage { display: none !important; }
+  .companion, body[data-companion="corner"] .companion, body[data-companion="middle"] .companion {
+    right: auto; top: auto; left: 50%; bottom: 8px; width: 150px; height: 100px; transform: translateX(-50%);
+  }
+  /* Story lines and the three-language diagram share one screen, so both run smaller. */
+  .reveal .slides .story .beat { font-size: 20px; }
+  /* Each diagram card's speaker icon moves to its top right corner, which saves a row per card. */
+  .story .node { position: relative; padding: 0.45em 2.4em 0.45em 0.7em; }
+  .story .node .icon { position: absolute; top: 0.55em; right: 0.7em; margin: 0; }
+  .extra { margin-top: 2vh; }
+  /* The pale backdrop behind the intro and closing text spans the whole width: the text does. */
+  .slide-scrim::before {
+    background: linear-gradient(180deg, rgba(248, 238, 224, 0.94) 0%, rgba(248, 238, 224, 0.86) 60%, rgba(248, 238, 224, 0) 100%);
+  }
+}
+/* Short phones, such as the iPhone SE: the diagram page's three cards and story lines need less
+   height still. */
+@media (max-width: 700px) and (max-height: 700px) {
+  .reveal .slides .story .beat { font-size: 17px; margin-bottom: 0.25em; }
+  .story .node-text { font-size: 0.95em; }
+  .story .flow { gap: 0.3em; }
+}

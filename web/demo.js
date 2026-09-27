@@ -208,6 +208,8 @@ await Reveal.initialize({
   disableLayout: true,
   transition: "none",
 });
+// The first fit ran before reveal.js laid the slides out, when the columns had no width yet.
+fitAll();
 Reveal.on("slidechanged", (e) => showSlide(e.currentSlide));
 // Revealing or hiding a story line is a step within the page, not a new page.
 Reveal.on("fragmentshown", () => showSlide(Reveal.getCurrentSlide()));

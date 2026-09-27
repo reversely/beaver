@@ -20,8 +20,17 @@ export function createCompanion(canvas) {
   // Beaver faces +x; a three-quarter view from the front right shows the face, the body behind it,
   // and the tail.
   const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 50);
-  camera.position.set(6.4, 1.9, 4.6);
-  camera.lookAt(0.1, 0.8, 0);
+  const target = new THREE.Vector3(0, 0.8, 0);
+  // From this direction, backed off until a sphere around Beaver fits both the canvas's height and
+  // width, so his tail stays in view as he turns, in any canvas shape.
+  const view = new THREE.Vector3(6.4, 1.1, 4.6).normalize();
+  const REACH = 2.6;
+  function frame(aspect) {
+    const vertical = THREE.MathUtils.degToRad(camera.fov) / 2;
+    const horizontal = Math.atan(Math.tan(vertical) * aspect);
+    camera.position.copy(view).multiplyScalar(REACH / Math.sin(Math.min(vertical, horizontal))).add(target);
+    camera.lookAt(target);
+  }
 
   let queued = false;
   function draw() {
@@ -29,6 +38,7 @@ export function createCompanion(canvas) {
     const { clientWidth: w, clientHeight: h } = canvas;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
+    frame(camera.aspect);
     camera.updateProjectionMatrix();
     renderer.render(scene, camera);
   }
