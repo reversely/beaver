@@ -72,6 +72,12 @@ class Routes(unittest.TestCase):
                 self.request("/api/rover", headers={"Host": "rebound.example"})[0], 403
             )
 
+    def test_unreachable_rover_is_a_state(self):
+        failure = server.subprocess.CalledProcessError(255, "ssh", stderr="timed out")
+        with mock.patch.object(server.rover_phone, "status", side_effect=failure):
+            status, body = self.request("/api/rover")
+        self.assertEqual((status, json.loads(body)["state"]), (200, "unreachable"))
+
     def test_running_state_carries_a_qr_code(self):
         state = server._rover_state(
             {

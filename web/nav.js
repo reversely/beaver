@@ -1,9 +1,8 @@
-// The site menu shared by the home page, the demo, and the app. The published site has no app
+// The site menu shared by the home page and the app. The published site has no app
 // behind it, so App, Rover, and any [data-site-local] element appear only on the laptop's server.
 // <body data-site="online|local"> sets the mode; without it, 127.0.0.1 and localhost are local.
 const LINKS = [
   { label: "Home", href: "/", current: (path) => path === "/" || path === "/index.html" },
-  { label: "Demo", href: "/demo/", current: (path) => path.startsWith("/demo/") },
   { label: "App", href: "/app/", current: (path, hash) => path.startsWith("/app/") && hash !== "#rover", local: true },
   { label: "Rover", href: "/app/#rover", current: (path, hash) => path.startsWith("/app/") && hash === "#rover", local: true },
 ];
@@ -30,6 +29,8 @@ function build() {
     item.append(anchor);
     list.append(item);
   }
+  // A menu with only the current page on it takes no one anywhere, so it is left off.
+  if (list.children.length < 2) return;
   nav.append(list);
   if (slot) slot.replaceChildren(nav);
   else document.body.prepend(nav);

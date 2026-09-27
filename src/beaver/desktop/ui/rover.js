@@ -9,6 +9,7 @@ const MESSAGES = {
   stopped: "The phone page is off",
   starting: "Starting the phone page",
   running: "Scan with the phone's camera",
+  unreachable: "The rover is off or out of reach",
 };
 let polling = null;
 
@@ -28,12 +29,13 @@ function show(state) {
     qr.replaceChildren();
     address.removeAttribute("href");
   }
-  toggle.hidden = false;
+  toggle.hidden = state.state === "unreachable";
   toggle.disabled = false;
   toggle.textContent = state.state === "stopped" ? "Start" : "Stop";
   toggle.dataset.action = state.state === "stopped" ? "start" : "stop";
   clearTimeout(polling);
   if (state.state === "starting") polling = setTimeout(refresh, 2000);
+  if (state.state === "unreachable") polling = setTimeout(refresh, 15000);
 }
 
 function fail(message) {

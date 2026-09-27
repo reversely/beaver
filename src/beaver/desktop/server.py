@@ -279,10 +279,11 @@ def make_handler(app: App):
             try:
                 self._json(HTTPStatus.OK, _rover_state(action(app.config)))
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
-                detail = getattr(error, "stderr", "") or ""
+                # An unreachable rover is a state the panel shows, not a failed request.
+                detail = (getattr(error, "stderr", "") or "").strip()
+                print(f"Rover not reachable over SSH: {detail or error}")
                 self._json(
-                    HTTPStatus.BAD_GATEWAY,
-                    {"error": detail.strip() or "the rover did not answer over SSH"},
+                    HTTPStatus.OK, {"state": "unreachable", "address": None, "log": []}
                 )
 
         def do_POST(self):
