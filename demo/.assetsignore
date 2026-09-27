@@ -1,6 +1,0 @@
-# Files Cloudflare does not publish: build scripts, art sources, the clip list, and notes.
-.assetsignore
-*.py
-art/source/
-audio/clips.json
-README.md
