@@ -85,10 +85,6 @@ redacted question, the chosen language, and which rules fired, never the unredac
 The rover still saves the question audio (`question.wav`) in its run folder on the Pi; the desktop
 app files the redacted transcript and never pulls that audio.
 
-The guard and on-board transcription cover rover turns only. A question asked in the desktop app,
-typed or spoken at the laptop, goes to Gemini as it is, and a spoken one is sent as audio. Camera
-frames go to Gemini unfiltered on both. [how-it-works.md](how-it-works.md) draws both paths and calls the guard the guard proxy.
-
 ## Security
 
 - The Gemini and ElevenLabs keys live only in `.env` at the repo root on each machine and never
@@ -96,6 +92,4 @@ frames go to Gemini unfiltered on both. [how-it-works.md](how-it-works.md) draws
 - The desktop page listens on 127.0.0.1 only, serves audio only from inside its `runs/` folder,
   accepts only its listed settings and values, and caps requests at 15 MB.
 - The phone page answers only requests carrying the token from its current start.
-- The question audio crosses Cloudflare's network on its way to the Pi: the quick tunnel's HTTPS
-  connection ends at Cloudflare's edge, before the guard proxy on the Pi sees it.
 - Sync uses the laptop's existing SSH key for the Pi and opens no port.

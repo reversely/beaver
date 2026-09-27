@@ -62,14 +62,12 @@ def box(x, y, w, h, name, title, sub="", fill=FILL, stroke=INK):
     return "".join(parts)
 
 
-def arrow(points, both=False, color=INK, dash=False):
+def arrow(points, both=False):
     pts = " ".join(f"{x},{y}" for x, y in points)
     ends = ' marker-start="url(#tail)"' if both else ""
-    marker = "head-red" if color != INK else "head"
-    d = ' stroke-dasharray="7 6"' if dash else ""
     return (
-        f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="2"{d} '
-        f'marker-end="url(#{marker})"{ends}/>'
+        f'<polyline points="{pts}" fill="none" stroke="{INK}" stroke-width="2" '
+        f'marker-end="url(#head)"{ends}/>'
     )
 
 
@@ -100,8 +98,6 @@ def svg(width, height, description, body):
         f'markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="{INK}"/></marker>'
         '<marker id="tail" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" '
         f'markerHeight="8" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="{INK}"/></marker>'
-        '<marker id="head-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" '
-        'markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b42318"/></marker>'
         "</defs>"
     )
     return (
@@ -131,7 +127,7 @@ def parts():
     b.append(arrow([(570, 300), (708, 390)], both=True))
     b.append(label(625, 395, ["answer to speak"], anchor="end"))
     b.append(arrow([(1028, 225), (932, 130)], both=True))
-    b.append(label(982, 142, ["questions,", "unfiltered"], anchor="start"))
+    b.append(label(982, 150, ["questions"], anchor="start"))
     b.append(arrow([(1028, 295), (932, 390)], both=True))
     b.append(label(982, 382, ["answer to speak"], anchor="start"))
     b.append(arrow([(160, 330), (160, 560), (1140, 560), (1140, 332)]))
@@ -142,27 +138,18 @@ def parts():
         "Parts of Beaver: on the rover, local processing puts a guard proxy between the rover"
         " and the remote AI services; the proxy sends Gemini clean text and a photo and sends"
         " ElevenLabs the checked answer; the desktop app sends Gemini its own questions "
-        "unfiltered and copies each saved rover turn over SSH every 60 seconds.",
+        "and copies each saved rover turn over SSH every 60 seconds.",
         "".join(b),
     )
 
 
 def privacy():
-    """What the rover sends out, what stays on the Pi, and the desktop path the filter skips."""
+    """What the rover sends out and what stays in local processing."""
     w, h = 190, 130
     y_out, y_pi = 70, 330
     b = [
         zone(250, 20, 1210, 230, "Remote Services", "#fff4e0", "#8a5a00"),
         zone(250, 280, 1210, 230, "Local Processing", "#e9f5ec", "#1a7f37"),
-        zone(
-            20,
-            560,
-            1440,
-            190,
-            "Desktop App: No Guard Proxy Yet",
-            "#fdeceb",
-            "#b42318",
-        ),
         box(30, y_pi, w, h, "microphone", "Question"),
         box(275, y_pi, w, h, "file-music", "Recording"),
         box(505, y_pi, w, h, "text-recognition", "Transcribe"),
@@ -171,28 +158,6 @@ def privacy():
         box(1195, y_pi, w + 50, h, "volume", "Speaker"),
         box(850, y_out, w, h, "sparkles", "Gemini"),
         box(1195, y_out, w + 50, h, "speakerphone", "ElevenLabs"),
-        box(
-            275,
-            600,
-            w,
-            h,
-            "device-laptop",
-            "Desktop app",
-            "",
-            "#ffffff",
-            "#b42318",
-        ),
-        box(
-            850,
-            600,
-            w,
-            h,
-            "sparkles",
-            "Gemini",
-            "",
-            "#ffffff",
-            "#b42318",
-        ),
     ]
     mid = y_pi + h / 2
     b.append(arrow([(220, mid), (273, mid)]))
@@ -205,15 +170,12 @@ def privacy():
     b.append(arrow([(1155, y_pi + 30), (1230, y_out + h + 2)]))
     b.append(arrow([(1340, y_out + h), (1340, y_pi - 2)]))
     b.append(label(1350, 268, ["speech"], anchor="start"))
-    b.append(arrow([(465, 665), (848, 665)], color="#b42318", dash=True))
-    b.append(label(656, 650, ["unfiltered question"], color="#b42318"))
     return svg(
         1480,
-        770,
+        540,
         "Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard "
         "proxy replaces personal information, so Gemini receives clean text and a photo; the "
-        "proxy checks the answer before ElevenLabs converts it into speech; questions from "
-        "the desktop app reach Gemini unfiltered.",
+        "proxy checks the answer before ElevenLabs converts it into speech.",
         "".join(b),
     )
 

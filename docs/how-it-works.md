@@ -6,7 +6,7 @@ layout in that script.
 
 ## Parts
 
-![Parts of Beaver: on the rover, local processing puts a guard proxy between the rover and the remote AI services; the proxy sends Gemini clean text and a photo and sends ElevenLabs the checked answer; the desktop app sends Gemini its own questions unfiltered and copies each saved rover turn over SSH every 60 seconds](img/how-it-works-parts.svg)
+![Parts of Beaver: on the rover, local processing puts a guard proxy between the rover and the remote AI services; the proxy sends Gemini clean text and a photo and sends ElevenLabs the checked answer; the desktop app sends Gemini and ElevenLabs its own questions and copies each saved rover turn over SSH every 60 seconds](img/how-it-works-parts.svg)
 
 The rover records a spoken question and a camera frame and plays the answer on its own speaker. A
 guard proxy runs on the rover between it and every remote AI service: each request passes through
@@ -23,7 +23,7 @@ English, French, or both, plus the visitor's language.
 
 ## Guard proxy
 
-![Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard proxy replaces personal information, so Gemini receives clean text and a photo; the proxy checks the answer before ElevenLabs converts it into speech; questions from the desktop app reach Gemini unfiltered](img/how-it-works-privacy.svg)
+![Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard proxy replaces personal information, so Gemini receives clean text and a photo; the proxy checks the answer before ElevenLabs converts it into speech](img/how-it-works-privacy.svg)
 
 The guard proxy is a local checkpoint on the rover between its microphone input and the remote AI
 services. It sends them text with personal information replaced and keeps the recording on the
@@ -44,11 +44,6 @@ rover.
 
 The rover's saved record holds the clean question and the kinds of personal information the proxy
 replaced.
-
-Not covered yet:
-
-- Gemini receives the photo unchanged; no check runs on faces, documents, or screens in it.
-- Questions asked in the desktop app go to Gemini unchanged, and a spoken one goes as audio.
 
 For developers: the proxy is `src/beaver/rover/guard.py`, transcription is
 `src/beaver/rover/transcribe.py`, and [architecture.md](architecture.md) describes the network
