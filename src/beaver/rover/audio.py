@@ -121,15 +121,15 @@ def enable_speaker(config: dict) -> None:
 
 
 _mouth: Mouth | None = None
-_mouth_opened = False
 
 
 def mouth(config: dict) -> Mouth | None:
-    """The OLED mouth, opened once per process; None when it is off or missing."""
-    global _mouth, _mouth_opened
-    if not _mouth_opened:
+    """The OLED mouth, kept once it opens; None when it is off or missing.
+
+    A failed open is tried again on the next reply, since a single I2C error can fail it."""
+    global _mouth
+    if _mouth is None:
         _mouth = open_mouth(config)
-        _mouth_opened = True
     return _mouth
 
 

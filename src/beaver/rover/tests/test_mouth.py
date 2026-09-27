@@ -91,6 +91,31 @@ class Speak(unittest.TestCase):
         self.assertTrue(np.array_equal(face.oled.shown[-1], frame(0)))
 
 
+class WriteErrors(unittest.TestCase):
+    def test_failed_page_is_sent_next_frame(self):
+        oled = mouth.Oled.__new__(mouth.Oled)
+        oled.pages = [None] * mouth.PAGES
+        writes = []
+        fail = {"left": 1}
+
+        def command(*_codes):
+            if fail["left"]:
+                fail["left"] -= 1
+                raise OSError(121, "Remote I/O error")
+
+        oled._command = command
+        oled.fd = None
+        real_write = mouth.os.write
+        mouth.os.write = lambda _fd, data: writes.append(data)
+        try:
+            oled.show(frame(0))
+            self.assertIsNone(oled.pages[0])
+            oled.show(frame(0))
+        finally:
+            mouth.os.write = real_write
+        self.assertEqual(oled.pages, pack(frame(0)))
+
+
 class Opening(unittest.TestCase):
     def test_off(self):
         self.assertIsNone(open_mouth({"mouth": {"enabled": False}}))

@@ -19,80 +19,76 @@ PAGES = H // 8
 # Rows as a visitor sees them: blue from 0 to 46, then the gap and the yellow band.
 VISIBLE = H - TOP
 
-CENTRE = (W - 1) / 2
-# The mouth's corners. Between them the upper lip is two cheeks that bulge down and meet in a point
-# above the teeth; the lower lip runs down steep sides to a rounded bottom that drops as the mouth
-# opens.
-CORNER_X = 16
-CORNER_Y = 3
-CHEEK_DROP = 10
-# How far below the corners the cheeks meet above the teeth.
-CUSP_DROP = 4
-LOWER_CLOSED_Y = 35
-OPEN_DROP = 9
-# Two solid teeth with a two-dot gap between them, hanging a dot below the cheeks.
-TOOTH_WIDTH = 18
-TOOTH_GAP = 2
-TOOTH_BOTTOM = 32
-TOOTH_RADIUS = 4
-
-_cols = np.arange(W)
-_rows = np.arange(H)[:, None]
-# Each column's distance from the centre: 0 at the centre, 1 at a corner.
-_reach = np.abs(_cols - CENTRE) / (CENTRE - CORNER_X)
-_inside = _reach <= 1
-
-
-def _cheeks() -> np.ndarray:
-    """The upper lip's row per column: down from each corner to a cheek's bottom, up to the centre."""
-    # Squaring the distance from the corner moves each cheek's bottom inward, over its tooth.
-    towards_centre = np.clip(1 - _reach, 0, 1)
-    bulge = np.sin(np.pi * towards_centre**2) ** 0.6
-    return CORNER_Y + CUSP_DROP * towards_centre + CHEEK_DROP * bulge
+# The mouth is the prototype's screen picture (the 48 by 28 dot grid the web model first drew),
+# copied cell for cell and scaled evenly onto the OLED. At rest it is a lip line rising from the
+# teeth to each top corner and two solid teeth. While Beaver speaks, a lower lip in the same cells
+# drops below the teeth, and the teeth stay where they are.
+GRID_COLS = 48
+LIP_LINE = [
+    (3, 3),
+    (4, 3),
+    (5, 4),
+    (6, 4),
+    (7, 4),
+    (8, 5),
+    (9, 5),
+    (10, 5),
+    (11, 6),
+    (12, 6),
+]
+TEETH_COLS = (13, 34)
+TEETH_ROWS = (7, 24)
+TOOTH_GAP_COL = 23
+# The picture's lit cells span columns 3 to 44 and rows 3 to 24; each cell is SCALE dots square.
+FIRST_COL, LAST_COL, FIRST_ROW = 3, 44, 3
+SCALE = 1.5
+# Grid rows below the teeth that the lower lip drops through, from just under them to fully open.
+LIP_CLOSED_ROW = TEETH_ROWS[1] + 2
+LIP_OPEN_ROW = FIRST_ROW + int(VISIBLE / SCALE) - 1
 
 
-def _lower_lip(bottom_y: float) -> np.ndarray:
-    """The lower lip's row per column: bottom_y across the middle, rising steeply to the corners."""
-    return bottom_y - (bottom_y - CORNER_Y) * np.clip(_reach, 0, 1) ** 4
-
-
-def _stroke(frame: np.ndarray, ys: np.ndarray, thickness: int = 2) -> None:
-    """Light a curve given as one row per column between the corners, joining steep steps."""
-    ys = np.round(ys).astype(int)
-    for x in _cols[_inside]:
-        y1 = ys[x + 1] if x + 1 < W and _inside[x + 1] else ys[x]
-        low, high = min(ys[x], y1), max(ys[x], y1)
-        frame[low : high + thickness, x] = True
-
-
-def _tooth(frame: np.ndarray, left: int, cheeks: np.ndarray) -> None:
-    """A solid tooth from a dot below the cheeks down to its rounded bottom corners."""
-    right = left + TOOTH_WIDTH - 1
-    dx = np.maximum(
-        np.maximum(left + TOOTH_RADIUS - _cols, _cols - (right - TOOTH_RADIUS)), 0
-    )
-    dy = np.maximum(_rows - (TOOTH_BOTTOM - TOOTH_RADIUS), 0)
-    top = np.round(cheeks).astype(int) + 3
-    frame |= (
-        (_cols >= left)
-        & (_cols <= right)
-        & (_rows >= top)
-        & (_rows <= TOOTH_BOTTOM)
-        & (dx**2 + dy**2 <= TOOTH_RADIUS**2)
-    )
+def _picture(openness: float) -> set[tuple[int, int]]:
+    """The lit (column, row) cells of the grid picture at this openness."""
+    cells = set()
+    for col, row in LIP_LINE:
+        cells |= {(col, row), (GRID_COLS - 1 - col, row)}
+    left, right = TEETH_COLS
+    top, bottom = TEETH_ROWS
+    for row in range(top, bottom + 1):
+        for col in range(left, right + 1):
+            # Each tooth's two bottom corners are cut, as in the picture.
+            corner = row == bottom and col in (left, right, TOOTH_GAP_COL + 1)
+            gap = col == TOOTH_GAP_COL and row > top
+            if not (corner or gap):
+                cells.add((col, row))
+    if openness > 0:
+        # The lower lip: flat under the teeth, rising steeply to meet the lip line at each corner.
+        lip_row = LIP_CLOSED_ROW + (LIP_OPEN_ROW - LIP_CLOSED_ROW) * openness
+        mid = (FIRST_COL + LAST_COL) / 2
+        half = (LAST_COL - FIRST_COL) / 2
+        rows = {
+            col: round(lip_row - (lip_row - FIRST_ROW) * (abs(col - mid) / half) ** 5)
+            for col in range(FIRST_COL, LAST_COL + 1)
+        }
+        for col, row in rows.items():
+            # Fill down to the next column's row so steep sides stay joined.
+            nearer = rows.get(col + 1 if col < mid else col - 1, row)
+            for fill in range(min(row, nearer), max(row, nearer) + 1):
+                cells.add((col, fill))
+    return cells
 
 
 def frame(openness: float) -> np.ndarray:
     """The mouth as 64 rows of 128 dots in panel order, closed at 0 and fully open at 1."""
     openness = min(max(openness, 0.0), 1.0)
+    cells = _picture(openness)
     seen = np.zeros((H, W), dtype=bool)
-    cheeks = _cheeks()
-    _stroke(seen, cheeks)
-    _stroke(seen, _lower_lip(LOWER_CLOSED_Y + OPEN_DROP * openness))
-    left = W // 2 - TOOTH_GAP // 2 - TOOTH_WIDTH
-    _tooth(seen, left, cheeks)
-    _tooth(seen, left + TOOTH_WIDTH + TOOTH_GAP, cheeks)
-    seen[VISIBLE:] = False
+    left = round((W - (LAST_COL - FIRST_COL + 1) * SCALE) / 2)
+    for y in range(VISIBLE):
+        row = FIRST_ROW + int(y / SCALE)
+        for x in range(W):
+            col = FIRST_COL + int((x - left) / SCALE) if x >= left else -1
+            seen[y, x] = (col, row) in cells
     return seen[::-1, ::-1].copy()
 
 
@@ -159,8 +155,14 @@ class Oled:
         for index, page in enumerate(pack(frame)):
             if page == self.pages[index]:
                 continue
-            self._command(0xB0 | index, 0x00, 0x10)
-            os.write(self.fd, b"\x40" + page)
+            try:
+                self._command(0xB0 | index, 0x00, 0x10)
+                os.write(self.fd, b"\x40" + page)
+            except OSError:
+                # A failed write on the shared bus loses one page of one frame; the page is sent
+                # again next frame, and the speech carries on.
+                self.pages[index] = None
+                continue
             self.pages[index] = page
 
 
@@ -200,8 +202,14 @@ def open_mouth(config: dict) -> Mouth | None:
     """The rover's mouth, or None when it is turned off or the OLED cannot be reached."""
     if not config.get("mouth", {}).get("enabled"):
         return None
+    global _reported
     try:
         return Mouth(config)
     except OSError as error:
-        print(f"mouth: OLED unavailable ({error}); speaking without it")
+        if not _reported:
+            print(f"mouth: OLED unavailable ({error}); speaking without it")
+            _reported = True
         return None
+
+
+_reported = False
