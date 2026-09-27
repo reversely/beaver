@@ -1,8 +1,9 @@
 // Beaver on the home page (#48): the model from beaver.js, drawn in a fixed corner on every slide.
-// Beaver turns slowly on the spot, his mouth follows his clips, and a drag turns him by hand. With
-// reduced motion he stays still and the canvas redraws only on a mouth change or a drag.
+// Beaver turns slowly on the spot and wags his tail, his mouth follows his clips, a drag on his
+// head aims it, and a drag anywhere else turns him. With reduced motion he stays still and the
+// canvas redraws only on a mouth change or a drag.
 import * as THREE from "three";
-import { createBeaver, speakWith } from "./beaver.js";
+import { attachHeadDrag, createBeaver, speakWith } from "./beaver.js";
 
 export function createCompanion(canvas) {
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
@@ -50,8 +51,11 @@ export function createCompanion(canvas) {
   let last = null;
   let resumeAt = 0;
   function spin(now) {
-    if (last !== null && now >= resumeAt && dragX === null) {
+    if (last !== null && now >= resumeAt && dragX === null && body.enabled) {
       beaver.rotation.y += (SPIN * (now - last)) / 1000;
+    }
+    if (last !== null) {
+      beaver.userData.update(now / 1000);
       draw();
     }
     last = now;
@@ -59,9 +63,17 @@ export function createCompanion(canvas) {
   }
   if (!still) requestAnimationFrame(spin);
 
-  // Dragging turns Beaver around his vertical axis.
+  // A drag that starts on the head aims the head (beaver.js) and switches the body turn off.
+  const body = { enabled: true };
+  attachHeadDrag({ beaver, camera, element: canvas, controls: body });
+
+  // Dragging anywhere else turns Beaver around his vertical axis.
   let dragX = null;
+  canvas.addEventListener("pointermove", () => {
+    if (!body.enabled) redraw();
+  });
   canvas.addEventListener("pointerdown", (event) => {
+    if (!body.enabled) return;
     dragX = event.clientX;
     canvas.setPointerCapture(event.pointerId);
     canvas.classList.add("is-turning");
