@@ -16,6 +16,8 @@ the row says Pi 5, with each app's default `config.toml` unless noted.
 | `voice` | `gemini-3.8-flash`, 2.1 s question | Gemini 1.6 s, first audio 1.9 s; the audio cost 52 prompt tokens |
 | `bilingualtest` | `gemini` translation, 3 cases, playback off | Translation 1,060 to 1,341 ms; first audio 4.3 to 7.3 s; peak memory 87 MB |
 | `bilingualtest` | `argos` translation, 3 cases, playback off | Translation 385 to 481 ms; first audio 3.6 to 4.3 s; peak memory 220 MB; 206 to 252 fewer Gemini tokens per case |
+| `bilingualtest` | `gemini` translation, 3 cases, playback off, 2026-09-27 | Answer 1,073 to 2,130 ms; translation 1,005 to 1,591 ms; first audio 3.5 to 5.0 s; all spoken 7.1 to 8.2 s; peak memory 84 MB |
+| `bilingualtest` | `answer.mode = "inline"`, 3 cases, playback off, 2026-09-27 | Answer 1,578 to 2,100 ms with the translation written into it (no translation step); first audio 2.8 to 3.4 s; all spoken 6.1 to 6.2 s; peak memory 88 MB |
 | Argos alone | 3 sentences, int8, 2 threads | 143 to 188 ms warm per language; 300 to 1,200 ms to load a model; about 150 MB per loaded model |
 | Typed question through the page's API | Before the shared-core merge, 2 runs | First audio at 2.68 and 2.32 s |
 | Typed question through the page's API | After the shared-core merge, 7 runs | First audio at 2.36 to 3.00 s, averaging 2.65 s |
