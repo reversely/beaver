@@ -51,6 +51,19 @@ chime = true
 chime_hz = 880
 chime_seconds = 0.15
 
+[mouth]
+# Beaver's mouth on the 128x64 SSD1306 OLED, which moves with the speech. false leaves the OLED
+# alone; the rover also speaks without it when the OLED cannot be reached, such as on the laptop.
+enabled = true
+bus = 1
+address = 0x3C
+# Mouth frames per second while speaking. The OLED's I2C bus runs at 100 kHz, where each changed
+# 128-dot row of 8 dots takes about 12 ms to send.
+fps = 12
+# Speech at or below quiet_dbfs keeps the mouth closed; at or above loud_dbfs it is fully open.
+quiet_dbfs = -40
+loud_dbfs = -12
+
 [camera]
 # "picamera2" for the OV5647 camera module; "opencv" for a USB or laptop camera.
 backend = "picamera2"

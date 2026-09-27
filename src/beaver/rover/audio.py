@@ -4,6 +4,7 @@ import io
 import queue
 import shutil
 import subprocess
+import time
 import wave
 
 import numpy as np
@@ -11,6 +12,7 @@ import sounddevice as sd
 from scipy import signal
 
 from beaver.core.record import RunRecord
+from mouth import Mouth, open_mouth
 
 RATE = 16000
 # 80 ms at 16 kHz: the frame size openWakeWord expects.
@@ -118,16 +120,32 @@ def enable_speaker(config: dict) -> None:
     _speaker_enabled = True
 
 
+_mouth: Mouth | None = None
+_mouth_opened = False
+
+
+def mouth(config: dict) -> Mouth | None:
+    """The OLED mouth, opened once per process; None when it is off or missing."""
+    global _mouth, _mouth_opened
+    if not _mouth_opened:
+        _mouth = open_mouth(config)
+        _mouth_opened = True
+    return _mouth
+
+
 def play_pcm(config: dict, record: RunRecord, pcm: bytes, rate: int) -> None:
     if not config["speaker"]["play"]:
         return
     enable_speaker(config)
+    face = mouth(config)
     with record.timed("playback"):
         sd.play(
             np.frombuffer(pcm, dtype=np.int16),
             samplerate=rate,
             device=find_device(config["speaker"]["device"], "output"),
         )
+        if face:
+            face.speak(pcm, rate, time.monotonic())
         sd.wait()
 
 
