@@ -28,9 +28,10 @@ class Frames(unittest.TestCase):
             self.assertTrue(drawn.any())
 
     def test_opening_lowers_the_lip(self):
+        # The panel is upside down, so a lip lower on the rover sits nearer panel row 0.
         closed, open_ = frame(0), frame(1)
         self.assertFalse(np.array_equal(closed, open_))
-        self.assertGreater(np.nonzero(open_)[0].max(), np.nonzero(closed)[0].max())
+        self.assertLess(np.nonzero(open_)[0].min(), np.nonzero(closed)[0].min())
 
     def test_centred(self):
         columns = np.nonzero(frame(0.5).any(axis=0))[0]

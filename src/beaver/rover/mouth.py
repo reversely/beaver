@@ -2,7 +2,9 @@
 the I2C writer.
 
 The panel is an SSD1306 at 0x3C with its colours fixed in the glass: rows 0-15 are yellow and rows
-16-63 blue, with a physical gap at row 16. The mouth uses the blue rows from 17 down.
+16-63 blue, with a physical gap at row 16. The panel is mounted upside down, so the mouth is drawn
+the way a visitor sees it and turned 180 degrees before sending. It stays in the blue rows, which a
+visitor sees as the top 47 rows.
 """
 
 import fcntl
@@ -14,77 +16,84 @@ import numpy as np
 W, H = 128, 64
 TOP = 17
 PAGES = H // 8
+# Rows as a visitor sees them: blue from 0 to 46, then the gap and the yellow band.
+VISIBLE = H - TOP
 
-CENTRE = W // 2
-# The lips meet at each corner, rise from the centre to the top corners as in the prototype's
-# picture, and the lower lip drops by up to OPEN_DROP rows as the mouth opens.
-CORNER_X = 6
-CORNER_Y = TOP + 1
-UPPER_CENTRE_Y = 26
-LOWER_CLOSED_Y = 51
-OPEN_DROP = 11
-# Two teeth with a two-dot gap between them, hanging from the upper lip.
-TOOTH_WIDTH = 20
+CENTRE = (W - 1) / 2
+# The mouth's corners. Between them the upper lip is two cheeks that bulge down and meet in a point
+# above the teeth; the lower lip runs down steep sides to a rounded bottom that drops as the mouth
+# opens.
+CORNER_X = 16
+CORNER_Y = 3
+CHEEK_DROP = 10
+# How far below the corners the cheeks meet above the teeth.
+CUSP_DROP = 4
+LOWER_CLOSED_Y = 35
+OPEN_DROP = 9
+# Two solid teeth with a two-dot gap between them, hanging a dot below the cheeks.
+TOOTH_WIDTH = 18
 TOOTH_GAP = 2
-TOOTH_TOP = UPPER_CENTRE_Y + 1
-TOOTH_BOTTOM = 48
+TOOTH_BOTTOM = 32
 TOOTH_RADIUS = 4
 
 _cols = np.arange(W)
 _rows = np.arange(H)[:, None]
+# Each column's distance from the centre: 0 at the centre, 1 at a corner.
+_reach = np.abs(_cols - CENTRE) / (CENTRE - CORNER_X)
+_inside = _reach <= 1
 
 
-def _lip(centre_y: float, power: float) -> np.ndarray:
-    """A lip's row for every column: centre_y at the centre, rising to CORNER_Y at the corners."""
-    reach = np.clip(np.abs(_cols - CENTRE) / (CENTRE - CORNER_X), 0, 1)
-    return centre_y + (CORNER_Y - centre_y) * reach**power
+def _cheeks() -> np.ndarray:
+    """The upper lip's row per column: down from each corner to a cheek's bottom, up to the centre."""
+    # Squaring the distance from the corner moves each cheek's bottom inward, over its tooth.
+    towards_centre = np.clip(1 - _reach, 0, 1)
+    bulge = np.sin(np.pi * towards_centre**2) ** 0.6
+    return CORNER_Y + CUSP_DROP * towards_centre + CHEEK_DROP * bulge
+
+
+def _lower_lip(bottom_y: float) -> np.ndarray:
+    """The lower lip's row per column: bottom_y across the middle, rising steeply to the corners."""
+    return bottom_y - (bottom_y - CORNER_Y) * np.clip(_reach, 0, 1) ** 4
 
 
 def _stroke(frame: np.ndarray, ys: np.ndarray, thickness: int = 2) -> None:
     """Light a curve given as one row per column between the corners, joining steep steps."""
-    inside = np.abs(_cols - CENTRE) <= CENTRE - CORNER_X
     ys = np.round(ys).astype(int)
-    for x in _cols[inside]:
-        y0, y1 = ys[x], ys[x + 1] if x + 1 < W and inside[x + 1] else ys[x]
-        low, high = min(y0, y1), max(y0, y1)
+    for x in _cols[_inside]:
+        y1 = ys[x + 1] if x + 1 < W and _inside[x + 1] else ys[x]
+        low, high = min(ys[x], y1), max(ys[x], y1)
         frame[low : high + thickness, x] = True
 
 
-def _rounded_block(
-    left: int, right: int, top: int, bottom: int, radius: int
-) -> np.ndarray:
-    """A filled block over the whole frame with its two bottom corners rounded."""
-    dx = np.maximum(np.maximum(left + radius - _cols, _cols - (right - radius)), 0)
-    dy = np.maximum(_rows - (bottom - radius), 0)
-    return (
+def _tooth(frame: np.ndarray, left: int, cheeks: np.ndarray) -> None:
+    """A solid tooth from a dot below the cheeks down to its rounded bottom corners."""
+    right = left + TOOTH_WIDTH - 1
+    dx = np.maximum(
+        np.maximum(left + TOOTH_RADIUS - _cols, _cols - (right - TOOTH_RADIUS)), 0
+    )
+    dy = np.maximum(_rows - (TOOTH_BOTTOM - TOOTH_RADIUS), 0)
+    top = np.round(cheeks).astype(int) + 3
+    frame |= (
         (_cols >= left)
         & (_cols <= right)
         & (_rows >= top)
-        & (_rows <= bottom)
-        & (dx**2 + dy**2 <= radius**2)
+        & (_rows <= TOOTH_BOTTOM)
+        & (dx**2 + dy**2 <= TOOTH_RADIUS**2)
     )
-
-
-def _tooth(frame: np.ndarray, left: int) -> None:
-    """A tooth outline two dots thick with its bottom corners rounded."""
-    right = left + TOOTH_WIDTH - 1
-    outer = _rounded_block(left, right, TOOTH_TOP, TOOTH_BOTTOM, TOOTH_RADIUS)
-    inner = _rounded_block(
-        left + 2, right - 2, TOOTH_TOP + 2, TOOTH_BOTTOM - 2, TOOTH_RADIUS - 2
-    )
-    frame |= outer & ~inner
 
 
 def frame(openness: float) -> np.ndarray:
-    """The mouth as 64 rows of 128 dots, closed at 0 and fully open at 1."""
+    """The mouth as 64 rows of 128 dots in panel order, closed at 0 and fully open at 1."""
     openness = min(max(openness, 0.0), 1.0)
-    out = np.zeros((H, W), dtype=bool)
-    _stroke(out, _lip(UPPER_CENTRE_Y, 2))
-    _stroke(out, _lip(LOWER_CLOSED_Y + OPEN_DROP * openness, 3))
-    _tooth(out, CENTRE - TOOTH_GAP // 2 - TOOTH_WIDTH)
-    _tooth(out, CENTRE + TOOTH_GAP // 2)
-    out[:TOP] = False
-    return out
+    seen = np.zeros((H, W), dtype=bool)
+    cheeks = _cheeks()
+    _stroke(seen, cheeks)
+    _stroke(seen, _lower_lip(LOWER_CLOSED_Y + OPEN_DROP * openness))
+    left = W // 2 - TOOTH_GAP // 2 - TOOTH_WIDTH
+    _tooth(seen, left, cheeks)
+    _tooth(seen, left + TOOTH_WIDTH + TOOTH_GAP, cheeks)
+    seen[VISIBLE:] = False
+    return seen[::-1, ::-1].copy()
 
 
 def pack(frame: np.ndarray) -> list[bytes]:
