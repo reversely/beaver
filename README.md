@@ -45,12 +45,10 @@ questions asked.
 
 ![The Notebooks list, one row per topic with its years and question count](assets/docs/app-notebooks.jpg)
 
-Inside a notebook, each concept carries a short explanation and why it matters to a newcomer, and
-each question keeps its answer in the language it was asked.
+Inside a notebook, the question keeps its answer in the language it was asked, the vocabulary
+cards switch between English and French, and each concept carries a note on why it matters.
 
-![A concept card on Canada's dual measurement system, with a "Why it matters" note](assets/docs/notebook-concept.png)
-
-![A question asked in French about the metric system, with its answer in French](assets/docs/notebook-question.png)
+![One notebook in three parts: a question asked and answered in French, vocabulary cards in English and French, and a concept card on Canada's dual measurement system with its "Why it matters" note](assets/docs/notebook-understanding.jpg)
 
 ## Setup
 
