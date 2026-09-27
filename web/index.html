@@ -23,7 +23,7 @@
 <body>
   <canvas class="city" id="city" aria-hidden="true"></canvas>
 
-  <!-- The laptop stays fixed from Ask Beaver to Notebooks; each slide picks its screen. -->
+  <!-- The laptop stays fixed across the five feature slides; each slide picks its screen. -->
   <div class="stage" id="stage" hidden>
     <figure class="laptop" aria-label="Beaver on a laptop">
       <div class="lid">
@@ -32,6 +32,81 @@
             <header class="app-bar">
               <span class="app-name">Beaver</span>
             </header>
+
+            <section class="app-view" data-screen="duties">
+              <h3>Deadlines and duties</h3>
+              <ol class="duties">
+                <li>
+                  <time datetime="2026-10-05">Oct 5, 2026</time>
+                  <p class="line" lang="en"><span class="code">English</span>Canada Groceries and Essentials Benefit payment</p>
+                  <p class="line" lang="es"><span class="code">Español</span>Pago del Beneficio Canadiense para Comestibles y Artículos Esenciales</p>
+                  <span class="source">Canada Revenue Agency</span>
+                </li>
+                <li>
+                  <time datetime="2026-12-15">Dec 15, 2026</time>
+                  <p class="line" lang="en"><span class="code">English</span>Tax instalment due, if you pay by instalments</p>
+                  <p class="line" lang="es"><span class="code">Español</span>Vence el pago a plazos del impuesto, si paga a plazos</p>
+                  <span class="source">Canada Revenue Agency</span>
+                </li>
+                <li>
+                  <time datetime="2027-04-30">Apr 30, 2027</time>
+                  <p class="line" lang="en"><span class="code">English</span>File your 2026 tax return and pay any balance</p>
+                  <p class="line" lang="es"><span class="code">Español</span>Presente su declaración de 2026 y pague cualquier saldo</p>
+                  <span class="source">Canada Revenue Agency</span>
+                </li>
+                <li>
+                  <time>9 months before expiry</time>
+                  <p class="line" lang="en"><span class="code">English</span>Renew your permanent resident card</p>
+                  <p class="line" lang="es"><span class="code">Español</span>Renueve su tarjeta de residente permanente</p>
+                  <span class="source">Immigration, Refugees and Citizenship Canada</span>
+                </li>
+              </ol>
+            </section>
+
+            <section class="app-view" data-screen="documents">
+              <h3>Documents</h3>
+              <div class="ask">
+                <figure class="doc-photo" aria-label="Photo of a letter">
+                  <span class="doc-seal"></span>
+                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                </figure>
+                <div class="ask-turns">
+                  <ol class="groups">
+                    <li>
+                      <p class="line" lang="en"><span class="code">English</span>This is a Notice of Assessment from the Canada Revenue Agency.</p>
+                      <p class="line" lang="zh-Hant"><span class="code">中文</span>這是加拿大稅務局寄來的評稅通知書。</p>
+                    </li>
+                    <li>
+                      <p class="line" lang="en"><span class="code">English</span>It confirms your 2025 tax return was processed.</p>
+                      <p class="line" lang="zh-Hant"><span class="code">中文</span>它確認您2025年的報稅表已處理完畢。</p>
+                    </li>
+                    <li>
+                      <p class="line" lang="en"><span class="code">English</span>You owe nothing, and you do not need to reply.</p>
+                      <p class="line" lang="zh-Hant"><span class="code">中文</span>您無需繳款，也不需要回覆。</p>
+                    </li>
+                  </ol>
+                  <p class="app-note">Summarized on this laptop. The photo was not sent anywhere.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="app-view" data-screen="rover">
+              <h3>Rover</h3>
+              <p class="app-note"><span class="tag ok">Phone page running</span> A question from the phone, answered through the rover's speaker</p>
+              <div class="ask-turns">
+                <p class="bubble" lang="ar" dir="rtl">هل يمكنك أن تأخذني في جولة في أرجاء مبنى البرلمان؟</p>
+                <ol class="groups">
+                  <li>
+                    <p class="line" lang="en"><span class="code">English</span>What you are looking at is The Peace Tower.</p>
+                    <p class="line" lang="ar" dir="rtl"><span class="code">العربية</span>ما تنظر إليه هو برج السلام (Peace Tower) في أوتاوا.</p>
+                  </li>
+                  <li>
+                    <p class="line" lang="en"><span class="code">English</span>Would you like to know more about the history or architecture?</p>
+                    <p class="line" lang="ar" dir="rtl"><span class="code">العربية</span>هل تود معرفة المزيد عن التاريخ أو الهندسة المعمارية؟</p>
+                  </li>
+                </ol>
+              </div>
+            </section>
 
             <section class="app-view" data-screen="conversation">
               <div class="ask">
@@ -165,15 +240,15 @@
         </div>
       </section>
 
-      <section data-view="duties">
-        <div class="card">
+      <section data-view="duties" data-screen="duties" data-stage="wide">
+        <div class="card card-side">
           <h2>Deadlines and duties</h2>
           <p>Beaver lists your upcoming tax, benefit, and immigration deadlines, each taken from the government page that states it.</p>
         </div>
       </section>
 
-      <section data-view="documents">
-        <div class="card">
+      <section data-view="documents" data-screen="documents" data-stage="wide">
+        <div class="card card-side">
           <h2>Documents</h2>
           <p>Photograph a letter you can't read. Beaver summarizes it in your language, on your own computer.</p>
         </div>
@@ -195,8 +270,8 @@
         </div>
       </section>
 
-      <section data-view="rover">
-        <div class="card">
+      <section data-view="rover" data-screen="rover" data-stage="wide">
+        <div class="card card-side">
           <h2>Rover</h2>
           <p>Take Beaver out with you. Ask through your phone, and Beaver answers through the rover's speaker, looking through its camera at what you see.</p>
         </div>

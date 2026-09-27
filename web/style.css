@@ -291,9 +291,9 @@ html, body {
 }
 .card p { color: var(--ink-2); font-size: 1.12em; }
 .card-side { width: min(520px, 28vw); }
-/* A feature card with no laptop beside it spans the phone's width. */
+/* On a phone every card spans the width; there is no room beside it. */
 @media (max-width: 700px) {
-  section:not([data-screen]) > .card { width: calc(100vw - 32px); }
+  .card, .card-side { width: calc(100vw - 32px); }
 }
 .meta { font-size: 0.78em !important; color: var(--ink-3) !important; margin-top: 1.2em !important; }
 
@@ -367,6 +367,18 @@ a.app-button { text-decoration: none; }
 .line { margin: 0 !important; display: grid; grid-template-columns: 4.6em 1fr; align-items: baseline; line-height: 1.4; border-radius: 0.4em; padding: 0.1em 0.3em; color: var(--ink-2); transition: background 0.2s, color 0.2s; }
 .line .code { font-size: 0.8em; font-weight: 600; color: var(--ink-3); }
 .line.speaking { background: rgba(213, 92, 43, 0.24); color: var(--ink); }
+
+/* Deadlines screen: date, duty in two languages, and its source. */
+.duties { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7em; overflow: auto; min-height: 0; scrollbar-width: none; }
+.duties li { display: grid; grid-template-columns: 7.5em 1fr; column-gap: 1em; border-left: 2px solid var(--orange); padding-left: 0.8em; }
+.duties time { grid-row: span 3; font-family: var(--display); font-weight: 700; color: var(--ink); }
+.duties .source { font-size: 0.8em; color: var(--ink-3); padding-left: 0.3em; }
+
+/* Documents screen: a photographed letter drawn as paper and grey lines of text. */
+.doc-photo { margin: 0.4em 0 0; width: 78%; justify-self: center; align-self: start; aspect-ratio: 3 / 4; background: #f3ece1; border-radius: 0.5em; padding: 1.4em 1.2em; display: grid; align-content: start; gap: 0.7em; transform: rotate(-2deg); box-shadow: 0 0.6em 1.4em rgba(0, 0, 0, 0.35); }
+.doc-photo span { height: 0.4em; border-radius: 999px; background: #c9bfb1; }
+.doc-photo span:nth-child(3n) { width: 70%; }
+.doc-photo .doc-seal { width: 2.4em; height: 2.4em; border-radius: 50%; background: var(--red); margin-bottom: 0.6em; }
 
 /* Notebook screen. */
 .nb-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.3em 0.9em; }
