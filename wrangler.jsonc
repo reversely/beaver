@@ -1,6 +1,6 @@
-// Cloudflare deploy of the demo page: every file under demo/ is published as-is.
+// Cloudflare deploy of the public site: every file under web/ is published as-is.
 {
   "name": "beaver",
   "compatibility_date": "2026-09-27",
-  "assets": { "directory": "./demo" }
+  "assets": { "directory": "./web" }
 }

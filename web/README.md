@@ -1,4 +1,4 @@
-# Demo page
+# Home page
 
 A static page that introduces Beaver on a laptop at a table. It tells the concept sheet's two
 paragraphs one line per page, plays the "Hey Beaver..." exchanges aloud, and shows the desktop
@@ -8,7 +8,7 @@ line is a saved MP3, and the Ask and Notebook screens replay one recorded deskto
 ## Running
 
 ```
-uv run python -m http.server 8766 -d demo
+uv run python -m http.server 8766 -d web
 ```
 
 Then open `http://127.0.0.1:8766`. Scroll, press the arrow keys, or press **Play demo**, which
@@ -42,7 +42,7 @@ Every spoken line is an MP3 in `audio/`, generated once by `audio/build_audio.py
 `audio/clips.json`, which holds each clip's exact text, language, and voice role:
 
 ```
-uv run --group desktop python demo/audio/build_audio.py
+uv run --group desktop python web/audio/build_audio.py
 ```
 
 | Role | ElevenLabs voice | Used for |
@@ -88,7 +88,7 @@ branches are used.
 
 ```
 uv run --with pillow --with numpy --with opencv-python-headless \
-    python demo/art/build_layers.py
+    python web/art/build_layers.py
 ```
 
 `build_layers.py` removes the master's cream sky by flood fill from the top edge, cuts Parliament's
