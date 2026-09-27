@@ -23,7 +23,7 @@ app on a laptop. It is built for one person with one rover and one laptop.
 | Shared core | `src/beaver/core` | Config loading, run records, the Gemini and ElevenLabs calls, and the prompts both apps use. |
 
 [`docs/how-it-works.md`](docs/how-it-works.md) draws the parts and what travels between them, and
-the privacy filter that decides what Gemini receives; [`docs/architecture.md`](docs/architecture.md)
+the guard proxy that decides what the AI services receive; [`docs/architecture.md`](docs/architecture.md)
 describes each part in detail.
 
 ## Setup
@@ -69,7 +69,7 @@ location lookup, whose fixed-point tests run once `run.py getplaces` has downloa
 
 | File | Contents |
 |---|---|
-| [`docs/how-it-works.md`](docs/how-it-works.md) | Two diagrams: the parts and their connections, and the privacy filter with Gemini |
+| [`docs/how-it-works.md`](docs/how-it-works.md) | Two diagrams: the parts and their connections, and the guard proxy between the rover and the AI services |
 | [`docs/architecture.md`](docs/architecture.md) | The parts, the data each one keeps, sync, the shared core, and security |
 | [`docs/hardware.md`](docs/hardware.md) | The rover: Raspberry Pi 5 on a SunFounder PiCar-X Robot HAT v4, power, and network access |
 | [`docs/measurements.md`](docs/measurements.md) | Timings, token counts, costs, and model comparisons measured so far |

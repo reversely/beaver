@@ -113,41 +113,37 @@ def svg(width, height, description, body):
 
 
 def parts():
-    """The phone, the rover and its local privacy gate, the remote services, and the laptop."""
+    """The rover and its local guard proxy, the remote AI services, and the laptop."""
     w, h = 220, 140
     b = [
-        zone(320, 150, 580, 220, "ON THE PI, LOCAL", "#e9f5ec", "#1a7f37"),
-        box(40, 190, w, h, "device-mobile", "Phone", "the visitor asks here"),
-        box(340, 205, w, h - 15, "robot", "Rover", "camera, speaker"),
-        box(640, 205, w, h - 15, "shield-lock", "Privacy gate", "Whisper + guard.py"),
-        box(1000, 40, w, h, "sparkles", "Gemini", "writes the answer"),
-        box(1000, 340, w, h, "speakerphone", "ElevenLabs", "speaks the answer"),
-        box(1320, 190, w, h, "device-laptop", "Desktop app", "laptop, notebooks"),
+        zone(30, 150, 580, 220, "ON THE ROVER, LOCAL", "#e9f5ec", "#1a7f37"),
+        box(50, 205, w, h - 15, "robot", "Rover", "hears, sees, speaks"),
+        box(350, 205, w, h - 15, "shield-lock", "Guard proxy", "cleans before sending"),
+        box(710, 40, w, h, "sparkles", "Gemini", "writes the answer"),
+        box(710, 340, w, h, "speakerphone", "ElevenLabs", "speaks the answer"),
+        box(1030, 190, w, h, "device-laptop", "Desktop app", "laptop, notebooks"),
     ]
-    b.append(arrow([(260, 268), (338, 268)], both=True))
-    b.append(label(299, 248, ["HTTPS"]))
-    b.append(label(299, 296, ["tunnel"]))
-    b.append(arrow([(560, 268), (638, 268)], both=True))
-    b.append(label(599, 248, ["audio"]))
-    b.append(label(599, 296, ["reply"]))
-    b.append(arrow([(860, 235), (998, 130)], both=True))
-    b.append(label(915, 150, ["redacted text,", "camera frame"], anchor="end"))
-    b.append(arrow([(860, 300), (998, 390)], both=True))
-    b.append(label(915, 395, ["checked reply"], anchor="end"))
-    b.append(arrow([(1318, 225), (1222, 130)], both=True))
-    b.append(label(1272, 142, ["its own questions,", "no gate yet"], anchor="start"))
-    b.append(arrow([(1318, 295), (1222, 390)], both=True))
-    b.append(label(1272, 382, ["each sentence"], anchor="start"))
-    b.append(arrow([(450, 330), (450, 560), (1430, 560), (1430, 332)]))
-    b.append(label(940, 550, ["pulls each saved turn over SSH, every 60 s"]))
+    b.append(arrow([(270, 268), (348, 268)], both=True))
+    b.append(label(309, 248, ["question"]))
+    b.append(label(309, 296, ["answer"]))
+    b.append(arrow([(570, 235), (708, 130)], both=True))
+    b.append(label(625, 150, ["text without", "personal info"], anchor="end"))
+    b.append(arrow([(570, 300), (708, 390)], both=True))
+    b.append(label(625, 395, ["checked answer"], anchor="end"))
+    b.append(arrow([(1028, 225), (932, 130)], both=True))
+    b.append(label(982, 142, ["its own questions,", "no proxy yet"], anchor="start"))
+    b.append(arrow([(1028, 295), (932, 390)], both=True))
+    b.append(label(982, 382, ["each sentence"], anchor="start"))
+    b.append(arrow([(160, 330), (160, 560), (1140, 560), (1140, 332)]))
+    b.append(label(650, 550, ["pulls each saved turn over SSH, every 60 s"]))
     return svg(
-        1580,
+        1290,
         590,
-        "The parts of Beaver. The phone reaches the rover through an HTTPS tunnel. On the Pi, "
-        "the privacy gate transcribes the question with Whisper and redacts it with guard.py, "
-        "so Gemini receives redacted text and a camera frame and ElevenLabs the checked reply. "
-        "The desktop app asks Gemini and ElevenLabs its own questions without a gate yet, and "
-        "pulls each rover turn over SSH every 60 seconds.",
+        "The parts of Beaver. On the rover, a local guard proxy sits between the rover and the "
+        "AI services: it turns the spoken question into text and removes personal information "
+        "before Gemini sees it, and checks the answer before ElevenLabs speaks it. The desktop "
+        "app asks Gemini and ElevenLabs its own questions without the proxy yet, and pulls each "
+        "rover turn over SSH every 60 seconds.",
         "".join(b),
     )
 
@@ -158,24 +154,24 @@ def privacy():
     y_out, y_pi = 70, 330
     b = [
         zone(250, 20, 1210, 230, "SENT TO REMOTE SERVICES", "#fff4e0", "#8a5a00"),
-        zone(250, 280, 1210, 230, "STAYS ON THE PI", "#e9f5ec", "#1a7f37"),
+        zone(250, 280, 1210, 230, "STAYS ON THE ROVER", "#e9f5ec", "#1a7f37"),
         zone(
             20,
             560,
             1440,
             190,
-            "DESKTOP APP QUESTIONS: NOT FILTERED YET",
+            "DESKTOP APP QUESTIONS: NO GUARD PROXY YET",
             "#fdeceb",
             "#b42318",
         ),
-        box(30, y_pi, w, h, "microphone", "Phone", "location to ~1 km"),
+        box(30, y_pi, w, h, "microphone", "Question", "spoken to the rover"),
         box(275, y_pi, w, h, "file-music", "Recording", "kept, never synced"),
         box(505, y_pi, w, h, "text-recognition", "Transcribe", "asks if unsure"),
-        box(735, y_pi, w, h, "shield-lock", "Redact", "guard.py"),
-        box(965, y_pi, w, h, "shield-check", "Check reply", "guard.py"),
+        box(735, y_pi, w, h, "shield-lock", "Clean question", "guard proxy"),
+        box(965, y_pi, w, h, "shield-check", "Check answer", "guard proxy"),
         box(1195, y_pi, w + 50, h, "volume", "Speaker", "on the rover"),
-        box(850, y_out, w, h, "sparkles", "Gemini", "text + frame, no audio"),
-        box(1195, y_out, w + 50, h, "speakerphone", "ElevenLabs", "checked reply"),
+        box(850, y_out, w, h, "sparkles", "Gemini", "clean text, no audio"),
+        box(1195, y_out, w + 50, h, "speakerphone", "ElevenLabs", "checked answer"),
         box(
             275,
             600,
@@ -204,9 +200,9 @@ def privacy():
     b.append(arrow([(465, mid), (503, mid)]))
     b.append(arrow([(695, mid), (733, mid)]))
     b.append(arrow([(830, y_pi), (890, y_out + h + 2)]))
-    b.append(label(848, 272, ["redacted text"], anchor="end"))
+    b.append(label(848, 272, ["clean text + frame"], anchor="end"))
     b.append(arrow([(1000, y_out + h), (1060, y_pi - 2)]))
-    b.append(label(1042, 272, ["reply"], anchor="start"))
+    b.append(label(1042, 272, ["answer"], anchor="start"))
     b.append(arrow([(1155, y_pi + 30), (1230, y_out + h + 2)]))
     b.append(arrow([(1340, y_out + h), (1340, y_pi - 2)]))
     b.append(label(1350, 280 - 12, ["audio"], anchor="start"))
@@ -215,10 +211,11 @@ def privacy():
     return svg(
         1480,
         770,
-        "The privacy filter. On the rover the recording stays on the Pi: Whisper transcribes "
-        "it, the guard redacts it, and Gemini receives only redacted text and a camera frame. "
-        "The guard checks the reply before ElevenLabs speaks it. Questions asked in the desktop "
-        "app reach Gemini as recorded, because the filter does not cover them yet.",
+        "The guard proxy. The spoken question stays on the rover: Whisper turns it into text "
+        "and the guard proxy removes personal information, so Gemini receives only clean text "
+        "and a camera frame. The proxy checks the answer before ElevenLabs speaks it. Questions "
+        "asked in the desktop app reach Gemini as recorded, because the proxy does not cover "
+        "them yet.",
         "".join(b),
     )
 

@@ -1,59 +1,59 @@
 # How it works
 
-Two diagrams: the parts of Beaver and what travels between them, and the privacy filter that
-decides what Gemini receives. Both describe the code at the time of writing; the text under each
-names the files involved.
-`python3 docs/img/make_diagrams.py` redraws both images from the layout in that script.
+Two diagrams: the parts of Beaver and what travels between them, and the guard proxy that decides
+what the AI services receive. `python3 docs/img/make_diagrams.py` redraws both images from the
+layout in that script.
 
 ## The parts
 
-![The parts of Beaver: the phone reaches the rover through an HTTPS tunnel; on the Pi, the privacy gate transcribes and redacts the question before Gemini receives redacted text and a camera frame and ElevenLabs the checked reply; the desktop app asks both its own questions without a gate yet and pulls each rover turn over SSH every 60 seconds](img/how-it-works-parts.svg)
+![The parts of Beaver: on the rover, a local guard proxy sits between the rover and the AI services, sending Gemini text without personal information and checking the answer before ElevenLabs speaks it; the desktop app asks both its own questions without the proxy yet and pulls each rover turn over SSH every 60 seconds](img/how-it-works-parts.svg)
 
-The rover answers on its own. A visitor opens the phone page from the QR code that `phone.py`
-prints (the desktop app's Rover panel shows the same code through `rover_phone.py`), holds the
-button, and asks. The recording reaches the Pi through a Cloudflare quick tunnel, because phone
-browsers open the microphone only on HTTPS pages and the campus network blocks connections between
-devices. The Pi answers through its own speaker and returns the reply text to the phone.
+The rover hears a spoken question, takes a camera frame, and speaks the answer on its own speaker.
+It does not send the question to the AI services directly. A guard proxy runs on the rover between
+it and every remote AI service: each request passes through the proxy, which forwards only what it
+has cleaned, and each answer passes back through it before the rover speaks.
 
-Between the rover and the AI services sits the privacy gate, which runs on the Pi before anything
-leaves it. Whisper (`transcribe.py`) turns the recording into text on the Pi, and `guard.py`
-replaces personal information in that text, so Gemini receives redacted text and a camera frame,
-never the recording. The gate checks Gemini's reply the same way before ElevenLabs speaks it. The
-next diagram follows one question through the gate. The desktop app's own questions do not pass
-through a gate yet.
+- Gemini writes the answer from clean text and the camera frame.
+- ElevenLabs turns the checked answer into speech.
 
-The laptop never receives a request from the Pi. Every 60 seconds `rover_sync.py` connects to the
-Pi over SSH through Tailscale and pulls each new turn's `record.json` and `frame.jpg`, files the
-turn into a notebook, and maps the turn's rounded location to a province and municipality with
-`place.py` against Statistics Canada's boundary file, which is stored on the laptop.
+The laptop never receives a request from the rover. Every 60 seconds the desktop app connects to
+the rover over SSH, pulls each new turn's saved record and camera frame, and files the turn into a
+notebook. The desktop app also takes its own questions, typed or spoken at the laptop, and answers
+them sentence by sentence in English, French, or both, plus the visitor's language; those
+questions do not pass through a guard proxy yet.
 
-The desktop app also takes its own questions, typed or spoken at the laptop, and answers them
-sentence by sentence in English, French, or both, plus the visitor's language. Translation runs on
-Gemini or on Argos models stored on the laptop.
+## The guard proxy
 
-## The privacy filter and Gemini
+![The guard proxy: the spoken question stays on the rover; Whisper turns it into text and the guard proxy removes personal information, so Gemini receives only clean text and a camera frame; the proxy checks the answer before ElevenLabs speaks it; desktop app questions reach Gemini as recorded](img/how-it-works-privacy.svg)
 
-![The privacy filter: the recording stays on the Pi, Whisper transcribes it, the guard redacts it, Gemini receives only redacted text and a camera frame, and the guard checks the reply before ElevenLabs speaks it; desktop app questions reach Gemini as recorded](img/how-it-works-privacy.svg)
+The guard proxy is a local checkpoint between a device that hears people and a cloud AI that
+answers them. The cloud AI needs the question's meaning, not the person's voice or their personal
+details, so the proxy sends the meaning and keeps the rest on the device.
 
-On the rover, the question's audio never reaches Gemini. `transcribe.py` turns it into text on the
-Pi with Whisper base, either in the language the phone page sent or in the one Whisper detects.
-When detection scores under 0.7 for every language on the page, the rover asks the visitor to
-choose one and sends Gemini nothing. `guard.py` then replaces personal information in the
-transcript with a spoken phrase, so "my number is 613 555 0142" reaches Gemini as "my number is a
-phone number". Gemini writes the answer from that text and a camera frame. The same guard runs on
-the reply before ElevenLabs speaks it or the run folder saves it, and cuts it at a sentence end
-when it is over the speech limit. The run record keeps the redacted question and the names of the
-rules that fired, never the original text.
+1. **The recording stays on the rover.** It is saved there and never sent anywhere, not even to
+   the laptop.
+2. **Transcribe on the rover.** Whisper turns the recording into text on the rover itself. When the
+   visitor's language is not certain (under 0.7), the rover asks the visitor to choose one and
+   sends nothing.
+3. **Clean the question.** The proxy replaces personal information with a plain phrase: email
+   addresses, phone numbers, postal codes, street addresses, social insurance numbers, health card
+   numbers, and payment card numbers. "My number is 613 555 0142" leaves the rover as "my number is
+   a phone number".
+4. **Ask Gemini.** Gemini receives the clean text, the language, and a camera frame; never the
+   recording.
+5. **Check the answer.** The proxy runs the same check on Gemini's answer and shortens it at a
+   sentence end if it is too long to speak, before ElevenLabs speaks it and before the rover saves
+   it.
 
-What the filter does not cover:
+The rover's saved record keeps the clean question and the names of the checks that fired, never
+the original words.
 
-- The camera frame goes to Gemini as the camera took it; nothing on the Pi checks it for faces,
-  documents, or screens.
-- The question audio passes through Cloudflare's network on its way to the Pi, because the quick
-  tunnel's HTTPS connection ends at Cloudflare's edge.
-- Questions asked in the desktop app, typed or spoken at the laptop, go to Gemini as they are: a
-  spoken question is sent as audio. The guard and on-board transcription run on rover turns only.
+What the proxy does not cover yet:
 
-The phone rounds its position to 2 decimal places before sending it, and the Pi rounds it again,
-so a modified page cannot store a finer point. Only the rounded pair reaches the laptop, where the
-province and municipality lookup runs without any remote service.
+- The camera frame goes to Gemini as the camera took it; nothing checks it for faces, documents,
+  or screens.
+- Questions asked in the desktop app go to Gemini as they are: a spoken one is sent as audio.
+
+For developers: the proxy is `src/beaver/rover/guard.py`, transcription is
+`src/beaver/rover/transcribe.py`, and [architecture.md](architecture.md) describes the network
+path and the files each part keeps.
