@@ -20,15 +20,23 @@ export function createCompanion(canvas) {
   // Beaver faces +x; a three-quarter view from the front right shows the face, the body behind it,
   // and the tail.
   const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 50);
-  const target = new THREE.Vector3(0, 0.8, 0);
-  // From this direction, backed off until a sphere around Beaver fits both the canvas's height and
-  // width, so his tail stays in view as he turns, in any canvas shape.
+  const target = new THREE.Vector3(0, 0.85, 0);
+  // Beaver is long and low: his tail reaches 2.52 from the turning axis, so he needs about 2.6 of
+  // room either side as he sways, but stands only 1.77 tall. The camera backs off just far enough
+  // for each of those to fit its own direction of the canvas, plus the depth of whatever sways
+  // toward the camera (the head, 1.61 ahead of the axis), so a wide canvas fills with Beaver.
   const view = new THREE.Vector3(6.4, 1.1, 4.6).normalize();
-  const REACH = 2.6;
+  const HALF_WIDTH = 2.6;
+  const HALF_HEIGHT = 1.0;
+  const NEAR_DEPTH = 1.7;
   function frame(aspect) {
     const vertical = THREE.MathUtils.degToRad(camera.fov) / 2;
     const horizontal = Math.atan(Math.tan(vertical) * aspect);
-    camera.position.copy(view).multiplyScalar(REACH / Math.sin(Math.min(vertical, horizontal))).add(target);
+    const distance = Math.max(
+      HALF_WIDTH / Math.tan(horizontal) + NEAR_DEPTH / 2,
+      HALF_HEIGHT / Math.tan(vertical) + NEAR_DEPTH,
+    );
+    camera.position.copy(view).multiplyScalar(distance).add(target);
     camera.lookAt(target);
   }
 

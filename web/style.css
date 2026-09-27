@@ -52,13 +52,14 @@ html, body {
    stands in the middle, between the card and the phone.
    Dragging him turns him around. */
 .companion {
-  position: fixed; z-index: 3; right: 4vw; top: 50%; width: 34vw; height: 30vw; transform: translateY(-42%);
+  position: fixed; z-index: 3; right: 3vw; top: 50%; width: 42vw; height: 23vw; transform: translateY(-40%);
   cursor: grab; touch-action: none;
   transition: width 0.6s ease, height 0.6s ease, right 0.6s ease, top 0.6s ease, transform 0.6s ease;
 }
 .companion.is-turning { cursor: grabbing; }
-body[data-companion="middle"] .companion { right: 37vw; top: 50%; width: 26vw; height: 22vw; transform: translateY(-30%); }
-body[data-companion="corner"] .companion { right: calc(100vw - 8px - 240px); top: calc(100vh - 64px - 180px); width: 240px; height: 180px; transform: none; }
+body[data-companion="middle"] .companion { right: 35vw; top: 50%; width: 30vw; height: 16vw; transform: translateY(-20%); }
+/* In the corner he stands behind the cards and takes no clicks, so a card's links stay usable. */
+body[data-companion="corner"] .companion { right: calc(100vw - 8px - 300px); top: calc(100vh - 64px - 160px); width: 300px; height: 160px; transform: none; z-index: 0; pointer-events: none; }
 @media (max-width: 700px) {
   .companion, body[data-companion="corner"] .companion, body[data-companion="middle"] .companion { right: calc(100vw - 8px - 140px); top: calc(100vh - 60px - 105px); width: 140px; height: 105px; transform: none; }
 }
