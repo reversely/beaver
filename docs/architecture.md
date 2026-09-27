@@ -85,6 +85,10 @@ redacted question, the chosen language, and which rules fired, never the unredac
 The rover still saves the question audio (`question.wav`) in its run folder on the Pi; the desktop
 app files the redacted transcript and never pulls that audio.
 
+The guard and on-board transcription cover rover turns only. A question asked in the desktop app,
+typed or spoken at the laptop, goes to Gemini as it is, and a spoken one is sent as audio. Camera
+frames go to Gemini unfiltered on both. [how-it-works.md](how-it-works.md) draws both paths.
+
 ## Security
 
 - The Gemini and ElevenLabs keys live only in `.env` at the repo root on each machine and never
