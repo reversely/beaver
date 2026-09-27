@@ -1,7 +1,8 @@
 // Beaver, drawn part for part from the rover prototype's CAD model (#46): a base with an arch cut
 // out underneath, a humped shell on top of it, a flat cross-hatched oval tail, a small block under
 // the head, and a forward-tilted head with two dot eyes, a small hole on each side, tan lower side
-// panels, and a cream arched face plate holding the camera lens and the screen.
+// panels, and a cream arched face plate holding the camera lens and the screen, which shows the prototype's
+// dot-matrix buck teeth.
 //
 // The one change from the model is colour: the CAD render leaves the base, shell, tail, and block
 // uncoloured, and here they take the head's own brown. Every other colour is sampled from the render.
@@ -113,6 +114,51 @@ function grooveTexture() {
   return texture;
 }
 
+// The screen's dot-matrix picture, as on the prototype: two buck teeth side by side under a mouth
+// line that rises to each top corner. Cells are lit on a 48 by 28 grid and drawn as square dots.
+function screenTexture() {
+  const cols = 48;
+  const rows = 28;
+  const lit = new Map();
+  const set = (col, row, level) => lit.set(`${col},${row}`, level);
+  // Mouth line: from each top corner down to the teeth's top edge.
+  const line = [[3, 3], [4, 3], [5, 4], [6, 4], [7, 4], [8, 5], [9, 5], [10, 5], [11, 6], [12, 6]];
+  for (const [col, row] of line) {
+    set(col, row, 1);
+    set(cols - 1 - col, row, 1);
+  }
+  // Teeth: two blocks with a one-cell gap, outlined bright, filled a little dimmer, with their
+  // bottom corners cut round.
+  for (const [left, right] of [[13, 23], [24, 34]]) {
+    for (let row = 7; row <= 24; row++) {
+      for (let col = left; col <= right; col++) {
+        const corner = row === 24 && (col === left || col === right);
+        if (corner) continue;
+        const edge = row === 7 || row === 24 || col === left || col === right || (row === 23 && (col === left + 1 || col === right - 1));
+        set(col, row, edge ? 1 : 0.72);
+      }
+    }
+  }
+  for (let row = 8; row <= 24; row++) lit.delete(`23,${row}`);
+
+  const cell = 8;
+  const canvas = document.createElement("canvas");
+  canvas.width = cols * cell;
+  canvas.height = rows * cell;
+  const context = canvas.getContext("2d");
+  context.fillStyle = "#000000";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  for (const [key, level] of lit) {
+    const [col, row] = key.split(",").map(Number);
+    context.fillStyle = `rgba(226, 230, 234, ${level})`;
+    context.fillRect(col * cell + 1, row * cell + 1, cell - 2, cell - 2);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
+}
+
 export function createBeaver() {
   const matte = (color, extra = {}) =>
     new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: 0, ...extra });
@@ -173,8 +219,11 @@ export function createBeaver() {
   const lens = new THREE.Mesh(new THREE.CircleGeometry(0.055, 32), black);
   lens.position.set(0, 0.06, 0.058);
   face.add(lens);
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.2), black);
-  screen.position.set(0, -0.19, 0.056);
+  const screen = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.42, 0.245),
+    new THREE.MeshBasicMaterial({ map: screenTexture() }),
+  );
+  screen.position.set(0, -0.2, 0.056);
   face.add(screen);
   for (const side of [-1, 1]) {
     const eye = new THREE.Mesh(new THREE.CircleGeometry(0.035, 20), black);
