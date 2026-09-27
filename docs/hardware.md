@@ -6,7 +6,7 @@ The rover is a SunFounder PiCar-X built on a Raspberry Pi 5 and a SunFounder Rob
 
 | Part | Detail |
 |---|---|
-| Computer | Raspberry Pi 5 Model B Rev 1.1, 4 GB, Raspberry Pi OS 64-bit (Debian 13, trixie), Python 3.13, kernel `6.18.50+rpt-rpi-2712` with 16 KB memory pages |
+| Computer | Raspberry Pi 5 Model B Rev 1.1, 4 GB, Raspberry Pi OS 64-bit (Debian 13, trixie), Python 3.13 |
 | HAT | SunFounder Robot HAT v4. It has no ID EEPROM, so the `robot_hat` library treats it as v4 |
 | Speaker | On the HAT, driven by the `hifiberry-dac` overlay (a PCM5102A DAC, playback only). The amplifier plays only while GPIO 20 is high; `speaker.enable_pin = 20` makes every rover command raise it before playback |
 | Microphone | None. The v4 HAT has no microphone, and Bluetooth headsets such as AirPods Max pair with the Pi but deliver no microphone audio. The phone page stands in (see [architecture.md](architecture.md)) |
@@ -21,12 +21,16 @@ installer adds `hifiberry-dac` to `/boot/firmware/config.txt`; switching it to
 The camera is detected only at boot (`camera_auto_detect=1`). After reseating the ribbon, with the
 power off, `rpicam-hello --list-cameras` should list the OV5647.
 
-The 16 KB page size breaks some prebuilt native libraries, which die on import with a bus error
-(exit 135): `av` 18.1.0 and `tokenizers` 0.23.2 (both needed by faster-whisper), and
-`huggingface_hub`'s `hf_xet` download accelerator, which `HF_HUB_DISABLE_XET=1` turns off.
-`ctranslate2` 4.8.2 and `onnxruntime` 1.30.0 import normally. The Pi also has the
-4 KB-page kernel, `kernel8.img`, which `kernel=kernel8.img` in `/boot/firmware/config.txt`
-selects at boot.
+A power cut during a package install can leave truncated files in uv's cache on the Pi, which
+later installs reuse. A truncated native library makes Python die on import with a bus error
+(exit 135): `tokenizers.abi3.so` was cut to exactly 4,194,304 bytes of its 11,079,248, and `av`
+also failed on import until the same reinstall. `uv cache clean <package>` and a reinstall fix it. Install with
+`UV_CONCURRENT_INSTALLS=1` and `nice -n 19` to keep the load low.
+
+The Pi boots the 4 KB-page kernel, `kernel8.img`, selected by `kernel=kernel8.img` at the end of
+`/boot/firmware/config.txt` (the previous file is `config.txt.bak`). Raspberry Pi OS's default on
+the Pi 5 is the 16 KB-page `kernel_2712.img`; the switch was made while the bus errors were blamed
+on page size, before the truncated files were found.
 
 ## Power
 
@@ -39,13 +43,16 @@ get_throttled` reports under-voltage since boot, and `vcgencmd pmic_read_adc EXT
 | Battery flat (0.0 V on the HAT) | `0x50000` (under-voltage and throttling since boot), 4.89 V input | The speaker produced a buzz instead of speech |
 | Battery charged (6.74 to 8.34 V) | `0x0`, 5.19 to 5.22 V input | Clean speech |
 
-The Pi reset unexpectedly at least three times on 2026-09-26 and 2026-09-27. After one reset, while
-a Whisper benchmark and the phone page with its camera and tunnel ran together, the Pi's power-reset
-flag read `0x2`. The cause is not yet confirmed. A 1-second log of throttle state and input voltage
-during a later benchmark (model downloads, load average up to 3.34) read `0x0` throughout, with
-the input at or above 5.15 V, and the Pi stayed up. No Whisper benchmark has produced a
-transcription: the two earlier runs ended with the Pi unreachable, and in the last one
-faster-whisper crashed on import (see the page-size note above).
+Keep the Pi's own USB-C port unplugged while the HAT powers it. With a cable from the laptop in
+that port alongside the HAT, the Pi read a battery of about 5.7 V, a 4.94 V input, and under-voltage
+(`0x50000`), and it reset unexpectedly at least three times on 2026-09-26 and 2026-09-27. After the
+cable came out, the same battery read 8.34 V, the input 5.22 V, and `get_throttled` `0x0`, steady
+under a package install and a Gemini request.
+
+That cable does not explain every drop. At about 01:06 on 2026-09-27, with the cable out and the
+readings above, the Pi went unreachable a few minutes into a Whisper benchmark (two threads,
+`nice -n 19`) and stayed unreachable for more than 10 minutes. Every earlier drop also came during
+sustained CPU load, so CPU-heavy work on the Pi waits until the cause is found.
 
 ## Network access
 
