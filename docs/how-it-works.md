@@ -3,58 +3,11 @@
 Two diagrams: the parts of Beaver and what travels between them, and the privacy filter that
 decides what Gemini receives. Both describe the code at the time of writing; the text under each
 names the files involved.
+`python3 docs/img/make_diagrams.py` redraws both images from the layout in that script.
 
 ## The parts
 
-```mermaid
-flowchart LR
-    subgraph phone["Visitor's phone, in a browser"]
-        page["Phone page<br/>hold to talk, language, location"]
-    end
-
-    tunnel["Cloudflare quick tunnel<br/>(HTTPS)"]
-
-    subgraph pi["Rover: Raspberry Pi 5, src/beaver/rover"]
-        server["phone.py<br/>web server, token check"]
-        whisper["transcribe.py<br/>Whisper base"]
-        guard["guard.py<br/>redaction, length"]
-        camera["camera.py<br/>OV5647 frame"]
-        speaker["audio.py<br/>HAT speaker"]
-        runs[("runs/<br/>one folder per turn")]
-    end
-
-    subgraph remote["Remote services"]
-        gemini["Gemini"]
-        eleven["ElevenLabs"]
-    end
-
-    subgraph laptop["Laptop: desktop app, src/beaver/desktop"]
-        app["server.py<br/>app page at /app/, home page at /"]
-        bilingual["bilingual.py, argos.py<br/>sentence-by-sentence replies"]
-        notebooks[("notebooks.py<br/>notebooks.json")]
-        sync["rover_sync.py<br/>pull every 60 s"]
-        roverctl["rover_phone.py<br/>start and stop the phone page"]
-        place["place.py<br/>province and municipality"]
-    end
-
-    page -- "question WAV, language, rounded location" --> tunnel --> server
-    server --> whisper --> guard
-    camera --> gemini
-    guard -- "redacted question" --> gemini
-    gemini -- "reply" --> guard
-    guard -- "redacted, shortened reply" --> eleven --> speaker
-    server -- "reply text" --> page
-    server --> runs
-
-    runs -- "record.json, frame.jpg, pulled over SSH through Tailscale" --> sync
-    roverctl -- "starts and stops it over SSH" --> server
-    sync --> notebooks
-    sync --> place
-    app --> bilingual
-    bilingual -- "question, optional camera frame" --> gemini
-    bilingual -- "each sentence" --> eleven
-    notebooks -- "one filing request per exchange" --> gemini
-```
+![The parts of Beaver: the phone reaches the rover through an HTTPS tunnel; the rover sends Gemini redacted text and a camera frame and ElevenLabs the checked reply; the desktop app asks both its own questions and pulls each rover turn over SSH every 60 seconds](img/how-it-works-parts.svg)
 
 The rover answers on its own. A visitor opens the phone page from the QR code that `phone.py`
 prints (the desktop app's Rover panel shows the same code through `rover_phone.py`), holds the
@@ -73,42 +26,7 @@ Gemini or on Argos models stored on the laptop.
 
 ## The privacy filter and Gemini
 
-```mermaid
-flowchart TB
-    subgraph onphone["On the phone"]
-        mic["Microphone"]
-        gps["Position<br/>rounded to 2 decimals, about 1 km"]
-    end
-
-    subgraph onpi["Stays on the Pi"]
-        wav[("question.wav<br/>kept in runs/, never synced")]
-        detect{"Language chosen,<br/>or detected with at least 0.7?"}
-        ask["Rover asks the visitor<br/>to choose a language"]
-        transcript["Whisper base transcript"]
-        redact["guard.py: emails, phone numbers,<br/>postal codes, addresses, SIN,<br/>health card and payment card numbers<br/>become phrases such as 'a phone number'"]
-        replyguard["guard.py on the reply:<br/>redact, cut at a sentence end"]
-    end
-
-    subgraph leaves["Leaves the Pi"]
-        togemini["To Gemini: redacted text,<br/>the language, the camera frame"]
-        toeleven["To ElevenLabs: the guarded reply"]
-        tolaptop["To the laptop over SSH:<br/>record.json with the redacted question,<br/>rounded location, frame.jpg"]
-    end
-
-    subgraph desktop["Desktop app questions: not filtered yet"]
-        dmic["Laptop microphone or typing"]
-        dgemini["To Gemini: the audio as recorded,<br/>or the typed text, and an optional frame"]
-    end
-
-    mic -- "through the Cloudflare tunnel" --> wav
-    gps --> tolaptop
-    wav --> detect
-    detect -- "no" --> ask
-    detect -- "yes" --> transcript --> redact --> togemini
-    togemini -- "reply" --> replyguard --> toeleven
-    redact --> tolaptop
-    dmic --> dgemini
-```
+![The privacy filter: the recording stays on the Pi, Whisper transcribes it, the guard redacts it, Gemini receives only redacted text and a camera frame, and the guard checks the reply before ElevenLabs speaks it; desktop app questions reach Gemini as recorded](img/how-it-works-privacy.svg)
 
 On the rover, the question's audio never reaches Gemini. `transcribe.py` turns it into text on the
 Pi with Whisper base, either in the language the phone page sent or in the one Whisper detects.
