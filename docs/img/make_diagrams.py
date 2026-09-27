@@ -113,40 +113,41 @@ def svg(width, height, description, body):
 
 
 def parts():
-    """The phone, the rover, the laptop, and the two remote services."""
+    """The phone, the rover and its local privacy gate, the remote services, and the laptop."""
     w, h = 220, 140
-    phone = (40, 190)
-    rover = (360, 190)
-    gemini = (700, 40)
-    eleven = (700, 340)
-    laptop = (1020, 190)
     b = [
-        box(*phone, w, h, "device-mobile", "Phone", "the visitor asks here"),
-        box(*rover, w, h, "robot", "Rover", "Raspberry Pi 5"),
-        box(*gemini, w, h, "sparkles", "Gemini", "writes the answer"),
-        box(*eleven, w, h, "speakerphone", "ElevenLabs", "speaks the answer"),
-        box(*laptop, w, h, "device-laptop", "Desktop app", "laptop, notebooks"),
+        zone(320, 150, 580, 220, "ON THE PI, LOCAL", "#e9f5ec", "#1a7f37"),
+        box(40, 190, w, h, "device-mobile", "Phone", "the visitor asks here"),
+        box(340, 205, w, h - 15, "robot", "Rover", "camera, speaker"),
+        box(640, 205, w, h - 15, "shield-lock", "Privacy gate", "Whisper + guard.py"),
+        box(1000, 40, w, h, "sparkles", "Gemini", "writes the answer"),
+        box(1000, 340, w, h, "speakerphone", "ElevenLabs", "speaks the answer"),
+        box(1320, 190, w, h, "device-laptop", "Desktop app", "laptop, notebooks"),
     ]
-    b.append(arrow([(260, 260), (358, 260)], both=True))
-    b.append(label(310, 240, ["HTTPS"]))
-    b.append(label(310, 290, ["tunnel"]))
-    b.append(arrow([(580, 225), (698, 130)], both=True))
-    b.append(label(626, 142, ["redacted text,", "camera frame"], anchor="end"))
-    b.append(arrow([(580, 295), (698, 390)], both=True))
-    b.append(label(626, 382, ["checked reply"], anchor="end"))
-    b.append(arrow([(1018, 225), (922, 130)], both=True))
-    b.append(label(974, 142, ["its own", "questions"], anchor="start"))
-    b.append(arrow([(1018, 295), (922, 390)], both=True))
-    b.append(label(974, 382, ["each sentence"], anchor="start"))
-    b.append(arrow([(470, 330), (470, 540), (1130, 540), (1130, 332)]))
-    b.append(label(800, 530, ["pulls each saved turn over SSH, every 60 s"]))
+    b.append(arrow([(260, 268), (338, 268)], both=True))
+    b.append(label(299, 248, ["HTTPS"]))
+    b.append(label(299, 296, ["tunnel"]))
+    b.append(arrow([(560, 268), (638, 268)], both=True))
+    b.append(label(599, 248, ["audio"]))
+    b.append(label(599, 296, ["reply"]))
+    b.append(arrow([(860, 235), (998, 130)], both=True))
+    b.append(label(915, 150, ["redacted text,", "camera frame"], anchor="end"))
+    b.append(arrow([(860, 300), (998, 390)], both=True))
+    b.append(label(915, 395, ["checked reply"], anchor="end"))
+    b.append(arrow([(1318, 225), (1222, 130)], both=True))
+    b.append(label(1272, 142, ["its own questions,", "no gate yet"], anchor="start"))
+    b.append(arrow([(1318, 295), (1222, 390)], both=True))
+    b.append(label(1272, 382, ["each sentence"], anchor="start"))
+    b.append(arrow([(450, 330), (450, 560), (1430, 560), (1430, 332)]))
+    b.append(label(940, 550, ["pulls each saved turn over SSH, every 60 s"]))
     return svg(
-        1280,
-        570,
-        "The parts of Beaver. The phone reaches the rover through an HTTPS tunnel. The rover "
-        "sends Gemini redacted text and a camera frame, and ElevenLabs the checked reply. The "
-        "desktop app asks Gemini and ElevenLabs its own questions and pulls each rover turn "
-        "over SSH every 60 seconds.",
+        1580,
+        590,
+        "The parts of Beaver. The phone reaches the rover through an HTTPS tunnel. On the Pi, "
+        "the privacy gate transcribes the question with Whisper and redacts it with guard.py, "
+        "so Gemini receives redacted text and a camera frame and ElevenLabs the checked reply. "
+        "The desktop app asks Gemini and ElevenLabs its own questions without a gate yet, and "
+        "pulls each rover turn over SSH every 60 seconds.",
         "".join(b),
     )
 

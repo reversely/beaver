@@ -7,13 +7,20 @@ names the files involved.
 
 ## The parts
 
-![The parts of Beaver: the phone reaches the rover through an HTTPS tunnel; the rover sends Gemini redacted text and a camera frame and ElevenLabs the checked reply; the desktop app asks both its own questions and pulls each rover turn over SSH every 60 seconds](img/how-it-works-parts.svg)
+![The parts of Beaver: the phone reaches the rover through an HTTPS tunnel; on the Pi, the privacy gate transcribes and redacts the question before Gemini receives redacted text and a camera frame and ElevenLabs the checked reply; the desktop app asks both its own questions without a gate yet and pulls each rover turn over SSH every 60 seconds](img/how-it-works-parts.svg)
 
 The rover answers on its own. A visitor opens the phone page from the QR code that `phone.py`
 prints (the desktop app's Rover panel shows the same code through `rover_phone.py`), holds the
 button, and asks. The recording reaches the Pi through a Cloudflare quick tunnel, because phone
 browsers open the microphone only on HTTPS pages and the campus network blocks connections between
 devices. The Pi answers through its own speaker and returns the reply text to the phone.
+
+Between the rover and the AI services sits the privacy gate, which runs on the Pi before anything
+leaves it. Whisper (`transcribe.py`) turns the recording into text on the Pi, and `guard.py`
+replaces personal information in that text, so Gemini receives redacted text and a camera frame,
+never the recording. The gate checks Gemini's reply the same way before ElevenLabs speaks it. The
+next diagram follows one question through the gate. The desktop app's own questions do not pass
+through a gate yet.
 
 The laptop never receives a request from the Pi. Every 60 seconds `rover_sync.py` connects to the
 Pi over SSH through Tailscale and pulls each new turn's `record.json` and `frame.jpg`, files the
