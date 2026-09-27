@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@500;600;700&family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="architecture.css">
   <link rel="stylesheet" href="/nav.css">
   <script type="importmap">
     {
@@ -360,6 +361,37 @@
             <button class="app-button app-button-large" type="button" id="restart">Start over</button>
             <a class="app-button app-button-large" href="/app/" data-site-local hidden>Open the app</a>
           </div>
+        </div>
+      </section>
+
+      <!-- Architecture, after the close: the same two diagrams as the README, drawn in the page's
+           colours by docs/img/make_diagrams.py. -->
+      <section data-view="architecture" class="arch-slide">
+        <div class="arch">
+          <h2>How Beaver works</h2>
+          <p class="arch-lead">Beaver meets a newcomer in two places. Out in the city, the rover answers a question about what they see, asked from their phone. At the laptop, the desktop app answers their longer questions and keeps every exchange from both places as notebooks.</p>
+          <div class="arch-figure"><img class="arch-diagram" src="diagrams/parts.svg" width="1290" height="590" alt="Parts of Beaver: on the rover, local processing puts a guard proxy between the rover and the remote AI services; the proxy sends Gemini clean text and a photo and sends ElevenLabs the checked answer; the desktop app sends Gemini and ElevenLabs its own questions and copies each saved rover turn over SSH every 60 seconds"></div>
+          <ul class="arch-notes">
+            <li><strong>Rover</strong> takes the question from the newcomer's phone, looks through its camera, and answers aloud in their language.</li>
+            <li><strong>Guard proxy</strong> runs on the rover and keeps their personal information from reaching the AI services.</li>
+            <li><strong>Gemini</strong> writes the answer, and <strong>ElevenLabs</strong> speaks it.</li>
+            <li><strong>Desktop app</strong> copies each rover turn every 60 seconds and files it into a notebook.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section data-view="architecture" class="arch-slide">
+        <div class="arch">
+          <h2>Guard proxy</h2>
+          <p class="arch-lead">A question about duties, documents, or deadlines can carry a phone number, an address, or a card number. The guard proxy keeps those on the rover.</p>
+          <div class="arch-figure"><img class="arch-diagram" src="diagrams/privacy.svg" width="1480" height="540" alt="Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard proxy replaces personal information, so Gemini receives clean text and a photo; the proxy checks the answer before ElevenLabs converts it into speech"></div>
+          <ol class="arch-notes">
+            <li>The rover keeps the recording in its own run folder.</li>
+            <li>Whisper turns the recording into text on the rover.</li>
+            <li>The guard proxy replaces personal information: "613 555 0142" leaves as "a phone number".</li>
+            <li>Gemini receives the clean text and a photo.</li>
+            <li>The guard proxy checks the answer before ElevenLabs speaks it.</li>
+          </ol>
         </div>
       </section>
 

@@ -1,0 +1,46 @@
+/* The architecture slides at the end of the page: each diagram on the page's dark maroon panel,
+   across the full width, with Beaver stepped aside so the diagram has the room. */
+.arch {
+  position: relative;
+  z-index: 1;
+  width: min(88vw, 1400px);
+  max-height: 90vh;
+  margin: 0 auto;
+  overflow: auto;
+  display: grid;
+  gap: 1.4vh;
+  padding: clamp(16px, 2.2vw, 36px);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+}
+.reveal .arch h2 { font-size: 1.8em; margin: 0; }
+.reveal .arch .arch-lead { margin: 0; max-width: 72ch; color: var(--ink-2); }
+.arch-figure { min-width: 0; }
+.arch-diagram { display: block; width: 100%; height: auto; max-height: 50vh; object-fit: contain; }
+.reveal .arch .arch-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5em 2em;
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 0.9em;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.reveal .arch ul.arch-notes { list-style: none; padding-left: 0; }
+/* Numbered steps run down each column in order, not across. */
+.reveal .arch ol.arch-notes { display: block; columns: 2; column-gap: 2em; }
+.reveal .arch ol.arch-notes li { break-inside: avoid; margin-bottom: 0.5em; }
+.arch-notes strong { color: var(--ink); font-weight: 600; }
+body:has(.reveal section.arch-slide.present) .companion { opacity: 0; pointer-events: none; }
+
+@media (max-width: 700px) {
+  /* Between the menu and the Play button, the panel scrolls inside itself. */
+  .arch { width: calc(100vw - 32px); max-height: calc(100dvh - 188px); }
+  .reveal .arch .arch-notes { grid-template-columns: 1fr; }
+  .reveal .arch ol.arch-notes { columns: 1; }
+  /* On a phone the diagram keeps a readable size and scrolls sideways inside the panel. */
+  .arch-figure { overflow-x: auto; }
+  .arch-diagram { width: 640px; max-width: none; max-height: none; }
+}

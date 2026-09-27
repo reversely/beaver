@@ -1,4 +1,5 @@
-"""Draw the two diagrams in docs/how-it-works.md as SVG files next to this script.
+"""Draw the two diagrams in docs/how-it-works.md as SVG files next to this script, and the same two
+in the home page's colours into web/diagrams/ for its architecture slides.
 
 Run: python3 docs/img/make_diagrams.py
 
@@ -11,10 +12,31 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 HERE = Path(__file__).parent
-INK = "#1f2328"
-MUTED = "#59636e"
-FILL = "#e8f1fb"
-FONT = "-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+WEB = HERE.parents[1] / "web" / "diagrams"
+
+# Docs: dark ink on white. Site: the home page's near-white ink on its dark maroon panel
+# (web/style.css), with the zones tinted in its sage and orange.
+THEMES = {
+    "docs": {
+        "ink": "#1f2328",
+        "muted": "#59636e",
+        "fill": "#e8f1fb",
+        "background": "#ffffff",
+        "local": ("#e9f5ec", "#1a7f37"),
+        "remote": ("#fff4e0", "#8a5a00"),
+        "font": "-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+    },
+    "site": {
+        "ink": "#faf7f4",
+        "muted": "#cfc6b8",
+        "fill": "#3a1e17",
+        "background": "none",
+        "local": ("rgba(137, 164, 111, 0.18)", "#b3cf96"),
+        "remote": ("rgba(213, 92, 43, 0.2)", "#f4875a"),
+        "font": "Inter, system-ui, sans-serif",
+    },
+}
+T = THEMES["docs"]
 
 ICONS = {
     "device-mobile": '<path d="M6 5a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-14" /> <path d="M11 4h2" /> <path d="M12 17v.01" />',
@@ -31,7 +53,8 @@ ICONS = {
 }
 
 
-def icon(name, cx, top, size=44, color=INK):
+def icon(name, cx, top, size=44, color=None):
+    color = color or T["ink"]
     scale = size / 24
     return (
         f'<g transform="translate({cx - size / 2},{top}) scale({scale})" fill="none" '
@@ -40,8 +63,9 @@ def icon(name, cx, top, size=44, color=INK):
     )
 
 
-def box(x, y, w, h, name, title, sub="", fill=FILL, stroke=INK):
+def box(x, y, w, h, name, title, sub=""):
     """A rounded box with an icon on top, a title, and an optional one-line subtitle."""
+    fill, stroke = T["fill"], T["ink"]
     cx = x + w / 2
     parts = [
         (
@@ -51,13 +75,13 @@ def box(x, y, w, h, name, title, sub="", fill=FILL, stroke=INK):
         icon(name, cx, y + 20, color=stroke),
         (
             f'<text x="{cx}" y="{y + (92 if sub else 100)}" text-anchor="middle" font-size="20" '
-            f'font-weight="600" fill="{INK}">{escape(title)}</text>'
+            f'font-weight="600" fill="{T["ink"]}">{escape(title)}</text>'
         ),
     ]
     if sub:
         parts.append(
             f'<text x="{cx}" y="{y + 116}" text-anchor="middle" font-size="14" '
-            f'fill="{MUTED}">{escape(sub)}</text>'
+            f'fill="{T["muted"]}">{escape(sub)}</text>'
         )
     return "".join(parts)
 
@@ -66,12 +90,13 @@ def arrow(points, both=False):
     pts = " ".join(f"{x},{y}" for x, y in points)
     ends = ' marker-start="url(#tail)"' if both else ""
     return (
-        f'<polyline points="{pts}" fill="none" stroke="{INK}" stroke-width="2" '
+        f'<polyline points="{pts}" fill="none" stroke="{T["ink"]}" stroke-width="2" '
         f'marker-end="url(#head)"{ends}/>'
     )
 
 
-def zone(x, y, w, h, title, fill, color):
+def zone(x, y, w, h, title, kind):
+    fill, color = T[kind]
     return (
         f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="20" fill="{fill}"/>'
         f'<text x="{x + 20}" y="{y + 30}" font-size="15" font-weight="700" '
@@ -83,16 +108,16 @@ def svg(width, height, description, body):
     defs = (
         "<defs>"
         '<marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" '
-        f'markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="{INK}"/></marker>'
+        f'markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="{T["ink"]}"/></marker>'
         '<marker id="tail" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="8" '
-        f'markerHeight="8" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="{INK}"/></marker>'
+        f'markerHeight="8" orient="auto"><path d="M10,0 L0,5 L10,10 z" fill="{T["ink"]}"/></marker>'
         "</defs>"
     )
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" '
-        f'width="{width}" height="{height}" font-family="{FONT}" role="img" '
+        f'width="{width}" height="{height}" font-family="{T["font"]}" role="img" '
         f'aria-label="{escape(description)}"><title>{escape(description)}</title>{defs}'
-        f'<rect width="{width}" height="{height}" fill="#ffffff"/>{body}</svg>\n'
+        f'<rect width="{width}" height="{height}" fill="{T["background"]}"/>{body}</svg>\n'
     )
 
 
@@ -100,7 +125,7 @@ def parts():
     """The rover and its local guard proxy, the remote AI services, and the laptop."""
     w, h = 220, 140
     b = [
-        zone(30, 150, 580, 220, "Local Processing", "#e9f5ec", "#1a7f37"),
+        zone(30, 150, 580, 220, "Local Processing", "local"),
         box(50, 205, w, h - 15, "robot", "Rover"),
         box(350, 205, w, h - 15, "shield-lock", "Guard proxy"),
         box(710, 40, w, h, "sparkles", "Gemini"),
@@ -129,8 +154,8 @@ def privacy():
     w, h = 190, 130
     y_out, y_pi = 70, 330
     b = [
-        zone(250, 20, 1210, 230, "Remote Services", "#fff4e0", "#8a5a00"),
-        zone(250, 280, 1210, 230, "Local Processing", "#e9f5ec", "#1a7f37"),
+        zone(250, 20, 1210, 230, "Remote Services", "remote"),
+        zone(250, 280, 1210, 230, "Local Processing", "local"),
         box(30, y_pi, w, h, "microphone", "Question"),
         box(275, y_pi, w, h, "file-music", "Recording"),
         box(505, y_pi, w, h, "text-recognition", "Transcribe"),
@@ -161,3 +186,7 @@ def privacy():
 if __name__ == "__main__":
     (HERE / "how-it-works-parts.svg").write_text(parts())
     (HERE / "how-it-works-privacy.svg").write_text(privacy())
+    T = THEMES["site"]
+    WEB.mkdir(exist_ok=True)
+    (WEB / "parts.svg").write_text(parts())
+    (WEB / "privacy.svg").write_text(privacy())
