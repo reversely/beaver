@@ -1,4 +1,4 @@
-# Every setting the experiment uses. Override any value for one run with
+# Every setting the desktop app uses. Override any value for one run with
 #   --set section.key=value     e.g. --set gemini.model=gemini-3.5-flash-lite
 # Run `run.py list` to see the Gemini models, ElevenLabs models, and voices your keys can use.
 

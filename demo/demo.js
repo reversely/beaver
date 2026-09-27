@@ -55,14 +55,14 @@ function showSlide(slide) {
   }
 }
 
-// The recorded exchange from experiment 001, with its audio compressed to MP3.
+// A recorded desktop-app exchange, with its audio compressed to MP3.
 async function loadSample() {
   const ex = await (await fetch("sample/exchange.json")).json();
   const bind = (key, text) => {
     document.querySelectorAll(`[data-bind="${key}"]`).forEach((el) => (el.textContent = text));
   };
   const date = new Date(`${ex.date}T12:00:00`).toLocaleDateString("en-CA", { day: "numeric", month: "long", year: "numeric" });
-  bind("recorded", `Recorded ${date} in experiment 001 with ${ex.model}`);
+  bind("recorded", `Recorded ${date} on the desktop app with ${ex.model}`);
   bind("question", ex.question);
   bind("timings", `Text ready ${(ex.timings_ms.text_ready / 1000).toFixed(1)} s, first audio ${(ex.timings_ms.first_audio_ready / 1000).toFixed(1)} s`);
 

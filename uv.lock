@@ -37,12 +37,22 @@ version = "0.1.0"
 source = { editable = "." }
 
 [package.dev-dependencies]
+desktop = [
+    { name = "ctranslate2" },
+    { name = "elevenlabs" },
+    { name = "google-genai" },
+    { name = "numpy" },
+    { name = "opencv-python" },
+    { name = "python-dotenv" },
+    { name = "sentencepiece" },
+    { name = "sounddevice" },
+]
 dev = [
     { name = "detect-secrets" },
     { name = "pre-commit" },
     { name = "ruff" },
 ]
-pi = [
+rover = [
     { name = "ctranslate2" },
     { name = "elevenlabs" },
     { name = "google-genai" },
@@ -54,26 +64,26 @@ pi = [
     { name = "sentencepiece" },
     { name = "sounddevice" },
 ]
-sandbox = [
-    { name = "ctranslate2" },
-    { name = "elevenlabs" },
-    { name = "google-genai" },
-    { name = "numpy" },
-    { name = "opencv-python" },
-    { name = "python-dotenv" },
-    { name = "sentencepiece" },
-    { name = "sounddevice" },
-]
 
 [package.metadata]
 
 [package.metadata.requires-dev]
+desktop = [
+    { name = "ctranslate2", specifier = ">=4.8.2" },
+    { name = "elevenlabs", specifier = ">=2.69.0" },
+    { name = "google-genai", specifier = ">=2.25.0" },
+    { name = "numpy", specifier = ">=2.5.3" },
+    { name = "opencv-python", specifier = ">=5.0.0.93" },
+    { name = "python-dotenv", specifier = ">=1.2.3" },
+    { name = "sentencepiece", specifier = ">=0.2.2" },
+    { name = "sounddevice", specifier = ">=0.5.6" },
+]
 dev = [
     { name = "detect-secrets", specifier = ">=1.5.0" },
     { name = "pre-commit", specifier = ">=4.6.2" },
     { name = "ruff", specifier = "==0.16.9" },
 ]
-pi = [
+rover = [
     { name = "ctranslate2", specifier = ">=4.8.2" },
     { name = "elevenlabs", specifier = ">=2.69.0" },
     { name = "google-genai", specifier = ">=2.25.0" },
@@ -82,16 +92,6 @@ pi = [
     { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "scipy", specifier = ">=1.18.1" },
     { name = "segno", specifier = ">=1.6.6" },
-    { name = "sentencepiece", specifier = ">=0.2.2" },
-    { name = "sounddevice", specifier = ">=0.5.6" },
-]
-sandbox = [
-    { name = "ctranslate2", specifier = ">=4.8.2" },
-    { name = "elevenlabs", specifier = ">=2.69.0" },
-    { name = "google-genai", specifier = ">=2.25.0" },
-    { name = "numpy", specifier = ">=2.5.3" },
-    { name = "opencv-python", specifier = ">=5.0.0.93" },
-    { name = "python-dotenv", specifier = ">=1.2.3" },
     { name = "sentencepiece", specifier = ">=0.2.2" },
     { name = "sounddevice", specifier = ">=0.5.6" },
 ]

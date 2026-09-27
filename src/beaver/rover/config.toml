@@ -1,15 +1,15 @@
-# Every setting the experiment uses. Override any value for one run with
+# Every setting the rover uses. Override any value for one run with
 #   --set section.key=value     e.g. --set trigger.modes='["button"]'
 # `run.py devices` lists the sound devices; `run.py mictest` measures the microphone level.
 
 [gemini]
-# Flash-Lite: experiment 001 hit gemini-3.8-flash's free-tier cap of 20 requests.
+# Flash-Lite: gemini-3.8-flash stopped at a free-tier cap of 20 requests in desktop testing.
 model = "gemini-3.5-flash-lite"
 temperature = 0.7
 max_output_tokens = 1024
 # One of "minimal", "low", "medium", "high", or "" to use the model's default.
 thinking_level = "low"
-# "low" costs 260 image tokens; the model default costs 1080 (experiment 001 image test).
+# "low" costs 260 image tokens; the model default costs 1080 (desktop image test).
 media_resolution = "low"
 # Retries after a Gemini server error, such as 503 "high demand", and the wait between them.
 retries = 3
@@ -27,8 +27,10 @@ max_characters = 600
 [microphone]
 # Part of the sound device's name, as `run.py devices` prints it; "" uses the system default.
 device = ""
-# The I2S MEMS microphone delivers 32-bit samples at 48 kHz on two channels, with the signal on
-# one of them (set by the microphone's L/R pin). The capture rate must be a multiple of 16000.
+# The Robot HAT v4 has no microphone, so questions come from the phone page (run.py phone). These
+# settings apply to a microphone added later, such as an I2S MEMS microphone, which delivers
+# 32-bit samples at 48 kHz on two channels with the signal on one of them (set by its L/R pin).
+# The capture rate must be a multiple of 16000.
 capture_rate = 48000
 channels = 2
 dtype = "int32"

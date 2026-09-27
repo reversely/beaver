@@ -1,22 +1,11 @@
-# Experiment 003: laptop demo of the setup sequence and a sample conversation
+# Demo page
 
-| | |
-|---|---|
-| Status | Active |
-| Started | 2026-09-26 |
-| Builds on | [Experiment 001](../src/beaver/desktop/README.md), [Experiment 002](../src/beaver/rover/README.md) |
-| Tickets | [#9](https://github.com/reversely/beaver/issues/9), [#10](https://github.com/reversely/beaver/issues/10), [#15](https://github.com/reversely/beaver/issues/15) |
+A static page that introduces Beaver on a laptop at a table. It tells the concept sheet's two
+paragraphs one line per page, plays the "Hey Beaver..." exchanges aloud, and shows the desktop
+app's Site, Deploy, Ask, and Notebook screens. It needs no API key and no server code: every spoken
+line is a saved MP3, and the Ask and Notebook screens replay one recorded desktop-app exchange.
 
-This folder is a static page that introduces Beaver on a laptop. It needs no API key and no
-server code. The sample conversation replays a recorded experiment 001 run; the "Hey Beaver..."
-exchanges come from the concept sheet.
-
-## Question
-
-Can one scrolling page explain what Beaver is, what it knows, and how you set up your rover from
-the desktop app, clearly enough to run unattended at a table?
-
-## Running it
+## Running
 
 ```
 uv run python -m http.server 8766 -d demo
@@ -43,7 +32,7 @@ of the paragraph stay above it, smaller and dimmed.
 | Beaver 3 | transitioning fluidly between a speaker's **native language, French & English**. | A diagram carries one sentence from Chinese to French to English; each card plays its language, and **Hear all three** plays them in order |
 | Hey Beaver... | The three exchanges | The play button between question and answer plays the question in the visitor's language, then each answer line; any single line plays on its own; the line being spoken is highlighted |
 | Site, Deploy | Your settings on the laptop and sending them to the rover | The deploy progress changes on a timer |
-| Ask, Notebook | The recorded experiment 001 exchange and its notebook entry | **Play reply** |
+| Ask, Notebook | A recorded desktop-app exchange and its notebook entry | **Play reply** |
 | Close | Wordmark and **Start over** | |
 
 The Site and Deploy screens are demo screens: nothing is sent to the rover. Each screen carries a
@@ -55,7 +44,7 @@ Every spoken line is an MP3 in `audio/`, generated once by `audio/build_audio.py
 `audio/clips.json`, which holds each clip's exact text, language, and voice role:
 
 ```
-uv run --group sandbox python demo/audio/build_audio.py
+uv run --group desktop python demo/audio/build_audio.py
 ```
 
 | Role | ElevenLabs voice | Used for |
@@ -87,11 +76,10 @@ plays. **Sound on** in the lower right mutes it, and the choice is remembered in
 | `art/build_layers.py` | Cuts the sources into the layers below |
 | `art/*.webp` | Layers: `clouds`, `land`, `parliament`, `foreground` (branches), `leaf-2` (falling leaf) |
 | `beaver-mark.png` | The Beaver mark from the concept sheet, used as the page icon; a placeholder until final branding |
-| `sample/` | Run `20260926-110552-ui`: question, sentences, timings, notebook entry, audio, camera frame |
+| `sample/` | Desktop run `20260926-110552-ui`: question, sentences, timings, notebook entry, audio, camera frame |
 
 reveal.js 5.2.1 runs in scroll view and three.js 0.170.0 draws the scene; both load from jsDelivr
-at pinned versions. Inter and Instrument Sans
-load from Google Fonts.
+at pinned versions. Inter and Instrument Sans load from Google Fonts.
 
 ## Art pipeline
 
@@ -131,10 +119,4 @@ letters of Arabic and Punjabi. The page's one gradient is
 the sky behind the painting. Reduced motion stops the falling leaves, the camera moves, the
 greeting cycle, and the screen animations.
 
-## Results
-
-| Test | Setting | Measurement |
-|---|---|---|
-| Frame rate | Chrome, Apple A18 Pro GPU, 1440 x 900, 5 s on the first slide | 60.1 frames per second; longest frame 17 ms |
-| Layout audit | 1024, 1280, 1440, 1920 px, first slide | 0 fails, 0 warnings |
-| Slide screenshots | 1024 x 700, 1440 x 900, 1920 x 1080 | Every setup screen fits its laptop; the camera never shows past the painting's edge |
+Frame rate and layout checks are in [docs/measurements.md](../docs/measurements.md).

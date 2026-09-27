@@ -55,7 +55,7 @@ def installed(config: dict) -> set[tuple[str, str]]:
 def _fetch(url: str) -> bytes:
     if not url.startswith("https://"):
         raise ValueError(f"refusing a non-HTTPS download: {url}")
-    request = urllib.request.Request(url, headers={"User-Agent": "beaver-experiment"})
+    request = urllib.request.Request(url, headers={"User-Agent": "beaver-desktop"})
     with urllib.request.urlopen(request, timeout=120) as response:
         return response.read()
 

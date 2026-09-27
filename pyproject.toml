@@ -1,7 +1,7 @@
 [project]
 name = "beaver"
 version = "0.1.0"
-description = "AI rover tour guide to Canadian culture: history, French/English translation, civic engagement, and education."
+description = "A multilingual guide to Canada: a rover that answers questions aloud, and a desktop app that keeps what was learned."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
@@ -20,7 +20,7 @@ dev = [
     "pre-commit>=4.6.2",
     "ruff==0.16.9",
 ]
-pi = [
+rover = [
     "ctranslate2>=4.8.2",
     "elevenlabs>=2.69.0",
     "google-genai>=2.25.0",
@@ -32,7 +32,7 @@ pi = [
     "sentencepiece>=0.2.2",
     "sounddevice>=0.5.6",
 ]
-sandbox = [
+desktop = [
     "ctranslate2>=4.8.2",
     "elevenlabs>=2.69.0",
     "google-genai>=2.25.0",
@@ -44,12 +44,12 @@ sandbox = [
 ]
 
 [tool.uv]
-# openwakeword requires tflite-runtime on Linux, which has no Python 3.13 builds. Experiment 002
-# runs openwakeword on onnxruntime instead. This override limits tflite-runtime to Python
+# openwakeword requires tflite-runtime on Linux, which has no Python 3.13 builds. The rover runs
+# openwakeword on onnxruntime instead. This override limits tflite-runtime to Python
 # versions below the project's 3.13 floor, so uv never installs it.
 override-dependencies = ["tflite-runtime; python_version < '3.12'"]
 
 [tool.ruff]
-# Each experiment folder runs as its own script root, so its modules (record, gemini, ...) are
-# first-party imports there.
+# Each app folder runs as its own script root, so its own modules (notebooks, phone, ...) are
+# first-party imports there, alongside the installed beaver package.
 src = [".", "src", "src/beaver/*"]

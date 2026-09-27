@@ -1,6 +1,6 @@
-"""Experiment 001: Gemini and ElevenLabs voice loop on the laptop. See README.md.
+"""Beaver desktop app: ask by voice or text, hear the answer, keep notebooks. See README.md.
 
-uv run --group sandbox python src/beaver/desktop/run.py <step> [--set section.key=value ...]
+uv run --group desktop python src/beaver/desktop/run.py <command> [words] [--set section.key=value ...]
 """
 
 import argparse
@@ -324,16 +324,22 @@ def step_pickpieces(config, record, args):
 
 
 STEPS = {
-    "text": (step_text, "1. Typed question to Gemini, text reply"),
-    "speak": (step_speak, "2. Text to ElevenLabs speech, played aloud"),
-    "voice": (step_voice, "3. Microphone to Gemini to ElevenLabs"),
-    "camera": (step_camera, "4. Camera frame to Gemini to ElevenLabs"),
-    "translate": (step_translate, "5. French/English voice loop"),
-    "look": (step_look, "6. Question plus camera image to Gemini to ElevenLabs"),
-    "imagetest": (step_imagetest, "Questions with and without the image, compared"),
-    "bilingual": (step_bilingual, "7. Sentence-by-sentence reply in each language"),
-    "bilingualtest": (step_bilingualtest, "The concept-sheet cases through step 7"),
-    "pickpieces": (step_pickpieces, "Pick a piece for notebooks that have none"),
+    "text": (step_text, "typed question to Gemini, text reply"),
+    "speak": (step_speak, "text to ElevenLabs speech, played aloud"),
+    "voice": (step_voice, "microphone question to Gemini, spoken reply"),
+    "camera": (step_camera, "camera frame to Gemini, spoken reply"),
+    "translate": (
+        step_translate,
+        "spoken question answered in the other of English and French",
+    ),
+    "look": (step_look, "question with a camera frame, spoken reply"),
+    "imagetest": (step_imagetest, "questions with and without the image, compared"),
+    "bilingual": (step_bilingual, "sentence-by-sentence reply in each chosen language"),
+    "bilingualtest": (
+        step_bilingualtest,
+        "the concept-sheet questions through the bilingual reply",
+    ),
+    "pickpieces": (step_pickpieces, "pick a piece for notebooks that have none"),
 }
 
 

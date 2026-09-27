@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Set up experiment 002 on a Raspberry Pi 5 running 64-bit Raspberry Pi OS with Python 3.13.
+# Set up the rover on a Raspberry Pi 5 running 64-bit Raspberry Pi OS with Python 3.13.
 # Run from the repo root: bash src/beaver/rover/setup-pi.sh
 set -euo pipefail
 
@@ -24,7 +24,7 @@ fi
 if [ ! -d .venv ]; then
   uv venv --system-site-packages --python /usr/bin/python3
 fi
-UV_PYTHON_DOWNLOADS=never uv sync --group pi
+UV_PYTHON_DOWNLOADS=never uv sync --group rover
 
 # cloudflared opens the tunnel for `run.py phone`; the static binary needs no apt repository.
 if ! command -v cloudflared >/dev/null && [ ! -x "$HOME/.local/bin/cloudflared" ]; then
@@ -35,21 +35,16 @@ if ! command -v cloudflared >/dev/null && [ ! -x "$HOME/.local/bin/cloudflared" 
 fi
 
 # Fetch the stand-in wake word model and openWakeWord's feature models.
-uv run --group pi python -c \
+uv run --group rover python -c \
   "from openwakeword import utils; utils.download_models(model_names=['hey_jarvis'])"
 
 cat <<'EOF'
 
-Setup finished. If you have not yet enabled I2S audio, add these lines to
-/boot/firmware/config.txt and reboot:
+Setup finished. The speaker on the Robot HAT v4 uses the hifiberry-dac overlay, which SunFounder's
+robot-hat installer (i2samp.sh) adds to /boot/firmware/config.txt. Do not switch it to
+googlevoicehat-soundcard: that overlay replaces the speaker driver. Check the hardware:
 
-  dtparam=i2s=on
-  dtoverlay=googlevoicehat-soundcard
-
-Then check the hardware:
-
-  arecord -l                    # the I2S card should appear as a capture device
-  aplay -l                      # and as a playback device
+  aplay -l                      # snd_rpi_hifiberry_dac should appear as a playback device
   rpicam-hello --list-cameras   # the OV5647 should appear
-  uv run --group pi python src/beaver/rover/run.py devices
+  uv run --group rover python src/beaver/rover/run.py devices
 EOF

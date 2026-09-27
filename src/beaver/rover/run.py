@@ -1,6 +1,6 @@
-"""Experiment 002: the Gemini and ElevenLabs loop on a Raspberry Pi 5. See README.md.
+"""Beaver rover: answer questions aloud on the Raspberry Pi 5. See README.md.
 
-uv run --group pi python src/beaver/rover/run.py <command> [words] [--set section.key=value ...]
+uv run --group rover python src/beaver/rover/run.py <command> [words] [--set section.key=value ...]
 """
 
 import argparse
