@@ -13,24 +13,6 @@ language. The guide has three parts:
 It runs as a rover on a Raspberry Pi 5, which a visitor asks through their phone, and as a desktop
 app on a laptop. It is built for one person with one rover and one laptop.
 
-![Beaver's 3D model speaking, its mouth moving with the clip](assets/beaver-talking.gif)
-
-The rover's face carries a small dot screen showing Beaver's mouth: a top lip and two buck teeth
-that stay the same, and a lower lip that passes behind the teeth and drops below them as Beaver
-speaks, following the loudness of each spoken answer. The camera sits in the head on two servos
-that pan and tilt it. The 3D model at `web/beaver.html` shows the same mouth and moves it with
-Beaver's recorded clips.
-
-## Parts
-
-| Part | Folder | What it does |
-|---|---|---|
-| Rover | `src/beaver/rover` | Records a spoken question and a camera frame, plays the answer on its own speaker, and saves each turn to a run folder. |
-| Guard proxy | `src/beaver/rover` | A local checkpoint between the rover and the remote AI services. Whisper transcribes the recording on the rover, and the proxy replaces personal information before any text leaves the rover and checks each answer before playback. |
-| Desktop app | `src/beaver/desktop` | A local web page at `http://127.0.0.1:8765/app/`, beside the home page at `/`. It starts the rover's phone page and shows its QR code, takes questions by voice or typing, replies sentence by sentence in each chosen language, and files every exchange into notebooks. Every 60 seconds it pulls the rover's new turns and files them too. |
-| Home page | `web` | A static page for a laptop at a table: a spoken walk through the concept sheet, the "Hey Beaver..." exchanges, and the desktop app's screens. |
-| Shared core | `src/beaver/core` | Config loading, run records, the Gemini and ElevenLabs calls, and the prompts both apps use. |
-
 ## Architecture
 
 ### Parts and connections
@@ -78,6 +60,26 @@ replaced.
 For developers: the proxy is `src/beaver/core/guard.py`, transcription is
 `src/beaver/core/transcribe.py`, both shared by the rover and the desktop app, and [`docs/architecture.md`](docs/architecture.md) describes the network
 path and the files each part keeps.
+
+## Beaver's face
+
+![Beaver's 3D model speaking, its mouth moving with the clip](assets/beaver-talking.gif)
+
+The rover's face carries a small dot screen showing Beaver's mouth: a top lip and two buck teeth
+that stay the same, and a lower lip that passes behind the teeth and drops below them as Beaver
+speaks, following the loudness of each spoken answer. The camera sits in the head on two servos
+that pan and tilt it. The 3D model at `web/beaver.html` shows the same mouth and moves it with
+Beaver's recorded clips.
+
+## Parts
+
+| Part | Folder | What it does |
+|---|---|---|
+| Rover | `src/beaver/rover` | Records a spoken question and a camera frame, plays the answer on its own speaker, and saves each turn to a run folder. |
+| Guard proxy | `src/beaver/rover` | A local checkpoint between the rover and the remote AI services. Whisper transcribes the recording on the rover, and the proxy replaces personal information before any text leaves the rover and checks each answer before playback. |
+| Desktop app | `src/beaver/desktop` | A local web page at `http://127.0.0.1:8765/app/`, beside the home page at `/`. It starts the rover's phone page and shows its QR code, takes questions by voice or typing, replies sentence by sentence in each chosen language, and files every exchange into notebooks. Every 60 seconds it pulls the rover's new turns and files them too. |
+| Home page | `web` | A static page for a laptop at a table: a spoken walk through the concept sheet, the "Hey Beaver..." exchanges, and the desktop app's screens. |
+| Shared core | `src/beaver/core` | Config loading, run records, the Gemini and ElevenLabs calls, and the prompts both apps use. |
 
 ## Desktop app
 
