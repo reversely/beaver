@@ -1,17 +1,17 @@
 // Beaver, drawn part for part from the rover prototype's CAD model (#46): a base with an arch cut
 // out underneath, a humped shell on top of it, a flat cross-hatched oval tail, a small block under
-// the head, and a forward-tilted head with two dot eyes, a small hole on each side, tan lower side
-// panels, and a cream arched face plate holding the camera lens and the screen, which shows the prototype's
+// the head, and a forward-tilted head with two dot eyes, a small hole on each side, and a cream arched
+// face plate that wraps the lower sides, holding the camera lens and the screen, which shows the prototype's
 // dot-matrix buck teeth.
 //
 // The one change from the model is colour: the CAD render leaves the base, shell, tail, and block
-// uncoloured, and here they take the head's own brown. Every other colour is sampled from the render.
+// uncoloured, and here they take the head's own brown. The other colours are sampled from the render
+// and the user's photo of the prototype.
 // The figure faces +x and stands on y = 0.
 import * as THREE from "three";
 
 // Sampled from the CAD render of the prototype.
-const BROWN = 0x5e451a;
-const TAN = 0x9a825a;
+const BROWN = 0x684d1f;
 const CREAM = 0xf5d48e;
 const LENS_RING = 0x464646;
 const BLACK = 0x000000;
@@ -79,15 +79,20 @@ function headProfile() {
   return shape;
 }
 
-// The face plate: square at the bottom, a full arch on top.
+// The face plate: square at the bottom, rounded over the top, with a small dip at the centre of
+// its top edge as on the prototype.
 function plateShape(width, height) {
   const shape = new THREE.Shape();
   const r = width / 2;
-  shape.moveTo(-r, -height / 2);
-  shape.lineTo(r, -height / 2);
-  shape.lineTo(r, height / 2 - r);
-  shape.absarc(0, height / 2 - r, r, 0, Math.PI, false);
-  shape.lineTo(-r, -height / 2);
+  const top = height / 2;
+  shape.moveTo(-r, -top);
+  shape.lineTo(r, -top);
+  shape.lineTo(r, top - r);
+  shape.bezierCurveTo(r, top - r * 0.4, r * 0.5, top, 0.05, top - 0.005);
+  shape.quadraticCurveTo(0.015, top - 0.01, 0, top - 0.035);
+  shape.quadraticCurveTo(-0.015, top - 0.01, -0.05, top - 0.005);
+  shape.bezierCurveTo(-r * 0.5, top, -r, top - r * 0.4, -r, top - r);
+  shape.lineTo(-r, -top);
   return shape;
 }
 
@@ -97,7 +102,7 @@ function grooveTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const context = canvas.getContext("2d");
-  context.fillStyle = "#5e451a";
+  context.fillStyle = "#684d1f";
   context.fillRect(0, 0, size, size);
   context.strokeStyle = "#3a2a10";
   context.lineWidth = 5;
@@ -194,8 +199,8 @@ export function createBeaver() {
   beaver.add(head);
   head.add(new THREE.Mesh(extrude(headProfile(), 0.95, 0.04), brown));
   for (const side of [-1, 1]) {
-    // The tan panel over the lower half of each side, meeting the face plate.
-    const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.42), matte(TAN));
+    // The face plate's side wing over the lower half of each side, in the plate's cream.
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.42), matte(CREAM));
     panel.position.set(0.12, -0.2, side * 0.517);
     panel.rotation.y = side > 0 ? 0 : Math.PI;
     head.add(panel);
