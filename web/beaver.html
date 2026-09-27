@@ -26,13 +26,13 @@
   </script>
 </head>
 <body>
-  <canvas id="stage" aria-label="Beaver, turnable by dragging"></canvas>
+  <canvas id="stage" aria-label="Beaver: drag the head to pan and tilt it, or drag elsewhere to turn the view"></canvas>
   <button class="speak" type="button" id="speak">Hear Beaver</button>
   <audio id="line" src="audio/hi-en.mp3" preload="auto"></audio>
   <script type="module">
     import * as THREE from "three";
     import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-    import { createBeaver, speakWith } from "./beaver.js";
+    import { attachHeadDrag, createBeaver, speakWith } from "./beaver.js";
 
     const canvas = document.getElementById("stage");
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -96,7 +96,13 @@
       speakWith(beaver, line);
     });
 
+    // A drag on the head pans and tilts it; a drag anywhere else turns the view.
+    attachHeadDrag({ beaver, camera, element: canvas, controls });
+
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const clock = new THREE.Clock();
     renderer.setAnimationLoop(() => {
+      if (!still) beaver.userData.update(clock.getElapsedTime());
       controls.update();
       renderer.render(scene, camera);
     });

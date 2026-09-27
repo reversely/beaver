@@ -281,26 +281,37 @@ export function createBeaver() {
   beaver.add(new THREE.Mesh(extrude(shellProfile(), 1.36, 0.05), brown));
   beaver.add(new THREE.Mesh(extrude(humpProfile(), 1.0, 0.06), brown));
 
-  // Tail: a flat oval sticking out behind, level with where the shell meets the base.
+  // Tail: a flat oval sticking out behind, level with where the shell meets the base, hinged where
+  // it joins the body so it can wag up and down.
+  const tailHinge = new THREE.Group();
+  tailHinge.position.set(-1.0, 0.8, 0);
+  beaver.add(tailHinge);
   const tail = new THREE.Mesh(
     new THREE.CylinderGeometry(1, 1, 0.08, 48),
     [brown, matte(0xffffff, { map: grooveTexture() }), brown],
   );
   tail.scale.set(0.8, 1, 0.58);
-  tail.position.set(-1.72, 0.8, 0);
+  tail.position.set(-0.72, 0, 0);
   tail.rotation.z = -0.06;
-  beaver.add(tail);
+  tailHinge.add(tail);
 
-  // Head: tilted forward over the chin block.
+  // The flat bracket on the base's front that the head rests on.
+  const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.025, 0.7), brown);
+  bracket.position.set(0.9, 0.645, 0);
+  beaver.add(bracket);
+
+  // Head: tilted forward as on the prototype, on a neck that pans it left and right and tilts it
+  // up from its back bottom corner, which rests on the bracket. The prototype's camera sits on a
+  // pan and tilt mount in the same way.
+  const neck = new THREE.Group();
+  neck.position.set(0.78, 0.68, 0);
+  neck.rotation.order = "YZX";
+  beaver.add(neck);
   const head = new THREE.Group();
-  head.position.set(1.25, 0.95, 0);
+  head.position.set(0.47, 0.27, 0);
   head.rotation.z = -0.35;
-  beaver.add(head);
+  neck.add(head);
   head.add(new THREE.Mesh(extrude(headProfile(), 0.95, 0.04), brown));
-  // The flat bracket the head rests on, running back under the shell's front.
-  const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.025, 0.7), brown);
-  bracket.position.set(-0.12, -0.45, 0);
-  head.add(bracket);
   for (const side of [-1, 1]) {
     const hole = new THREE.Mesh(new THREE.CircleGeometry(0.02, 16), black);
     hole.position.set(-0.05, 0.08, side * 0.522);
@@ -338,5 +349,90 @@ export function createBeaver() {
   beaver.traverse((part) => {
     if (part.isMesh) part.castShadow = true;
   });
+
+  // Pan turns the face from +x toward -z; tilt raises it from resting on the bracket.
+  const turn = { pan: 0, tilt: HEAD.tilt };
+  beaver.userData.neck = neck;
+  beaver.userData.aim = (pan, tilt) => {
+    turn.pan = Math.min(Math.max(pan, -HEAD.maxPan), HEAD.maxPan);
+    turn.tilt = Math.min(Math.max(tilt, 0), HEAD.maxTilt);
+    neck.rotation.y = turn.pan;
+    neck.rotation.z = turn.tilt;
+  };
+  beaver.userData.aiming = () => ({ ...turn });
+  beaver.userData.aim(0, HEAD.tilt);
+  // The tail wags up and down about its hinge; seconds is the time since the page started.
+  beaver.userData.update = (seconds) => {
+    tailHinge.rotation.z = TAIL.swing * Math.sin(2 * Math.PI * TAIL.hz * seconds);
+  };
   return beaver;
+}
+
+// The head's reach: about 50 degrees either side, and up to about 30 degrees above the bracket,
+// starting about 20 degrees up.
+const HEAD = { maxPan: 0.9, maxTilt: 0.55, tilt: 0.35 };
+// The tail's wag: about 12 degrees up and down, a little over once a second.
+const TAIL = { swing: 0.22, hz: 1.2 };
+
+// Let a drag that starts on the head pan and tilt it; any other drag is left to the page's camera
+// controls, which are paused while the head is held. The head follows the pointer's direction on
+// screen from any viewing angle. Returns a function that removes the listeners.
+export function attachHeadDrag({ beaver, camera, element, controls }) {
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+  const neck = beaver.userData.neck;
+  let held = null;
+
+  const toPointer = (event) => {
+    const box = element.getBoundingClientRect();
+    pointer.set(((event.clientX - box.left) / box.width) * 2 - 1, -((event.clientY - box.top) / box.height) * 2 + 1);
+  };
+  // The on-screen direction, in pixels per unit, that a small world step from the neck moves to.
+  const screenStep = (direction) => {
+    const origin = neck.getWorldPosition(new THREE.Vector3());
+    const a = origin.clone().project(camera);
+    const b = origin.add(direction).project(camera);
+    const box = element.getBoundingClientRect();
+    const v = new THREE.Vector2(((b.x - a.x) * box.width) / 2, (-(b.y - a.y) * box.height) / 2);
+    return v.lengthSq() > 1e-6 ? v.normalize() : v;
+  };
+
+  const down = (event) => {
+    toPointer(event);
+    raycaster.setFromCamera(pointer, camera);
+    if (!raycaster.intersectObject(neck, true).length) return;
+    const { pan, tilt } = beaver.userData.aiming();
+    // Moving the pointer toward the face's left (-z) pans that way; toward screen up tilts up.
+    held = { x: event.clientX, y: event.clientY, pan, tilt, side: screenStep(new THREE.Vector3(0, 0, -1)), up: screenStep(new THREE.Vector3(0, 1, 0)) };
+    if (controls) controls.enabled = false;
+    element.setPointerCapture(event.pointerId);
+    event.stopPropagation();
+  };
+  const move = (event) => {
+    if (!held) return;
+    const dx = event.clientX - held.x;
+    const dy = event.clientY - held.y;
+    const rate = 0.008;
+    beaver.userData.aim(
+      held.pan + (dx * held.side.x + dy * held.side.y) * rate,
+      held.tilt + (dx * held.up.x + dy * held.up.y) * rate,
+    );
+  };
+  const up = (event) => {
+    if (!held) return;
+    held = null;
+    if (controls) controls.enabled = true;
+    if (element.hasPointerCapture(event.pointerId)) element.releasePointerCapture(event.pointerId);
+  };
+  // Capture phase, so the head claims the drag before the camera controls see it.
+  element.addEventListener("pointerdown", down, true);
+  element.addEventListener("pointermove", move);
+  element.addEventListener("pointerup", up);
+  element.addEventListener("pointercancel", up);
+  return () => {
+    element.removeEventListener("pointerdown", down, true);
+    element.removeEventListener("pointermove", move);
+    element.removeEventListener("pointerup", up);
+    element.removeEventListener("pointercancel", up);
+  };
 }
