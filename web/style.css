@@ -338,13 +338,43 @@ a.app-button { text-decoration: none; }
 .base::before { content: ""; position: absolute; left: 42%; right: 42%; top: 0; height: 6px; border-radius: 0 0 6px 6px; background: #161211; }
 
 /* Screen contents scale with the laptop width, so each screen fits at every window size. */
-.app { height: 100%; display: flex; flex-direction: column; font-size: 2.5cqi; }
-.stage.wide .app { font-size: 1.9cqi; }
-.app-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.55em 1.1em; border-bottom: 1px solid var(--hairline); }
-.app-name { font-family: var(--display); font-weight: 700; color: var(--ink); }
-.app-view { display: none; flex: 1; padding: 1em 1.5em; flex-direction: column; gap: 0.6em; min-height: 0; }
+/* The laptop shows a scaled copy of the desktop app (src/beaver/desktop/ui): its night-green
+   field, Inria Sans, the sidebar with the five topics, and translucent dark cards. The app's
+   colours are redefined here so every screen inside picks them up. */
+.app {
+  --ink: #f4efe6; --ink-2: #cfc6b8; --ink-3: #a39a8c;
+  --raised: rgba(255, 255, 255, 0.07); --hairline: rgba(255, 255, 255, 0.1);
+  --orange: #e3a86f; --app-surface: rgba(14, 23, 21, 0.78); --app-accent: #9a4e27;
+  height: 100%; display: grid; grid-template-columns: 24% minmax(0, 1fr); gap: 1.1em; padding: 1.1em;
+  font-family: "Inria Sans", system-ui, sans-serif; font-size: 2.1cqi; color: var(--ink);
+  background: radial-gradient(ellipse 60% 70% at 72% 0%, rgba(160, 205, 150, 0.35), transparent 70%), linear-gradient(#2d4a33, #13241b 70%, #0b1712);
+}
+.stage.wide .app { font-size: 1.55cqi; }
+.app-side, .app-card { background: var(--app-surface); border-radius: 0.9em; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09); }
+.app-side { padding: 1.4em 1.1em; display: flex; flex-direction: column; gap: 1.2em; min-height: 0; }
+.app-brand { display: flex; flex-direction: column; line-height: 1.05; color: var(--ink-2); }
+.app-brand strong { font-size: 3.4em; font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+.app-brand-fr { font-style: italic; font-weight: 300; }
+.app-label { margin: 0 !important; font-size: 0.75em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.app-topics { list-style: none; margin: -0.6em 0 0; padding: 0; display: grid; gap: 0.2em; }
+.app-topics li { padding: 0.45em 0.6em; border-radius: 0.6em; color: var(--ink-2); }
+.app[data-topic="duties"] [data-topic="duties"], .app[data-topic="documents"] [data-topic="documents"],
+.app[data-topic="ask"] [data-topic="ask"], .app[data-topic="notebooks"] [data-topic="notebooks"],
+.app[data-topic="rover"] [data-topic="rover"] { background: rgba(227, 168, 111, 0.14); color: var(--ink); font-weight: 700; }
+.app-main { min-width: 0; min-height: 0; display: flex; }
+.app-view { display: none; flex: 1; flex-direction: column; gap: 0.9em; min-height: 0; min-width: 0; }
 .app-view.on { display: flex; animation: rise 0.45s ease-out; }
-.app-view h3 { margin: 0 !important; font-size: 1.45em !important; }
+.app-view h3 { margin: 0 !important; font-size: 2em !important; font-weight: 700; font-family: inherit !important; color: var(--ink); }
+.app-card { padding: 1.1em 1.3em; min-height: 0; display: flex; flex-direction: column; gap: 0.7em; }
+.app-composer { flex-direction: row; align-items: center; gap: 0.8em; }
+.app-talk { flex: none; width: 4.6em; height: 4.6em; border-radius: 50%; display: grid; place-items: center; text-align: center; font-size: 0.75em; font-weight: 700; background: var(--app-accent); color: #fff; }
+.app-input { flex: 1; padding: 0.55em 1em; border-radius: 999px; background: rgba(255, 255, 255, 0.07); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-btn { align-self: start; padding: 0.5em 1.2em; border-radius: 999px; background: var(--app-accent); color: #fff; font-weight: 700; }
+.app-composer .app-btn { align-self: center; }
+.app-rover { align-items: start; }
+.app-qr svg { display: block; width: 9em; height: auto; border-radius: 0.5em; }
+.app-link { color: var(--orange); }
+.app .bubble, .app .duties time, .app .nb-head strong { font-family: inherit; }
 .app-label { font-size: 0.85em; color: var(--ink-3); }
 .app-note { margin: 0 !important; color: var(--ink-3); font-size: 0.9em; }
 

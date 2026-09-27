@@ -17,6 +17,9 @@ setupStory(sound);
 
 const stage = document.getElementById("stage");
 const LANG_NAMES = { en: "English", fr: "Français", es: "Español" };
+// The app's sidebar topic that each laptop screen belongs to.
+const SCREEN_TOPICS = { duties: "duties", documents: "documents", conversation: "ask", notebook: "notebooks", rover: "rover" };
+
 function showSlide(slide) {
   sound.stop();
   // A story page's view follows its current line; any other page has one view.
@@ -27,6 +30,7 @@ function showSlide(slide) {
   stage.classList.toggle("wide", slide.dataset.stage === "wide");
   if (screen) {
     document.querySelectorAll(".app-view").forEach((v) => v.classList.toggle("on", v.dataset.screen === screen));
+    document.querySelector(".laptop .app").dataset.topic = SCREEN_TOPICS[screen];
   }
 }
 
