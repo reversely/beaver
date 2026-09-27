@@ -1,0 +1,7 @@
+// Cloudflare deploy of the demo page. The build command copies demo/ into site/ without the build
+// scripts and art sources; this file points the deploy at site/ instead of letting it guess.
+{
+  "name": "beaver",
+  "compatibility_date": "2026-09-27",
+  "assets": { "directory": "./site" }
+}
