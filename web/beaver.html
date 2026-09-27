@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beaver mascot</title>
+  <link rel="icon" href="beaver-mark.png">
+  <style>
+    html, body { margin: 0; height: 100%; background: #ececec; overflow: hidden; }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="stage" aria-label="Beaver, the mascot, turnable by dragging"></canvas>
+  <script type="module">
+    import * as THREE from "three";
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+    import { createBeaver } from "./beaver.js";
+
+    const canvas = document.getElementById("stage");
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xececec);
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+    camera.position.set(3.8, 2.5, 4.7);
+
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 1.8));
+    const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+    sun.position.set(3, 6, 4);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.radius = 6;
+    sun.shadow.bias = -0.0005;
+    sun.shadow.normalBias = 0.03;
+    scene.add(sun);
+
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(3, 48), new THREE.ShadowMaterial({ opacity: 0.18 }));
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const beaver = createBeaver();
+    beaver.position.x = 0.2;
+    scene.add(beaver);
+
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.target.set(0.1, 0.7, 0);
+    controls.enableDamping = true;
+    controls.enablePan = false;
+    controls.minDistance = 4;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+    // Frame the whole figure at any window shape: the camera backs off until the beaver's
+    // bounding sphere fits both the vertical and the horizontal field of view.
+    const radius = 2.5;
+    function resize() {
+      const aspect = innerWidth / innerHeight;
+      camera.aspect = aspect;
+      const vertical = THREE.MathUtils.degToRad(camera.fov) / 2;
+      const horizontal = Math.atan(Math.tan(vertical) * aspect);
+      const distance = radius / Math.sin(Math.min(vertical, horizontal));
+      camera.position.sub(controls.target).setLength(distance).add(controls.target);
+      controls.maxDistance = distance * 1.6;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight, false);
+    }
+    addEventListener("resize", resize);
+    resize();
+
+    renderer.setAnimationLoop(() => {
+      controls.update();
+      renderer.render(scene, camera);
+    });
+  </script>
+</body>
+</html>
