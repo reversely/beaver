@@ -16,29 +16,6 @@ uv run --group desktop python src/beaver/desktop/run.py serve
 Then open `http://127.0.0.1:8765`. Scroll, press the arrow keys, or press **Play demo**, which
 advances one slide every 8 seconds and loops.
 
-## Publishing
-
-The public site is https://beaver.shereenlee-ds.workers.dev/ (Cloudflare Worker `beaver`). Every
-file under `web/` is published at the same path: `web/index.html` is `/`, `web/art/land.webp` is
-`/art/land.webp`. Nothing outside `web/` is published.
-
-`wrangler.jsonc` at the repo root is the one place that names the published folder. To publish a
-different folder, change `assets.directory` there; no Cloudflare setting names a folder.
-
-Cloudflare builds and deploys on every push to `main`. The Worker's build settings in the
-Cloudflare dashboard (Workers & Pages, `beaver`, Settings, Build) are:
-
-| Setting | Value |
-|---|---|
-| Git repository | `reversely/beaver`, branch `main` |
-| Build command | empty |
-| Deploy command | `npx wrangler deploy` |
-| Root directory | empty |
-| Build watch paths | none |
-
-With no watch path, a push that changes only the rover or the desktop app also redeploys the same
-files; the deploy takes about 5 to 7 minutes and changes nothing on the site.
-
 ## Menu
 
 `nav.js` and `nav.css` draw the site menu on the home page and the app: Home (`/`), App
