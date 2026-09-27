@@ -35,6 +35,25 @@ Beaver's recorded clips.
 the guard proxy that decides what the AI services receive; [`docs/architecture.md`](docs/architecture.md)
 describes each part in detail.
 
+## Desktop app
+
+Ask Beaver takes a question by holding the talk button or by typing in any language, with the
+option to show Beaver the camera.
+
+![The desktop app's Ask Beaver screen, with the talk button and a question box](assets/docs/app-ask.jpg)
+
+Notebooks gathers every exchange by topic, each with the years it covers and the number of
+questions asked.
+
+![The Notebooks list, one row per topic with its years and question count](assets/docs/app-notebooks.jpg)
+
+Inside a notebook, each concept carries a short explanation and why it matters to a newcomer, and
+each question keeps its answer in the language it was asked.
+
+![A concept card on Canada's dual measurement system, with a "Why it matters" note](assets/docs/notebook-concept.png)
+
+![A question asked in French about the metric system, with its answer in French](assets/docs/notebook-question.png)
+
 ## Setup
 
 Beaver uses [uv](https://docs.astral.sh/uv/) for Python 3.13 and its dependencies.
