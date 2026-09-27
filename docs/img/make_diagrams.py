@@ -71,18 +71,6 @@ def arrow(points, both=False):
     )
 
 
-def label(x, y, lines, anchor="middle", color=INK):
-    """Arrow labels, one short line each, with a white halo so they read over lines."""
-    out = []
-    for i, line in enumerate(lines):
-        out.append(
-            f'<text x="{x}" y="{y + i * 20}" text-anchor="{anchor}" font-size="16" '
-            f'fill="{color}" stroke="#ffffff" stroke-width="5" paint-order="stroke">'
-            f"{escape(line)}</text>"
-        )
-    return "".join(out)
-
-
 def zone(x, y, w, h, title, fill, color):
     return (
         f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="20" fill="{fill}"/>'
@@ -120,18 +108,11 @@ def parts():
         box(1030, 190, w, h, "device-laptop", "Desktop app"),
     ]
     b.append(arrow([(270, 268), (348, 268)], both=True))
-    b.append(label(309, 248, ["question"]))
-    b.append(label(309, 296, ["answer"]))
     b.append(arrow([(570, 235), (708, 130)], both=True))
-    b.append(label(625, 150, ["clean text,", "photo"], anchor="end"))
     b.append(arrow([(570, 300), (708, 390)], both=True))
-    b.append(label(625, 395, ["answer to speak"], anchor="end"))
     b.append(arrow([(1028, 225), (932, 130)], both=True))
-    b.append(label(982, 150, ["questions"], anchor="start"))
     b.append(arrow([(1028, 295), (932, 390)], both=True))
-    b.append(label(982, 382, ["answer to speak"], anchor="start"))
     b.append(arrow([(160, 330), (160, 560), (1140, 560), (1140, 332)]))
-    b.append(label(650, 550, ["saved turns, copied over SSH every 60 s"]))
     return svg(
         1290,
         590,
@@ -164,12 +145,9 @@ def privacy():
     b.append(arrow([(465, mid), (503, mid)]))
     b.append(arrow([(695, mid), (733, mid)]))
     b.append(arrow([(830, y_pi), (890, y_out + h + 2)]))
-    b.append(label(848, 272, ["clean text, photo"], anchor="end"))
     b.append(arrow([(1000, y_out + h), (1060, y_pi - 2)]))
-    b.append(label(1042, 272, ["answer"], anchor="start"))
     b.append(arrow([(1155, y_pi + 30), (1230, y_out + h + 2)]))
     b.append(arrow([(1340, y_out + h), (1340, y_pi - 2)]))
-    b.append(label(1350, 268, ["speech"], anchor="start"))
     return svg(
         1480,
         540,
