@@ -1,10 +1,10 @@
 // Beaver, drawn part for part from the rover prototype's CAD model (#46): a base with an arch cut
-// out underneath, a humped shell on top of it, a flat cross-hatched oval tail, a small block under
-// the head, and a forward-tilted head with two dot eyes, a small hole on each side, and a cream arched
+// out underneath, a humped shell on top of it, a flat cross-hatched oval tail, and a forward-tilted head,
+// overhanging the base on a flat bracket, with two dot eyes, a small hole on each side, and a cream arched
 // face plate that wraps the lower sides, holding the camera lens and the screen, which shows the rover's OLED
 // mouth and moves with speech through speakWith().
 //
-// The one change from the model is colour: the CAD render leaves the base, shell, tail, and block
+// The one change from the model is colour: the CAD render leaves the base, shell, tail, and bracket
 // uncoloured, and here they take the head's own brown. The other colours are sampled from the render
 // and the user's photo of the prototype.
 // The figure faces +x and stands on y = 0.
@@ -283,17 +283,16 @@ export function createBeaver() {
   tail.rotation.z = -0.06;
   beaver.add(tail);
 
-  // The small block under the head, at the front of the base.
-  const chin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.95), brown);
-  chin.position.set(1.12, 0.2, 0);
-  beaver.add(chin);
-
   // Head: tilted forward over the chin block.
   const head = new THREE.Group();
   head.position.set(1.25, 0.95, 0);
   head.rotation.z = -0.35;
   beaver.add(head);
   head.add(new THREE.Mesh(extrude(headProfile(), 0.95, 0.04), brown));
+  // The flat bracket the head rests on, running back under the shell's front.
+  const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.025, 0.7), brown);
+  bracket.position.set(-0.12, -0.45, 0);
+  head.add(bracket);
   for (const side of [-1, 1]) {
     // The face plate's side wing over the lower half of each side, in the plate's cream.
     const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.42), matte(CREAM));
