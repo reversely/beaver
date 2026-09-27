@@ -12,6 +12,34 @@ The rover is a SunFounder PiCar-X built on a Raspberry Pi 5 and a SunFounder Rob
 | Microphone | None. The v4 HAT has no microphone, and Bluetooth headsets such as AirPods Max pair with the Pi but deliver no microphone audio. The phone page stands in (see [architecture.md](architecture.md)) |
 | Camera | OV5647 (5 MP) on a CAM/DISP connector, through the Pi 5's narrow 22-pin adapter cable |
 | Button | The HAT's USER button on GPIO 25 (`button.pin`) |
+| Mouth screen | SSD1306 OLED, 128 by 64 dots, at I2C address `0x3C` on bus 1, mounted upside down (see below) |
+| Head servos | The camera's pan servo on the HAT's `P0` and tilt servo on `P1`, both mounted inverted |
+
+## Mouth screen
+
+The OLED shows Beaver's mouth (`src/beaver/rover/mouth.py`, the `[mouth]` section of
+`config.toml`). The panel's colours are fixed in the glass: dot rows 0 to 15 light yellow and rows
+16 to 63 blue, with a physical gap at row 16. The mouth uses only the blue rows. The panel is
+mounted upside down, so each frame is drawn as a visitor sees it and turned 180 degrees before
+sending; a visitor sees the blue rows as the top of the screen.
+
+The mouth is the prototype's dot-grid picture: a stepped top lip and two solid buck teeth that are
+the same in every frame, and a lower lip that passes behind the teeth and drops below them with the
+loudness of the speech, 12 times a second. The rover writes the screen through `/dev/i2c-1` and
+sends only the 8-row pages that changed. At the bus's 100 kHz, the largest change, fully open to
+closed, took 61 to 75 ms to send, within the 83 ms frame period.
+
+The screen shares I2C bus 1 with the HAT's controller at `0x14`. On 2026-09-27 the screen stopped
+answering at `0x3C` after working, and a bus scan found only `0x14`; the rover speaks without the
+mouth while the screen is missing and tries it again on each reply.
+
+## Head servos
+
+`robot_hat.Servo("P0")` pans the head and `Servo("P1")` tilts it; both take the angle with its sign
+flipped, as SunFounder's `picarx` library drives them. The sensors project's limits are pan -90 to
+90 degrees and tilt -35 to 65 degrees. `robot_hat` retries a failed I2C write without end, so a
+stuck HAT controller makes a servo call hang; `robot_hat.reset_mcu()` resets the controller, after
+which the servos moved normally on 2026-09-27. Only one program may drive the HAT at a time.
 
 The v4 HAT uses GPIO 20 for the speaker enable, which is also the data-in pin of the I2S block the
 DAC uses (GPIO 18 to 21), so an I2S microphone cannot share that block with the speaker. SunFounder's

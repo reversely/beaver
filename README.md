@@ -13,6 +13,14 @@ language. The guide has three parts:
 It runs as a rover on a Raspberry Pi 5, which a visitor asks through their phone, and as a desktop
 app on a laptop. It is built for one person with one rover and one laptop.
 
+![Beaver's 3D model speaking, its mouth moving with the clip](assets/beaver-talking.gif)
+
+The rover's face carries a small dot screen showing Beaver's mouth: a top lip and two buck teeth
+that stay the same, and a lower lip that passes behind the teeth and drops below them as Beaver
+speaks, following the loudness of each spoken answer. The camera sits in the head on two servos
+that pan and tilt it. The 3D model at `web/beaver.html` shows the same mouth and moves it with
+Beaver's recorded clips.
+
 ## Parts
 
 | Part | Folder | What it does |
@@ -63,7 +71,7 @@ uv run python -m unittest discover -s src/beaver/desktop/tests
 ```
 
 The first checks the desktop app's 3D piece registry against its spec; the second checks the
-rover's guard rules, phone server, and language detection; the third checks the desktop app's
+rover's guard rules, phone server, language detection, and mouth frames; the third checks the desktop app's
 location lookup, whose fixed-point tests run once `run.py getplaces` has downloaded the boundary file. The pre-commit hook runs the first when the registry files change.
 
 ## Documentation
