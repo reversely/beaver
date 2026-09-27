@@ -49,7 +49,7 @@ ELEVENLABS_API_KEY=...
 |---|---|---|
 | Desktop app and demo | `uv run --group desktop python src/beaver/desktop/run.py serve`, then open `http://127.0.0.1:8765` | [`src/beaver/desktop/README.md`](src/beaver/desktop/README.md) |
 | Rover, on the Pi | `uv run --group rover python src/beaver/rover/run.py phone` | [`src/beaver/rover/README.md`](src/beaver/rover/README.md) |
-| Home page | `uv run python -m http.server 8766 -d web`, then open `http://127.0.0.1:8766` | [`web/README.md`](web/README.md) |
+| Home page | Served by the desktop app at `http://127.0.0.1:8765` | [`web/README.md`](web/README.md) |
 
 The rover's hardware, power, and network access are in [`docs/hardware.md`](docs/hardware.md).
 

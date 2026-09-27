@@ -1,0 +1,36 @@
+/* The site menu. Its own dark maroon surface keeps it readable over the home page's cream sky and
+   over the app's dark scene alike: near-white 16.9 and the current link's orange 7.3 on #26100c. */
+.site-nav ul {
+  display: flex;
+  gap: 2px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: rgba(38, 16, 12, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+.site-nav a {
+  display: block;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #faf7f4;
+  text-decoration: none;
+}
+.site-nav a:hover { background: rgba(255, 255, 255, 0.08); }
+.site-nav a[aria-current="page"] { color: #f4875a; background: rgba(255, 255, 255, 0.06); }
+.site-nav a:focus-visible { outline: 2px solid #f4875a; outline-offset: 2px; }
+.site-nav.is-floating { position: fixed; top: 16px; right: 16px; z-index: 50; }
+@media (max-width: 480px) {
+  .site-nav.is-floating { top: 8px; right: 8px; left: 8px; }
+  .site-nav ul { justify-content: center; }
+  .site-nav a { padding: 10px 12px; }
+}
+/* In a page's own slot, such as the app's sidebar, the links share the slot's width. */
+.site-nav:not(.is-floating) { margin-bottom: 20px; }
+.site-nav:not(.is-floating) ul { justify-content: space-between; }
+.site-nav:not(.is-floating) a { padding: 8px 10px; }

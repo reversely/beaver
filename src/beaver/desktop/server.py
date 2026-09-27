@@ -29,8 +29,8 @@ from beaver.core.settings import render_prompt
 HERE = Path(__file__).parent
 
 UI = HERE / "ui"
-# The demo is the home page at /, and this app's page is at /app/.
-DEMO = HERE.parents[2] / "demo"
+# The site (web/) is served at /, with its home page and demo, and this app's page at /app/.
+SITE = HERE.parents[2] / "web"
 # Settings changed on the page; gitignored, applied over config.toml at startup.
 LOCAL_SETTINGS = HERE / "settings.local.json"
 # Each setting the page may change, with the values it accepts.
@@ -254,7 +254,7 @@ def make_handler(app: App):
             elif path.startswith("/app/"):
                 self._file(_page(UI, path.removeprefix("/app/")))
             else:
-                self._file(_page(DEMO, path.lstrip("/")))
+                self._file(_page(SITE, path.lstrip("/")))
 
         def _local(self) -> bool:
             """A request this laptop's own page sent: to this server's own host name, which a

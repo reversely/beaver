@@ -9,13 +9,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/nav.css">
   <script type="importmap">
     { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
   </script>
 </head>
-<body>
+<body data-site="local">
   <div class="app">
     <aside class="side card">
+      <div data-site-nav></div>
       <div class="brand">
         <span class="brand-line">your guide to Canada</span>
         <span class="brand-word">beaver</span>
@@ -128,5 +130,6 @@
   <script type="module" src="scene.js"></script>
   <script type="module" src="app.js"></script>
   <script type="module" src="rover.js"></script>
+  <script type="module" src="/nav.js"></script>
 </body>
 </html>

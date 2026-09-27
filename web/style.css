@@ -335,6 +335,9 @@ html, body {
 .app-button-quiet { background: var(--raised); color: var(--accent-text); }
 .card .app-button { margin-top: 0.3em; }
 .app-button-large { font-size: 1.1em; justify-self: start; }
+/* The closing page's actions: Start over, and Open the app on the laptop's server. */
+.close-actions { display: flex; flex-wrap: wrap; gap: 0.8em; }
+a.app-button { text-decoration: none; }
 
 /* Laptop, fixed on the right while the interface slides scroll. */
 .stage {

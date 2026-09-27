@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Sans:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/nav.css">
   <script type="importmap">
     {
       "imports": {
@@ -248,7 +249,10 @@
             <p class="tagline fit">the newcomer's field guide to Canada</p>
             <p class="brand-fr fit" lang="fr">votre guide du Canada</p>
           </div>
-          <button class="app-button app-button-large" type="button" id="restart">Start over</button>
+          <div class="close-actions">
+            <button class="app-button app-button-large" type="button" id="restart">Start over</button>
+            <a class="app-button app-button-large" href="/app/" data-site-local hidden>Open the app</a>
+          </div>
         </div>
       </section>
 
@@ -259,5 +263,6 @@
   <button class="ambience" type="button" id="ambience" aria-pressed="true" aria-label="Ambient sound"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg><span>Sound on</span></button>
 
   <script type="module" src="demo.js"></script>
+  <script type="module" src="/nav.js"></script>
 </body>
 </html>

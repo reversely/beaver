@@ -7,12 +7,23 @@ line is a saved MP3, and the Ask and Notebook screens replay one recorded deskto
 
 ## Running
 
+The desktop app's server serves this folder at `/` and the app at `/app/`, on one port:
+
 ```
-uv run python -m http.server 8766 -d web
+uv run --group desktop python src/beaver/desktop/run.py serve
 ```
 
-Then open `http://127.0.0.1:8766`. Scroll, press the arrow keys, or press **Play demo**, which
+Then open `http://127.0.0.1:8765`. Scroll, press the arrow keys, or press **Play demo**, which
 advances one slide every 8 seconds and loops.
+
+## Menu
+
+`nav.js` and `nav.css` draw the site menu on the home page, the demo, and the app: Home (`/`),
+Demo (`/demo/`), App (`/app/`), and Rover (`/app/#rover`, the app's Rover panel). The published
+site has no app behind it, so on any host but `127.0.0.1` or `localhost` the menu shows only Home
+and Demo, and elements marked `data-site-local`, such as the closing page's **Open the app**, stay
+hidden. `<body data-site="online">` or `"local"` overrides the host check. A page with a
+`[data-site-nav]` element gets the menu there; any other page gets it fixed at the top right.
 
 ## Pages
 
