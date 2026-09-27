@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Beaver demo</title>
+  <title>Beaver</title>
   <link rel="icon" href="beaver-mark.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
 <body>
   <canvas class="city" id="city" aria-hidden="true"></canvas>
 
-  <!-- The laptop stays fixed from Site to the notebook; each slide picks its screen. -->
+  <!-- The laptop stays fixed from Ask Beaver to Notebooks; each slide picks its screen. -->
   <div class="stage" id="stage" hidden>
     <figure class="laptop" aria-label="Beaver on a laptop">
       <div class="lid">
@@ -31,52 +31,7 @@
           <div class="app">
             <header class="app-bar">
               <span class="app-name">Beaver</span>
-              <span class="tag tag-demo">demo</span>
             </header>
-
-            <section class="app-view" data-screen="site">
-              <h3>Site</h3>
-              <label class="app-field">
-                <span>Site name</span>
-                <input type="text" value="Demo classroom" tabindex="-1" readonly>
-              </label>
-              <div class="app-field">
-                <span>Reply in</span>
-                <div class="seg"><span>English</span><span>Français</span><span class="on">Both</span></div>
-              </div>
-              <div class="app-row">
-                <span>Add the visitor's language</span>
-                <span class="toggle on" aria-label="on"></span>
-              </div>
-              <div class="app-field">
-                <span>Topics</span>
-                <div class="chips">
-                  <span class="chip on">History</span><span class="chip on">Languages</span><span class="chip on">Civic life</span><span class="chip on">Places</span><span class="chip on">Art</span>
-                </div>
-              </div>
-              <div class="app-row">
-                <span>Voice</span>
-                <span class="app-value">Chadwitch en-CA</span>
-              </div>
-              <button class="app-button" type="button" tabindex="-1">Save</button>
-            </section>
-
-            <section class="app-view" data-screen="deploy">
-              <h3>Deploy</h3>
-              <dl class="summary">
-                <dt>Site</dt><dd>Demo classroom</dd>
-                <dt>Reply in</dt><dd>English and French</dd>
-                <dt>Visitor language</dt><dd>on</dd>
-                <dt>Topics</dt><dd>5</dd>
-                <dt>Voice</dt><dd>Chadwitch en-CA</dd>
-                <dt>Rover</dt><dd>raspberry</dd>
-              </dl>
-              <div class="progress"><span data-progress="deploy"></span></div>
-              <div class="app-row">
-                <button class="app-button" type="button" tabindex="-1">Deploy</button>
-                <span class="tag" data-status="deploy">ready</span>
-              </div>
-            </section>
 
             <section class="app-view" data-screen="conversation">
               <div class="ask">
@@ -210,25 +165,23 @@
         </div>
       </section>
 
-      <section data-view="site" data-screen="site">
-        <div class="card card-step">
-          <ol class="steps" aria-label="Setup steps"><li class="on">Site</li><li>Deploy</li></ol>
-          <h2>Site</h2>
-          <p>Tell Beaver where it lives. Name your space, choose English, French, or both, and pick the topics your visitors care about.</p>
+      <section data-view="duties">
+        <div class="card">
+          <h2>Deadlines and duties</h2>
+          <p>Beaver lists your upcoming tax, benefit, and immigration deadlines, each taken from the government page that states it.</p>
         </div>
       </section>
 
-      <section data-view="deploy" data-screen="deploy">
-        <div class="card card-step">
-          <ol class="steps" aria-label="Setup steps"><li class="done">Site</li><li class="on">Deploy</li></ol>
-          <h2>Deploy</h2>
-          <p>Beaver picks up your settings and says hello in every language you chose.</p>
+      <section data-view="documents">
+        <div class="card">
+          <h2>Documents</h2>
+          <p>Photograph a letter you can't read. Beaver summarizes it in your language, on your own computer.</p>
         </div>
       </section>
 
       <section data-view="conversation" data-screen="conversation" data-stage="wide">
         <div class="card card-side">
-          <h2>Ask</h2>
+          <h2>Ask Beaver</h2>
           <p>Point Beaver at a painting and ask in Spanish. Beaver answers sentence by sentence in English, French, and Spanish, so every new word comes with its translation.</p>
           <button class="app-button" type="button" id="play-reply">Play reply</button>
           <p class="meta" data-bind="recorded"></p>
@@ -237,8 +190,15 @@
 
       <section data-view="notebook" data-screen="notebook" data-stage="wide">
         <div class="card card-side">
-          <h2>Notebook</h2>
-          <p>Every conversation becomes a notebook of new words and big ideas, in all three languages, to look back on after the visit.</p>
+          <h2>Notebooks</h2>
+          <p>Every conversation becomes a notebook of new words and big ideas, in all three languages, to look back on later.</p>
+        </div>
+      </section>
+
+      <section data-view="rover">
+        <div class="card">
+          <h2>Rover</h2>
+          <p>Take Beaver out with you. Ask through your phone, and Beaver answers through the rover's speaker, looking through its camera at what you see.</p>
         </div>
       </section>
 
@@ -259,7 +219,7 @@
     </div>
   </div>
 
-  <button class="autoplay" type="button" id="autoplay" aria-pressed="false">Play demo</button>
+  <button class="autoplay" type="button" id="autoplay" aria-pressed="false">Play</button>
   <button class="ambience" type="button" id="ambience" aria-pressed="true" aria-label="Ambient sound"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg><span>Sound on</span></button>
 
   <script type="module" src="demo.js"></script>

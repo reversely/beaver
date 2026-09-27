@@ -25,10 +25,11 @@ const VIEWS = {
   "beaver-2": [4.5, 3.6, -5],
   "beaver-3": [3.5, 2.6, -2],
   hey: [-6, -1.6, -3],
-  site: [-4, 2.5, -6],
-  deploy: [6, 1.5, -6],
+  duties: [-4, 2.5, -6],
+  documents: [1, 2, -6],
   conversation: [-7.5, -2.5, -5],
   notebook: [-10, -1, -3],
+  rover: [6, 1.5, -6],
   close: [2, 1, -2],
 };
 // Slides where the maple branches frame the view.

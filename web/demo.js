@@ -17,42 +17,16 @@ setupStory(sound);
 
 const stage = document.getElementById("stage");
 const LANG_NAMES = { en: "English", fr: "Français", es: "Español" };
-// Each setup screen plays a short scripted change once its slide is shown.
-const timers = [];
-function clearTimers() {
-  timers.splice(0).forEach(clearTimeout);
-}
-const SCRIPTS = {
-  deploy() {
-    const bar = document.querySelector('[data-progress="deploy"]');
-    const tag = document.querySelector('[data-status="deploy"]');
-    bar.style.transition = "none";
-    bar.style.width = "0%";
-    tag.textContent = "deploying";
-    tag.classList.remove("ok");
-    timers.push(setTimeout(() => {
-      bar.style.transition = reducedMotion ? "none" : "width 2s ease-out";
-      bar.style.width = "100%";
-    }, 400));
-    timers.push(setTimeout(() => {
-      tag.textContent = "deployed";
-      tag.classList.add("ok");
-    }, 2500));
-  },
-};
-
 function showSlide(slide) {
   sound.stop();
   // A story page's view follows its current line; any other page has one view.
   currentView = storyStep(slide) || slide.dataset.view;
   city.goTo(currentView);
-  clearTimers();
   const screen = slide.dataset.screen;
   stage.hidden = !screen;
   stage.classList.toggle("wide", slide.dataset.stage === "wide");
   if (screen) {
     document.querySelectorAll(".app-view").forEach((v) => v.classList.toggle("on", v.dataset.screen === screen));
-    SCRIPTS[screen]?.();
   }
 }
 
@@ -238,7 +212,7 @@ function setAutoplay(on) {
   clearInterval(autoTimer);
   autoTimer = on ? setInterval(() => (Reveal.isLastSlide() ? Reveal.slide(0) : Reveal.next()), 8000) : null;
   autoplay.setAttribute("aria-pressed", String(on));
-  autoplay.textContent = on ? "Pause demo" : "Play demo";
+  autoplay.textContent = on ? "Pause" : "Play";
 }
 autoplay.addEventListener("click", () => setAutoplay(!autoTimer));
 document.getElementById("restart").addEventListener("click", () => Reveal.slide(0));

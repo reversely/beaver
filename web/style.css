@@ -291,35 +291,12 @@ html, body {
 }
 .card p { color: var(--ink-2); font-size: 1.12em; }
 .card-side { width: min(520px, 28vw); }
+/* A feature card with no laptop beside it spans the phone's width. */
+@media (max-width: 700px) {
+  section:not([data-screen]) > .card { width: calc(100vw - 32px); }
+}
 .meta { font-size: 0.78em !important; color: var(--ink-3) !important; margin-top: 1.2em !important; }
 
-.steps { display: flex; gap: 0.35em; margin: 0 0 1.2em; padding: 0; list-style: none; counter-reset: step; flex-wrap: wrap; }
-.steps li {
-  counter-increment: step;
-  font-size: 0.72em;
-  padding: 0.3em 0.8em 0.3em 0.35em;
-  border-radius: 999px;
-  color: var(--ink-3);
-  background: var(--raised);
-  display: flex;
-  align-items: center;
-  gap: 0.45em;
-}
-.steps li::before {
-  content: counter(step);
-  width: 1.55em;
-  height: 1.55em;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 0.9em;
-  font-weight: 700;
-  background: var(--raised);
-}
-.steps li.done { color: var(--ink-2); }
-.steps li.done::before { background: var(--sage); color: var(--on-accent); }
-.steps li.on { background: var(--orange); color: var(--on-accent); font-weight: 600; }
-.steps li.on::before { background: var(--on-accent); color: var(--ink); }
 
 .app-button {
   align-self: flex-start;
@@ -368,34 +345,16 @@ a.app-button { text-decoration: none; }
 .app-view { display: none; flex: 1; padding: 1em 1.5em; flex-direction: column; gap: 0.6em; min-height: 0; }
 .app-view.on { display: flex; animation: rise 0.45s ease-out; }
 .app-view h3 { margin: 0 !important; font-size: 1.45em !important; }
-.app-field { display: grid; gap: 0.25em; color: var(--ink-2); }
-.app-field input { font: inherit; padding: 0.45em 0.7em; border-radius: 0.5em; border: 1px solid var(--hairline); background: var(--raised); color: var(--ink); }
-.app-field input::placeholder { color: var(--ink-3); }
-.app-row { display: flex; align-items: center; justify-content: space-between; gap: 0.7em; color: var(--ink-2); }
-.app-value { color: var(--ink); }
 .app-label { font-size: 0.85em; color: var(--ink-3); }
 .app-note { margin: 0 !important; color: var(--ink-3); font-size: 0.9em; }
 
 .seg { display: inline-flex; border: 1px solid var(--hairline); border-radius: 0.5em; overflow: hidden; width: max-content; }
 .seg span { padding: 0.25em 0.75em; color: var(--ink-2); }
 .seg span.on { background: var(--orange); color: var(--on-accent); font-weight: 600; }
-.toggle { width: 2em; height: 1.15em; border-radius: 999px; background: var(--hairline); position: relative; }
-.toggle.on { background: var(--sage); }
-.toggle::after { content: ""; position: absolute; top: 0.15em; left: 0.15em; width: 0.85em; height: 0.85em; border-radius: 50%; background: var(--ink); }
-.toggle.on::after { left: 1em; }
-.chips { display: flex; flex-wrap: wrap; gap: 0.4em; }
-.chip { font-size: 0.85em; padding: 0.2em 0.65em; border-radius: 999px; background: var(--raised); color: var(--ink-2); border: 1px solid var(--hairline); }
-.chip.on { color: var(--accent-text); border-color: rgba(213, 92, 43, 0.6); }
 
 .tag { font-size: 0.78em; font-weight: 600; padding: 0.15em 0.6em; border-radius: 999px; background: var(--raised); color: var(--ink-2); }
 .tag.ok { background: var(--sage); color: var(--on-accent); }
-.tag-demo { background: var(--red); color: var(--ink); }
 
-.summary { display: grid; grid-template-columns: auto 1fr; gap: 0.25em 1.1em; margin: 0; }
-.summary dt { color: var(--ink-3); }
-.summary dd { margin: 0; color: var(--ink); }
-.progress { height: 0.4em; border-radius: 999px; background: var(--raised); overflow: hidden; }
-.progress span { display: block; height: 100%; width: 0; background: var(--orange); }
 
 /* Conversation screen: camera frame beside the reply, as in the desktop interface. */
 .ask { display: grid; grid-template-columns: 0.75fr 1.5fr; gap: 1.4em; min-height: 0; flex: 1; }
