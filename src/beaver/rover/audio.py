@@ -118,32 +118,13 @@ def enable_speaker(config: dict) -> None:
     _speaker_enabled = True
 
 
-def normalize(samples: np.ndarray, settings: dict) -> tuple[np.ndarray, float]:
-    """Scale int16 samples so the loudest reaches speaker.normalize_dbfs; return them and the gain in
-    dB. The speaker mixer is already at 100%, so this is the only volume left to use."""
-    peak = int(np.abs(samples.astype(np.int32)).max()) if samples.size else 0
-    if not settings["normalize"] or peak == 0:
-        return samples, 0.0
-    gain_db = min(
-        settings["normalize_dbfs"] - 20 * np.log10(peak / 32768),
-        settings["max_gain_db"],
-    )
-    scaled = samples.astype(np.float32) * 10 ** (gain_db / 20)
-    return np.clip(scaled, -32768, 32767).astype(np.int16), round(float(gain_db), 1)
-
-
 def play_pcm(config: dict, record: RunRecord, pcm: bytes, rate: int) -> None:
     if not config["speaker"]["play"]:
         return
     enable_speaker(config)
-    with record.timed("normalize"):
-        samples, gain_db = normalize(
-            np.frombuffer(pcm, dtype=np.int16), config["speaker"]
-        )
-    record.data["playback_gain_db"] = gain_db
     with record.timed("playback"):
         sd.play(
-            samples,
+            np.frombuffer(pcm, dtype=np.int16),
             samplerate=rate,
             device=find_device(config["speaker"]["device"], "output"),
         )
