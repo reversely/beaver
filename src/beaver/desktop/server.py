@@ -230,8 +230,10 @@ def _rover_state(state: dict) -> dict:
     if state["address"]:
         import segno
 
-        state["qr_svg"] = segno.make(state["address"], error="l").svg_inline(
-            scale=5, dark="#2b1a14", light="#fffaf2"
+        # Error correction M survives screen glare that L does not; 6 px per module keeps every
+        # edge on a whole pixel, since the page shows the code at its drawn size.
+        state["qr_svg"] = segno.make(state["address"], error="m").svg_inline(
+            scale=6, border=4, dark="#2b1a14", light="#fffaf2"
         )
     return state
 

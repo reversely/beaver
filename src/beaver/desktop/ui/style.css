@@ -501,5 +501,6 @@ a.nav-item, a.tag-link { text-decoration: none; }
 .rover .empty { margin-bottom: 12px; }
 .rover .empty.is-error { color: var(--error); }
 .rover-link { display: grid; justify-items: start; gap: 10px; margin-bottom: 12px; }
-.rover-qr svg { display: block; width: 168px; height: auto; border-radius: 8px; }
+/* Shown at its drawn size, whole pixels per module, so phone cameras see sharp edges. */
+.rover-qr svg { display: block; max-width: 100%; height: auto; border-radius: 8px; shape-rendering: crispEdges; }
 .rover-link a { color: var(--accent-text); font-size: 15px; }
