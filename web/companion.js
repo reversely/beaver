@@ -1,6 +1,6 @@
 // Beaver on the home page (#48): the model from beaver.js, drawn in a fixed corner on every slide.
-// Beaver moves only when a clip plays (the mouth) or when the visitor drags to turn him, so the
-// canvas redraws only then.
+// Beaver turns slowly on the spot, his mouth follows his clips, and a drag turns him by hand. With
+// reduced motion he stays still and the canvas redraws only on a mouth change or a drag.
 import * as THREE from "three";
 import { createBeaver, speakWith } from "./beaver.js";
 
@@ -44,6 +44,21 @@ export function createCompanion(canvas) {
   };
   new ResizeObserver(redraw).observe(canvas);
 
+  // A slow turn, one revolution every 20 seconds, paused while dragged and for a moment after.
+  const SPIN = (Math.PI * 2) / 20;
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let last = null;
+  let resumeAt = 0;
+  function spin(now) {
+    if (last !== null && now >= resumeAt && dragX === null) {
+      beaver.rotation.y += (SPIN * (now - last)) / 1000;
+      draw();
+    }
+    last = now;
+    requestAnimationFrame(spin);
+  }
+  if (!still) requestAnimationFrame(spin);
+
   // Dragging turns Beaver around his vertical axis.
   let dragX = null;
   canvas.addEventListener("pointerdown", (event) => {
@@ -59,6 +74,7 @@ export function createCompanion(canvas) {
   });
   const release = () => {
     dragX = null;
+    resumeAt = performance.now() + 1500;
     canvas.classList.remove("is-turning");
   };
   canvas.addEventListener("pointerup", release);
