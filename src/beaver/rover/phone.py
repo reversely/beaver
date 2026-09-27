@@ -47,7 +47,48 @@ def wav_seconds(data: bytes) -> float:
         return wav.getnframes() / wav.getframerate()
 
 
-def make_handler(token: str, max_bytes: int, answer):
+# A location body is two short numbers; anything longer is refused before it is read.
+MAX_LOCATION_BYTES = 128
+
+
+class LastLocation:
+    """The phone's most recent location, rounded to 2 decimals (about 1 km). Each later turn writes
+    it into record.json; the rover uses it for nothing else."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._value = None
+
+    def set(self, lat: float, lon: float) -> None:
+        with self._lock:
+            self._value = {"lat": lat, "lon": lon}
+
+    def get(self) -> dict | None:
+        with self._lock:
+            return dict(self._value) if self._value else None
+
+
+def parse_location(body: bytes) -> tuple[float, float]:
+    """(lat, lon) rounded to 2 decimals, from {"lat": .., "lon": ..}; ValueError otherwise. The page
+    rounds before sending; rounding again here keeps a finer point from a modified page out of
+    the records."""
+    data = json.loads(body)
+    if not isinstance(data, dict) or set(data) != {"lat", "lon"}:
+        raise ValueError("expected lat and lon only")
+    lat, lon = data["lat"], data["lon"]
+    # bool is an int subclass; true/false are not coordinates.
+    if not all(
+        isinstance(v, int | float) and not isinstance(v, bool) for v in (lat, lon)
+    ):
+        raise ValueError("lat and lon must be numbers")
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        raise ValueError("lat or lon out of range")
+    return round(lat, 2), round(lon, 2)
+
+
+def make_handler(
+    token: str, max_bytes: int, answer, location: LastLocation | None = None
+):
     """`answer(wav, upload_ms, respond, language)` runs one turn and calls `respond(reply)` once
     the reply text exists, before the rover speaks it. One turn runs at a time. `language` is
     transcribe.AUTO or one of transcribe.LANGUAGES, checked here; the page's own value never
@@ -90,7 +131,37 @@ def make_handler(token: str, max_bytes: int, answer):
                 return
             self._send(HTTPStatus.OK, (PAGE / name).read_bytes(), kind)
 
+        def _location(self):
+            if not self._authorized():
+                self._json(HTTPStatus.FORBIDDEN, {"error": "This link has expired."})
+                return
+            try:
+                length = int(self.headers.get("Content-Length", ""))
+            except ValueError:
+                self._json(
+                    HTTPStatus.LENGTH_REQUIRED, {"error": "No location arrived."}
+                )
+                return
+            if length > MAX_LOCATION_BYTES:
+                self._json(
+                    HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
+                    {"error": "Location too large."},
+                )
+                return
+            try:
+                lat, lon = parse_location(self.rfile.read(length))
+            except (ValueError, KeyError):  # json.JSONDecodeError is a ValueError
+                self._json(
+                    HTTPStatus.BAD_REQUEST, {"error": "Location not understood."}
+                )
+                return
+            location.set(lat, lon)
+            self._json(HTTPStatus.OK, {"lat": lat, "lon": lon})
+
         def do_POST(self):
+            if urlsplit(self.path).path == "/api/location" and location is not None:
+                self._location()
+                return
             if urlsplit(self.path).path != "/api/ask":
                 self._json(HTTPStatus.NOT_FOUND, {"error": "Not found."})
                 return
@@ -206,10 +277,10 @@ def lan_address() -> str:
         return probe.getsockname()[0]
 
 
-def serve(config: dict, answer) -> None:
+def serve(config: dict, answer, location: LastLocation | None = None) -> None:
     settings = config["phone"]
     token = secrets.token_urlsafe(16)
-    handler = make_handler(token, settings["max_upload_bytes"], answer)
+    handler = make_handler(token, settings["max_upload_bytes"], answer, location)
     port = settings["port"]
     tunnel = None
     if settings["tunnel"] == "cloudflare":

@@ -142,16 +142,20 @@ def cmd_phone(config, args):
     transcript, so Gemini receives only redacted text, never the audio."""
     import guard
     from camera import Camera
-    from phone import serve
+    from phone import LastLocation, serve
     from transcribe import AUTO, LANGUAGES, Transcriber
 
     camera = Camera(config) if config["look"]["include_image"] else None
     print(f"Loading Whisper {config['transcribe']['model']}...")
     transcriber = Transcriber(config)
 
+    location = LastLocation()
+
     def answer(wav, upload_ms, respond, language):
         record = RunRecord(config, "phone")
         question_end = time.perf_counter()
+        # Rounded to about 1 km on the phone and again on the rover; only this pair is saved.
+        record.data["location"] = location.get()
         record.data["timings_ms"]["upload"] = upload_ms
         record.data["question_language"] = language
         try:
@@ -192,7 +196,7 @@ def cmd_phone(config, args):
         record.finish(reply=reply)
 
     try:
-        serve(config, answer)
+        serve(config, answer, location)
     finally:
         if camera:
             camera.close()

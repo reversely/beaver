@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
-from phone import PAGE, make_handler
+from phone import MAX_LOCATION_BYTES, PAGE, LastLocation, make_handler, parse_location
 from transcribe import AUTO, LANGUAGES, pick_language
 
 TOKEN = "test-token"
@@ -38,7 +38,8 @@ class PhoneServer(unittest.TestCase):
             self.turns.append(language)
             respond(f"reply in {language}")
 
-        handler = make_handler(TOKEN, 64 * 1024, answer)
+        self.location = LastLocation()
+        handler = make_handler(TOKEN, 64 * 1024, answer, self.location)
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
         self.port = self.server.server_address[1]
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
@@ -47,9 +48,9 @@ class PhoneServer(unittest.TestCase):
         self.server.shutdown()
         self.server.server_close()
 
-    def post(self, query: str, body: bytes):
+    def post(self, query: str, body: bytes, path: str = "/api/ask"):
         request = urllib.request.Request(
-            f"http://127.0.0.1:{self.port}/api/ask?{query}",
+            f"http://127.0.0.1:{self.port}{path}?{query}",
             data=body,
             method="POST",
             headers={"Content-Type": "audio/wav"},
@@ -85,6 +86,68 @@ class PhoneServer(unittest.TestCase):
         self.assertEqual(self.post(f"t={TOKEN}&lang=en", b"not a wav file")[0], 400)
         self.assertEqual(self.post(f"t={TOKEN}&lang=en", wav_bytes(3.0))[0], 413)
         self.assertEqual(self.turns, [])
+
+    def locate(self, query: str, body: bytes):
+        return self.post(query, body, "/api/location")[0]
+
+    def test_location_is_rounded_and_kept(self):
+        body = json.dumps({"lat": 45.42456, "lon": -75.69972}).encode()
+        self.assertEqual(self.locate(f"t={TOKEN}", body), 200)
+        self.assertEqual(self.location.get(), {"lat": 45.42, "lon": -75.7})
+
+    def test_location_needs_the_token(self):
+        body = json.dumps({"lat": 45.42, "lon": -75.70}).encode()
+        self.assertEqual(self.locate("t=wrong", body), 403)
+        self.assertIsNone(self.location.get())
+
+    def test_bad_locations_are_refused(self):
+        bodies = [
+            b"not json",
+            b"[45.42, -75.70]",
+            json.dumps({"lat": 91, "lon": 0}).encode(),
+            json.dumps({"lat": 0, "lon": -181}).encode(),
+            json.dumps({"lat": True, "lon": 0}).encode(),
+            json.dumps({"lat": "45", "lon": "-75"}).encode(),
+            json.dumps({"lat": 45, "lon": -75, "name": "home"}).encode(),
+            b'{"lat": NaN, "lon": 0}',
+            b'{"lat": Infinity, "lon": 0}',
+        ]
+        for body in bodies:
+            self.assertEqual(self.locate(f"t={TOKEN}", body), 400, body)
+        oversized = (
+            json.dumps({"lat": 45.0, "lon": -75.0})
+            .encode()
+            .ljust(MAX_LOCATION_BYTES + 1)
+        )
+        self.assertEqual(self.locate(f"t={TOKEN}", oversized), 413)
+        self.assertIsNone(self.location.get())
+
+
+class ParseLocation(unittest.TestCase):
+    def test_rounds_to_two_decimals(self):
+        self.assertEqual(
+            parse_location(b'{"lat": 43.65107, "lon": -79.347015}'), (43.65, -79.35)
+        )
+
+
+class NoLocationEndpoint(unittest.TestCase):
+    def test_absent_without_a_holder(self):
+        server = ThreadingHTTPServer(
+            ("127.0.0.1", 0), make_handler(TOKEN, 1024, lambda *a: None)
+        )
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        try:
+            request = urllib.request.Request(
+                f"http://127.0.0.1:{server.server_address[1]}/api/location?t={TOKEN}",
+                data=b'{"lat": 1, "lon": 1}',
+                method="POST",
+            )
+            with self.assertRaises(urllib.error.HTTPError) as caught:
+                urllib.request.urlopen(request)
+            self.assertEqual(caught.exception.code, 404)
+        finally:
+            server.shutdown()
+            server.server_close()
 
 
 class PageLanguages(unittest.TestCase):

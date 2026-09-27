@@ -56,6 +56,13 @@ the visitor to choose a language and sends nothing to Gemini. Tiny detects faste
 Chinese question as English with 0.79 (docs/measurements.md).
 It answers one question at a time and tells a second phone to wait.
 
+"Use my location" appears only on HTTPS pages, where browsers offer geolocation. A tap reads the
+phone's position once, rounds it to 2 decimals (about 1 km), and posts it to `/api/location` with
+the same token; the rover rounds again, refuses anything but two in-range numbers (400) or a body
+over 128 bytes (413), and writes the rounded pair into each later turn's `record.json` as
+`location`. The rover uses it for nothing else; mapping it to a province and municipality is the
+desktop's job (#31).
+
 A quick tunnel needs no Cloudflare account and connects outward over port 443, so it works on
 eduroam, which blocks connections between devices. Its address changes at every start. In one of
 three tests, eduroam's DNS had not resolved a new `trycloudflare.com` address two minutes after

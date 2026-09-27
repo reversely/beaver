@@ -132,3 +132,28 @@ h2 {
   background: var(--card);
   color: var(--ink);
 }
+
+.locate {
+  align-self: stretch;
+  min-height: 44px;
+  border: 1px solid var(--ink-2);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.locate[hidden] {
+  display: none;
+}
+
+.locate:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.locate:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}

@@ -143,6 +143,41 @@ async function send(wav) {
   }
 }
 
+// ---- Location: only on a tap, rounded to 2 decimals (about 1 km) before it leaves the phone ----
+
+const locate = document.getElementById("locate");
+// Browsers offer geolocation only on secure (HTTPS) pages; elsewhere the button stays hidden.
+locate.hidden = !(window.isSecureContext && "geolocation" in navigator);
+
+function round2(value) {
+  return Math.round(value * 100) / 100;
+}
+
+locate.addEventListener("click", () => {
+  locate.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    async ({ coords }) => {
+      try {
+        const response = await fetch(`/api/location?t=${encodeURIComponent(token)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat: round2(coords.latitude), lon: round2(coords.longitude) }),
+        });
+        setStatus(response.ok ? "Beaver knows your area to within 1 km" : "Beaver could not save your location");
+      } catch {
+        setStatus("The phone lost its connection to the rover");
+      } finally {
+        locate.disabled = false;
+      }
+    },
+    () => {
+      setStatus("Please allow location access for this page");
+      locate.disabled = false;
+    },
+    { enableHighAccuracy: false, maximumAge: 600000, timeout: 15000 },
+  );
+});
+
 talk.addEventListener("pointerdown", (event) => {
   talk.setPointerCapture(event.pointerId);
   startRecording();
