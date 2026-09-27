@@ -48,7 +48,8 @@ html, body {
 .stage { color: var(--ink); }
 
 /* Beaver (#48). On slides with open space on the right he stands there, over Parliament; where
-   the laptop or the phone fills the right, he steps down to the lower left corner.
+   the laptop fills the right, he steps down to the lower left corner; on the phone slides he
+   stands in the middle, between the card and the phone.
    Dragging him turns him around. */
 .companion {
   position: fixed; z-index: 3; right: 4vw; top: 50%; width: 34vw; height: 30vw; transform: translateY(-42%);
@@ -56,9 +57,10 @@ html, body {
   transition: width 0.6s ease, height 0.6s ease, right 0.6s ease, top 0.6s ease, transform 0.6s ease;
 }
 .companion.is-turning { cursor: grabbing; }
+body[data-companion="middle"] .companion { right: 37vw; top: 50%; width: 26vw; height: 22vw; transform: translateY(-30%); }
 body[data-companion="corner"] .companion { right: calc(100vw - 8px - 240px); top: calc(100vh - 64px - 180px); width: 240px; height: 180px; transform: none; }
 @media (max-width: 700px) {
-  .companion, body[data-companion="corner"] .companion { right: calc(100vw - 8px - 140px); top: calc(100vh - 60px - 105px); width: 140px; height: 105px; transform: none; }
+  .companion, body[data-companion="corner"] .companion, body[data-companion="middle"] .companion { right: calc(100vw - 8px - 140px); top: calc(100vh - 60px - 105px); width: 140px; height: 105px; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) { .companion { transition: none; } }
 /* Slide text grows with the window so wide screens keep a laptop's proportions. */

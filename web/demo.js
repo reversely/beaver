@@ -33,7 +33,7 @@ function showSlide(slide) {
   const phone = slide.dataset.phone;
   phoneStage.hidden = !phone;
   document.querySelectorAll(".phone-view").forEach((v) => v.classList.toggle("on", v.dataset.phone === phone));
-  document.body.dataset.companion = screen || phone ? "corner" : "open";
+  document.body.dataset.companion = phone ? "middle" : screen ? "corner" : "open";
   stage.classList.toggle("wide", slide.dataset.stage === "wide");
   if (screen) {
     document.querySelectorAll(".app-view").forEach((v) => v.classList.toggle("on", v.dataset.screen === screen));
