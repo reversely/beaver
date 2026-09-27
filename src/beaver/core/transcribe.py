@@ -1,4 +1,5 @@
-"""Turn a spoken question into text on the Pi, in the language the phone page chose or detected.
+"""Turn a spoken question into text on the machine that heard it (the rover's Pi or the laptop), in
+the language the phone page chose or the one Whisper detects.
 
 Transcribing on board lets the guard redact personal information before any of the question
 reaches Gemini. Whisper base with the language given took 1.8 s for an English question and 5.6 s

@@ -23,6 +23,7 @@ import bilingual
 import devices
 import notebooks
 import rover_phone
+from beaver.core import guard
 from beaver.core.record import RunRecord
 from beaver.core.settings import render_prompt
 
@@ -83,14 +84,29 @@ class App:
             return copy.deepcopy(self.config)
 
 
-def ask_events(config: dict, payload: dict):
+# Whisper loads once, on the first spoken question, so a typed-only session never pays for it.
+_transcriber = None
+_transcriber_lock = threading.Lock()
+
+
+def _transcribe(config: dict, wav: bytes) -> tuple[str | None, str, float]:
+    global _transcriber
+    with _transcriber_lock:
+        if _transcriber is None:
+            from beaver.core.transcribe import Transcriber
+
+            _transcriber = Transcriber(config)
+    return _transcriber.detect_and_transcribe(wav)
+
+
+def ask_events(config: dict, payload: dict, transcribe=_transcribe):
     """Run one turn and yield its events."""
     record = RunRecord(config, "ui")
     start = time.perf_counter()
     try:
-        question = _question(config, record, payload)
+        question = _question(config, record, payload, transcribe)
         image = _image(record, payload)
-        result = bilingual.answer(config, record, question, image)
+        result = guard_answer(bilingual.answer(config, record, question, image), record)
         record.mark("text_ready", start)
         yield {
             "type": "question",
@@ -138,18 +154,48 @@ def ask_events(config: dict, payload: dict):
         yield {"type": "error", "message": message}
 
 
-def _question(config, record, payload):
+def _question(config, record, payload, transcribe):
+    """The question as text with personal information replaced (beaver.core.guard), the same as
+    on the rover. A spoken question is transcribed on this laptop first, so its audio never
+    leaves it."""
     if payload.get("text"):
-        return [render_prompt(config, "typed_question", {"question": payload["text"]})]
-    wav = base64.b64decode(payload["audio_wav"])
-    path = record.save_file("question.wav", wav)
-    return [
-        (
-            wav,
-            "audio/wav",
-            f"{path.name}: {len(wav) // 1024} KB of browser microphone audio",
-        )
-    ]
+        heard = payload["text"]
+    else:
+        wav = base64.b64decode(payload["audio_wav"])
+        record.save_file("question.wav", wav)
+        with record.timed("transcribe"):
+            language, heard, probability = transcribe(config, wav)
+        record.data["detected_language"] = {
+            "language": language,
+            "probability": round(probability, 2),
+        }
+        if language is None:
+            raise ValueError(
+                "Beaver could not tell which language you spoke. Please ask again, or type it."
+            )
+    question, findings = guard.redact(heard.strip())
+    if not question:
+        raise ValueError("Beaver did not catch that. Please ask again.")
+    record.data["question"] = question
+    record.data["guard_question"] = [f.rule for f in findings]
+    return [render_prompt(config, "typed_question", {"question": question})]
+
+
+def guard_answer(result: dict, record) -> dict:
+    """Replace personal information in every answer sentence before it is spoken or filed, and
+    keep the guarded question rather than Gemini's copy of it. Records which rules fired, never
+    the original text."""
+    rules = []
+    groups = []
+    for group in result["groups"]:
+        guarded = []
+        for code, sentence in group:
+            text, findings = guard.redact(sentence)
+            rules += [f.rule for f in findings]
+            guarded.append((code, text))
+        groups.append(guarded)
+    record.data["guard_reply"] = {"rules": rules}
+    return {**result, "question": record.data["question"], "groups": groups}
 
 
 def _image(record, payload):

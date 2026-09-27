@@ -18,8 +18,9 @@ before playback.
 
 The desktop app pulls from the rover: every 60 seconds it connects to the rover over SSH, copies
 each new turn's saved record and photo, and files the turn into a notebook. The desktop app also
-takes its own questions, typed or spoken at the laptop, and answers them sentence by sentence in
-English, French, or both, plus the visitor's language.
+takes its own questions, typed or spoken at the laptop, transcribes and guards them on the laptop the
+same way, and answers them sentence by sentence in English, French, or both, plus the visitor's
+language.
 
 ## Guard proxy
 
@@ -45,6 +46,6 @@ rover.
 The rover's saved record holds the clean question and the kinds of personal information the proxy
 replaced.
 
-For developers: the proxy is `src/beaver/rover/guard.py`, transcription is
-`src/beaver/rover/transcribe.py`, and [architecture.md](architecture.md) describes the network
+For developers: the proxy is `src/beaver/core/guard.py`, transcription is
+`src/beaver/core/transcribe.py`, both shared by the rover and the desktop app, and [architecture.md](architecture.md) describes the network
 path and the files each part keeps.

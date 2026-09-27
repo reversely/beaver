@@ -34,6 +34,16 @@ spoken_languages = [
   "ja", "ko", "ms", "nl", "pl", "pt", "ro", "ru", "sk", "sv", "ta", "tr", "uk", "zh",
 ]
 
+[transcribe]
+# A spoken question is transcribed on this laptop with Whisper, and the guard replaces personal
+# information in it, so Gemini receives text and never the audio (beaver.core.transcribe).
+model = "base"
+compute_type = "int8"
+cpu_threads = 4
+# Whisper detects the language among the rover's eight; below this probability the app asks the
+# visitor to ask again or type the question, instead of guessing.
+detect_min_probability = 0.7
+
 [microphone]
 sample_rate = 16000
 # 0 records until you press Enter; a positive number records that many seconds.

@@ -1,4 +1,4 @@
-"""On-board guard for text that leaves the Pi or gets spoken: personal information and length.
+"""Guard for text that leaves the rover or the laptop, or gets spoken: personal information and length.
 
 Rules are data: a name, a pattern, an optional validator, and the phrase spoken in place of what
 it finds. check() lists findings (rule and position, never the matched text), redact() replaces

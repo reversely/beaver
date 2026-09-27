@@ -123,7 +123,7 @@ def cmd_loop(config, args):
 def guard_reply(config, record, reply):
     """Redact personal information from a reply, then shorten it at a sentence end when it is over
     elevenlabs.max_characters. Records which rules fired and how much was cut, never the original."""
-    import guard
+    from beaver.core import guard
 
     text, findings = guard.redact(reply)
     text, dropped = guard.shorten(text, config["elevenlabs"]["max_characters"])
@@ -140,10 +140,10 @@ def cmd_phone(config, args):
     Each question is transcribed on the Pi in the language the phone page chose, or in the one
     Whisper detects when the page asks for automatic detection, and the guard redacts the
     transcript, so Gemini receives only redacted text, never the audio."""
-    import guard
+    from beaver.core import guard
+    from beaver.core.transcribe import AUTO, LANGUAGES, Transcriber
     from camera import Camera
     from phone import LastLocation, serve
-    from transcribe import AUTO, LANGUAGES, Transcriber
 
     camera = Camera(config) if config["look"]["include_image"] else None
     print(f"Loading Whisper {config['transcribe']['model']}...")

@@ -66,6 +66,7 @@ source = { editable = "." }
 desktop = [
     { name = "ctranslate2" },
     { name = "elevenlabs" },
+    { name = "faster-whisper" },
     { name = "google-genai" },
     { name = "numpy" },
     { name = "opencv-python" },
@@ -100,6 +101,7 @@ rover = [
 desktop = [
     { name = "ctranslate2", specifier = ">=4.8.2" },
     { name = "elevenlabs", specifier = ">=2.69.0" },
+    { name = "faster-whisper", specifier = ">=1.2.1" },
     { name = "google-genai", specifier = ">=2.25.0" },
     { name = "numpy", specifier = ">=2.5.3" },
     { name = "opencv-python", specifier = ">=5.0.0.93" },

@@ -14,8 +14,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
+from beaver.core.transcribe import AUTO, LANGUAGES, pick_language
 from phone import MAX_LOCATION_BYTES, PAGE, LastLocation, make_handler, parse_location
-from transcribe import AUTO, LANGUAGES, pick_language
 
 TOKEN = "test-token"
 

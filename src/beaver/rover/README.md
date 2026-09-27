@@ -102,8 +102,8 @@ With a microphone on the Pi, `trigger.modes` lists how a question starts, checke
 
 ## Guard
 
-`guard.py` checks text for personal information and length, entirely on the Pi. Every phone turn
-transcribes the question on the Pi (`transcribe.py`, Whisper base in the language the phone page
+`beaver.core.guard` checks text for personal information and length, on the Pi. Every phone turn
+transcribes the question on the Pi (`beaver.core.transcribe`, Whisper base in the language the phone page
 sends or detects), redacts the transcript before Gemini sees it, and redacts and, if needed, shortens the
 reply before it is spoken or saved. `[transcribe]` in `config.toml` sets the model, precision, and
 threads.

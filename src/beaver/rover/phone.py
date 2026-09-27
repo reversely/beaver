@@ -22,7 +22,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from transcribe import AUTO, LANGUAGES
+from beaver.core.transcribe import AUTO, LANGUAGES
 
 HERE = Path(__file__).parent
 

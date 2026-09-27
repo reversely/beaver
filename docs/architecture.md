@@ -34,7 +34,7 @@ everything sent to Gemini and ElevenLabs, the reply, token counts, and timings),
 The desktop app runs `src/beaver/desktop/run.py serve`, which serves the demo at
 `http://127.0.0.1:8765` and the app's page at `/app/`. Its Rover panel starts the rover's phone page
 over SSH and shows the address and QR code. The app takes a question by voice or typing, with an optional frame from the
-laptop camera, and answers sentence by sentence in English, French, or both, optionally adding the
+laptop camera, transcribes and guards it on the laptop (see Guard), and answers sentence by sentence in English, French, or both, optionally adding the
 visitor's own language to each sentence. After each answer, one Gemini request files the exchange
 into a notebook: a title in English and French, a theme, a span of years, vocabulary in three
 languages, concepts, and dated moments. All notebooks live in one file,
@@ -75,12 +75,17 @@ numbers written as digits.
 
 ## Guard
 
-`src/beaver/rover/guard.py` finds personal information (emails, phone numbers, postal codes,
+`src/beaver/core/guard.py` finds personal information (emails, phone numbers, postal codes,
 addresses, social insurance numbers, Quebec and Ontario health card numbers, and payment card
 numbers) and over-long text, replaces findings with a spoken phrase such as "a phone number", and
-cuts text at a sentence end. It runs entirely on the Pi, on every phone turn: on the transcript
-before Gemini receives it, and on the reply before it is spoken or saved. The run record keeps the
-redacted question, the chosen language, and which rules fired, never the unredacted text.
+cuts text at a sentence end. It runs on the machine that heard the question: on the Pi for every
+phone turn, and on the laptop for every question asked in the desktop app. It runs on the
+transcript before Gemini receives it, and on the reply before it is spoken or saved. The run record
+keeps the redacted question, the chosen language, and which rules fired, never the unredacted text.
+
+Both apps transcribe a spoken question with `src/beaver/core/transcribe.py` (Whisper base) before
+the guard sees it, so Gemini receives text and never audio. The desktop app detects the language
+among the rover's eight and asks the visitor to ask again or type when Whisper is under 0.7.
 
 The rover still saves the question audio (`question.wav`) in its run folder on the Pi; the desktop
 app files the redacted transcript and never pulls that audio.

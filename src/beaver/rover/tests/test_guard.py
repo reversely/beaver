@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
-from guard import check, luhn, redact, shorten
+from beaver.core.guard import check, luhn, redact, shorten
 
 
 def rules(text):
