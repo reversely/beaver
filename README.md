@@ -31,9 +31,14 @@ Beaver's recorded clips.
 | Home page | `web` | A static page for a laptop at a table: a spoken walk through the concept sheet, the "Hey Beaver..." exchanges, and the desktop app's screens. |
 | Shared core | `src/beaver/core` | Config loading, run records, the Gemini and ElevenLabs calls, and the prompts both apps use. |
 
-[`docs/how-it-works.md`](docs/how-it-works.md) draws the parts and what travels between them, and
-the guard proxy that decides what the AI services receive; [`docs/architecture.md`](docs/architecture.md)
-describes each part in detail.
+## Architecture
+
+![Parts of Beaver: on the rover, local processing puts a guard proxy between the rover and the remote AI services; the proxy sends Gemini clean text and a photo and sends ElevenLabs the checked answer; the desktop app sends Gemini and ElevenLabs its own questions and copies each saved rover turn over SSH every 60 seconds](docs/img/how-it-works-parts.svg)
+
+![Guard proxy: the recording stays on the rover; Whisper transcribes it and the guard proxy replaces personal information, so Gemini receives clean text and a photo; the proxy checks the answer before ElevenLabs converts it into speech](docs/img/how-it-works-privacy.svg)
+
+[`docs/how-it-works.md`](docs/how-it-works.md) explains both diagrams, and
+[`docs/architecture.md`](docs/architecture.md) describes each part in detail.
 
 ## Desktop app
 
