@@ -13,8 +13,8 @@ exchanges come from the concept sheet.
 
 ## Question
 
-Can one scrolling page explain what Beaver is, what it knows, and how an operator sets up one rover
-for a visitor session, clearly enough to run unattended at a table?
+Can one scrolling page explain what Beaver is, what it knows, and how you set up your rover from
+the desktop app, clearly enough to run unattended at a table?
 
 ## Running it
 
@@ -42,13 +42,12 @@ of the paragraph stay above it, smaller and dimmed.
 | Beaver 2 | that can act as your guide to the **context** behind the things you see every day, | |
 | Beaver 3 | transitioning fluidly between a speaker's **native language, French & English**. | A diagram carries one sentence from Chinese to French to English; each card plays its language, and **Hear all three** plays them in order |
 | Hey Beaver... | The three exchanges | The play button between question and answer plays the question in the visitor's language, then each answer line; any single line plays on its own; the line being spoken is highlighted |
-| Sign in, Site, Pair, Deploy, Session | The host's setup for one rover on the laptop | The pairing status and deploy progress change on a timer |
+| Site, Deploy | Your settings on the laptop and sending them to the rover | The deploy progress changes on a timer |
 | Ask, Notebook | The recorded experiment 001 exchange and its notebook entry | **Play reply** |
 | Close | Wordmark and **Start over** | |
 
-The setup screens are demo screens: no account, rover, or session exists behind them. The QR codes
-scan, but they hold placeholder strings (`beaver-demo:pair:ROVER-1`, `beaver-demo:join:BVR-4K7`)
-that nothing reads yet. Each screen carries a `demo` tag.
+The Site and Deploy screens are demo screens: nothing is sent to the rover. Each screen carries a
+`demo` tag.
 
 ## Sound
 
@@ -78,7 +77,7 @@ plays. **Sound on** in the lower right mutes it, and the choice is remembered in
 | File | Role |
 |---|---|
 | `index.html` | Slides and the laptop's screens |
-| `demo.js` | reveal.js setup, greeting cycle, per-slide screen changes, QR codes, the sample exchange, autoplay |
+| `demo.js` | reveal.js setup, greeting cycle, per-slide screen changes, the sample exchange, autoplay |
 | `story.js` | Builds each story page from its paragraph template and handles words, lines, and speaker buttons |
 | `sound.js` | Plays clips in order with line highlighting, and runs the ambience loop and its mute |
 | `audio/` | `clips.json`, `build_audio.py`, and the generated MP3s |
@@ -90,8 +89,8 @@ plays. **Sound on** in the lower right mutes it, and the choice is remembered in
 | `beaver-mark.png` | The Beaver mark from the concept sheet, used as the page icon; a placeholder until final branding |
 | `sample/` | Run `20260926-110552-ui`: question, sentences, timings, notebook entry, audio, camera frame |
 
-reveal.js 5.2.1 runs in scroll view, three.js 0.170.0 draws the scene, and qrcode-generator 1.4.4
-draws the QR codes; all three load from jsDelivr at pinned versions. Inter and Instrument Sans
+reveal.js 5.2.1 runs in scroll view and three.js 0.170.0 draws the scene; both load from jsDelivr
+at pinned versions. Inter and Instrument Sans
 load from Google Fonts.
 
 ## Art pipeline

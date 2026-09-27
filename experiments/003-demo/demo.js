@@ -17,37 +17,12 @@ setupStory(sound);
 
 const stage = document.getElementById("stage");
 const LANG_NAMES = { en: "English", fr: "Français", es: "Español" };
-const LINK_ENDS = { pair: ["laptop", "rover"], session: ["rover", "phones"] };
-
-// QR codes come from qrcode-generator (global `qrcode`), drawn as one SVG path.
-function drawQr(el) {
-  const qr = qrcode(0, "M");
-  qr.addData(el.dataset.qr);
-  qr.make();
-  const n = qr.getModuleCount();
-  let d = "";
-  for (let r = 0; r < n; r++) {
-    for (let c = 0; c < n; c++) if (qr.isDark(r, c)) d += `M${c + 2} ${r + 2}h1v1h-1z`;
-  }
-  el.innerHTML = `<svg viewBox="0 0 ${n + 4} ${n + 4}" shape-rendering="crispEdges" aria-hidden="true"><rect width="100%" height="100%" fill="#fff"/><path d="${d}"/></svg>`;
-}
-document.querySelectorAll("[data-qr]").forEach(drawQr);
-
 // Each setup screen plays a short scripted change once its slide is shown.
 const timers = [];
 function clearTimers() {
   timers.splice(0).forEach(clearTimeout);
 }
 const SCRIPTS = {
-  pair() {
-    const tag = document.querySelector('[data-status="pair"]');
-    tag.textContent = "waiting";
-    tag.classList.remove("ok");
-    timers.push(setTimeout(() => {
-      tag.textContent = "connected";
-      tag.classList.add("ok");
-    }, 2200));
-  },
   deploy() {
     const bar = document.querySelector('[data-progress="deploy"]');
     const tag = document.querySelector('[data-status="deploy"]');
@@ -78,9 +53,6 @@ function showSlide(slide) {
     document.querySelectorAll(".app-view").forEach((v) => v.classList.toggle("on", v.dataset.screen === screen));
     SCRIPTS[screen]?.();
   }
-  document.querySelectorAll(".link").forEach((l) => l.classList.toggle("on", l.dataset.link === slide.dataset.link));
-  const ends = LINK_ENDS[slide.dataset.link] || [];
-  document.querySelectorAll(".node").forEach((n) => n.classList.toggle("on", ends.includes(n.dataset.node)));
 }
 
 // The recorded exchange from experiment 001, with its audio compressed to MP3.

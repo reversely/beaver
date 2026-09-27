@@ -335,7 +335,6 @@ html, body {
   transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .stage.wide { width: min(1180px, 58vw); }
-.stage.wide .links { display: none; }
 .laptop { margin: 0; width: 100%; }
 .lid { background: #1b1716; border-radius: 18px 18px 5px 5px; padding: 1.4% 1.4% 2%; border: 1px solid var(--hairline); }
 .screen { container-type: inline-size; background: #0f0c0b; border-radius: 5px; aspect-ratio: 16 / 10; overflow: hidden; }
@@ -373,15 +372,6 @@ html, body {
 .tag.ok { background: var(--sage); color: var(--on-accent); }
 .tag-demo { background: var(--red); color: var(--ink); }
 
-.qr { width: 10em; align-self: center; }
-.qr svg { display: block; width: 100%; height: auto; border-radius: 0.5em; }
-.qr rect { fill: var(--ink); }
-.qr path { fill: var(--on-accent); }
-.session { display: flex; align-items: center; gap: 1.5em; justify-content: center; flex: 1; }
-.session .qr { width: 11.5em; }
-.session-code { display: grid; gap: 0.25em; }
-.session-code strong { font-family: var(--display); font-size: 2.6em; color: var(--ink); letter-spacing: 0.02em; }
-
 .summary { display: grid; grid-template-columns: auto 1fr; gap: 0.25em 1.1em; margin: 0; }
 .summary dt { color: var(--ink-3); }
 .summary dd { margin: 0; color: var(--ink); }
@@ -411,14 +401,6 @@ html, body {
 .concept { margin-top: 0.4em; padding: 0.8em 1em; border-radius: 0.8em; background: var(--raised); border-left: 3px solid var(--sage); }
 .concept h3 { margin: 0 0 0.3em !important; font-size: 1.1em !important; }
 .concept p { margin: 0 !important; color: var(--ink-2); }
-
-/* Connection line under the laptop: laptop, rover, phones. */
-.links { width: min(440px, 100%); overflow: visible; background: var(--surface); border: 1px solid var(--hairline); border-radius: 999px; padding: 8px 18px 4px; }
-.links .link { stroke: var(--hairline); stroke-width: 3; stroke-linecap: round; }
-.links .link.on { stroke: var(--orange); stroke-dasharray: 8 8; animation: flow 1s linear infinite; }
-.links .node { fill: var(--surface-solid); stroke: var(--ink-3); stroke-width: 3; }
-.links .node.on { fill: var(--orange); stroke: var(--orange); }
-.links text { font: 600 13px var(--sans); fill: var(--ink-2); text-anchor: middle; }
 
 .autoplay {
   position: fixed;
@@ -461,7 +443,7 @@ button:focus-visible { outline: 3px solid var(--accent-text); outline-offset: 2p
 @keyframes flow { to { stroke-dashoffset: -16; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .app-view.on, .links .link.on, .greeting.in { animation: none; }
+  .app-view.on, .greeting.in { animation: none; }
   .beat.now mark { animation: none; background-size: 100% 100%; }
   .stage { transition: none; }
 }

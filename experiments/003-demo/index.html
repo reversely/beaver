@@ -18,12 +18,11 @@
       }
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 </head>
 <body>
   <canvas class="city" id="city" aria-hidden="true"></canvas>
 
-  <!-- The laptop stays fixed from sign-in to the notebook; each slide picks its screen. -->
+  <!-- The laptop stays fixed from Site to the notebook; each slide picks its screen. -->
   <div class="stage" id="stage" hidden>
     <figure class="laptop" aria-label="Beaver on a laptop">
       <div class="lid">
@@ -33,16 +32,6 @@
               <span class="app-name">Beaver</span>
               <span class="tag tag-demo">demo</span>
             </header>
-
-            <section class="app-view" data-screen="signin">
-              <h3>Sign in</h3>
-              <label class="app-field">
-                <span>Email</span>
-                <input type="email" placeholder="name@school.ca" tabindex="-1">
-              </label>
-              <button class="app-button" type="button" tabindex="-1">Continue</button>
-              <p class="app-note">Demo mode needs no account</p>
-            </section>
 
             <section class="app-view" data-screen="site">
               <h3>Site</h3>
@@ -71,16 +60,6 @@
               <button class="app-button" type="button" tabindex="-1">Save</button>
             </section>
 
-            <section class="app-view" data-screen="pair">
-              <h3>Pair rover</h3>
-              <div class="qr" data-qr="beaver-demo:pair:ROVER-1"></div>
-              <p class="app-note">Hold this code up to the rover camera</p>
-              <div class="app-row">
-                <span>Rover 1</span>
-                <span class="tag" data-status="pair">waiting</span>
-              </div>
-            </section>
-
             <section class="app-view" data-screen="deploy">
               <h3>Deploy</h3>
               <dl class="summary">
@@ -89,26 +68,13 @@
                 <dt>Visitor language</dt><dd>on</dd>
                 <dt>Topics</dt><dd>5</dd>
                 <dt>Voice</dt><dd>Chadwitch en-CA</dd>
-                <dt>Rover</dt><dd>Rover 1</dd>
+                <dt>Rover</dt><dd>raspberry</dd>
               </dl>
               <div class="progress"><span data-progress="deploy"></span></div>
               <div class="app-row">
                 <button class="app-button" type="button" tabindex="-1">Deploy</button>
                 <span class="tag" data-status="deploy">ready</span>
               </div>
-            </section>
-
-            <section class="app-view" data-screen="session">
-              <h3>Visitor session</h3>
-              <div class="session">
-                <div class="qr" data-qr="beaver-demo:join:BVR-4K7"></div>
-                <div class="session-code">
-                  <span class="app-label">Session code</span>
-                  <strong>BVR-4K7</strong>
-                  <span class="app-note">Visitors scan to join</span>
-                </div>
-              </div>
-              <button class="app-button app-button-quiet" type="button" tabindex="-1">End session</button>
             </section>
 
             <section class="app-view" data-screen="conversation">
@@ -142,17 +108,6 @@
       <div class="base"></div>
     </figure>
 
-    <!-- One rover: the laptop pairs it, and visitor phones join its session. -->
-    <svg class="links" viewBox="0 0 420 64" role="img" aria-label="Laptop to rover to visitor phones">
-      <line class="link" data-link="pair" x1="70" y1="22" x2="190" y2="22" />
-      <line class="link" data-link="session" x1="230" y1="22" x2="350" y2="22" />
-      <circle class="node" data-node="laptop" cx="50" cy="22" r="10" />
-      <circle class="node" data-node="rover" cx="210" cy="22" r="10" />
-      <circle class="node" data-node="phones" cx="370" cy="22" r="10" />
-      <text x="50" y="54">Laptop</text>
-      <text x="210" y="54">Rover</text>
-      <text x="370" y="54">Phones</text>
-    </svg>
   </div>
 
   <div class="reveal">
@@ -266,43 +221,19 @@
         </div>
       </section>
 
-      <section data-view="signin" data-screen="signin">
-        <div class="card card-step">
-          <ol class="steps" aria-label="Setup steps"><li class="on">Sign in</li><li>Site</li><li>Pair</li><li>Deploy</li><li>Session</li></ol>
-          <h2>Sign in</h2>
-          <p>Hosting newcomers at a school, library, or museum? Sign in with your work email and Beaver is ready to meet them.</p>
-        </div>
-      </section>
-
       <section data-view="site" data-screen="site">
         <div class="card card-step">
-          <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="on">Site</li><li>Pair</li><li>Deploy</li><li>Session</li></ol>
+          <ol class="steps" aria-label="Setup steps"><li class="on">Site</li><li>Deploy</li></ol>
           <h2>Site</h2>
           <p>Tell Beaver where it lives. Name your space, choose English, French, or both, and pick the topics your visitors care about.</p>
         </div>
       </section>
 
-      <section data-view="pair" data-screen="pair" data-link="pair">
+      <section data-view="deploy" data-screen="deploy">
         <div class="card card-step">
-          <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="on">Pair</li><li>Deploy</li><li>Session</li></ol>
-          <h2>Pair</h2>
-          <p>Hold the code up to Beaver's camera. One look, and Beaver knows where it belongs.</p>
-        </div>
-      </section>
-
-      <section data-view="deploy" data-screen="deploy" data-link="pair">
-        <div class="card card-step">
-          <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="done">Pair</li><li class="on">Deploy</li><li>Session</li></ol>
+          <ol class="steps" aria-label="Setup steps"><li class="done">Site</li><li class="on">Deploy</li></ol>
           <h2>Deploy</h2>
           <p>Beaver picks up your settings and says hello in every language you chose.</p>
-        </div>
-      </section>
-
-      <section data-view="session" data-screen="session" data-link="session">
-        <div class="card card-step">
-          <ol class="steps" aria-label="Setup steps"><li class="done">Sign in</li><li class="done">Site</li><li class="done">Pair</li><li class="done">Deploy</li><li class="on">Session</li></ol>
-          <h2>Session</h2>
-          <p>Visitors scan the code with their phones and start asking, in whatever language feels like home. Their questions and notebooks stay with them for the visit.</p>
         </div>
       </section>
 
