@@ -70,7 +70,7 @@ failed, so the connection runs laptop to Pi.
 - A turn saved before on-board transcription has no redacted question, so the sync also pulls its
   `question.wav`, and one Gemini request writes down the question and names its language.
 - A `filed.json` marker in each pulled folder keeps the desktop app from filing a turn twice. When
-  the desktop app is closed or cannot reach the Pi, the next pass catches up.
+  nobody runs the desktop app or it cannot reach the Pi, the next pass catches up.
 
 ## Shared core
 
