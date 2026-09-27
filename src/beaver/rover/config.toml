@@ -23,6 +23,19 @@ voice_id = "eadgjmk4R4uojdsheG9t"
 output_format = "pcm_24000"
 # Refuse to send more characters than this in one request, to protect the monthly quota.
 max_characters = 600
+# Page languages the model above speaks, by the page's codes (ElevenLabs calls Tagalog "fil").
+# Punjabi is missing, so a Punjabi answer shows on the phone and is not spoken.
+spoken_languages = ["en", "fr", "es", "ar", "zh", "tl", "uk"]
+
+[languages]
+# Each answer shows on the phone in the visitor's language, French, and English, in that order.
+# The rover speaks the first this many of them that the voice can say: 2 is the visitor's
+# language and French, or English and French for a question in English.
+spoken = 2
+
+[tts]
+# Sentences synthesized at once, so later sentences are ready while earlier ones play.
+parallel = 2
 
 [microphone]
 # Part of the sound device's name, as `run.py devices` prints it; "" uses the system default.
@@ -155,6 +168,7 @@ system = "system.md"
 text = "text.md"
 look = "look.md"
 typed_question = "typed_question.md"
+translate_sentences = "translate_sentences.md"
 
 [prompt_vars]
 guide_name = "Beaver"

@@ -134,6 +134,47 @@ def guard_reply(config, record, reply):
     return text
 
 
+def in_languages(config, record, reply, visitor):
+    """The English reply as sentence groups in the visitor's language, French, and English, in
+    that order, and the codes spoken aloud: the first languages.spoken of them the voice can say."""
+    from beaver.core.languages import LANGUAGES
+    from beaver.core.sentences import group, split_sentences, translate
+
+    codes = list(dict.fromkeys([visitor, "fr", "en"]))
+    sentences = split_sentences(reply)
+    targets = {code: LANGUAGES[code] for code in codes if code != "en"}
+    translations = {"en": sentences, **translate(config, record, sentences, targets)}
+    codes, groups = group(record, codes, translations, len(sentences))
+    speakable = [c for c in codes if c in config["elevenlabs"]["spoken_languages"]]
+    spoken = speakable[: config["languages"]["spoken"]]
+    record.data["languages"] = {"shown": codes, "spoken": spoken}
+    return groups, set(spoken)
+
+
+def speak_groups(config, record, groups, spoken, question_end):
+    """Speak each sentence in the spoken languages, in group order; the next sentences synthesize
+    while one plays. The whole reply is saved as one reply.wav."""
+    from beaver.core.sentences import synthesize_in_order
+
+    pieces = []
+    for piece in synthesize_in_order(config, groups, spoken):
+        if piece["pcm"] is None:
+            continue
+        if not pieces:
+            record.mark("question_end_to_speech", question_end)
+        audio.play_pcm(config, record, piece["pcm"], piece["rate"])
+        pieces.append(piece)
+    if not pieces:
+        return
+    record.data["elevenlabs_characters"] = sum(len(p["text"]) for p in pieces)
+    record.data["spoken_pieces"] = [
+        {k: p[k] for k in ("group", "code", "first_audio_ms", "synth_ms", "waited_ms")}
+        for p in pieces
+    ]
+    pcm = b"".join(p["pcm"] for p in pieces)
+    record.save_file("reply.wav", audio.to_wav(pcm, pieces[0]["rate"]))
+
+
 def cmd_phone(config, args):
     """Take questions from a phone's browser; answer through the rover's camera and speaker.
 
@@ -188,8 +229,13 @@ def cmd_phone(config, args):
                 note = f"The visitor asked in {LANGUAGES[language]}."
                 reply = ask_with_frame(config, record, camera, [note, prompt])
                 reply = guard_reply(config, record, reply)
-            respond(reply)
-            speak(config, record, reply, question_end)
+            if language and question:
+                groups, spoken = in_languages(config, record, reply, language)
+                respond(reply, groups)
+                speak_groups(config, record, groups, spoken, question_end)
+            else:
+                respond(reply)
+                speak(config, record, reply, question_end)
         except (SystemExit, Exception) as error:
             record.finish(error=f"{type(error).__name__}: {error}")
             raise

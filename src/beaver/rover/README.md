@@ -49,7 +49,11 @@ The person opens the page on a phone, picks their language or leaves it on "Dete
 automatically", and holds the button while asking. The browser records the phone's microphone,
 converts it to 16 kHz mono WAV, and uploads it with the choice, which the phone remembers for next
 time. The rover transcribes the question on the Pi, redacts it, sends Gemini the redacted text with
-a camera frame, returns the reply text to the phone, and speaks the reply. A choice outside the
+a camera frame, and gets an English reply. One batched Gemini request translates each sentence into
+the visitor's language and French. The phone shows every sentence in the visitor's language, French,
+and English, in that order, and the rover speaks each sentence in the first `languages.spoken` (2)
+of those the voice can say: Spanish and French for a Spanish question, English and French for an
+English one. Punjabi shows on the phone without being spoken. A choice outside the
 page's list gets a 400. For automatic detection, Whisper base detects the language among the page's
 eight and transcribes in one pass; under `transcribe.detect_min_probability` (0.7) the rover asks
 the visitor to choose a language and sends nothing to Gemini. Tiny detects faster but heard a real

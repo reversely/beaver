@@ -91,8 +91,9 @@ def parse_location(body: bytes) -> tuple[float, float]:
 def make_handler(
     token: str, max_bytes: int, answer, location: LastLocation | None = None
 ):
-    """`answer(wav, upload_ms, respond, language)` runs one turn and calls `respond(reply)` once
-    the reply text exists, before the rover speaks it. One turn runs at a time. `language` is
+    """`answer(wav, upload_ms, respond, language)` runs one turn and calls `respond(reply, groups)`
+    once the reply text exists, before the rover speaks it. `groups` holds each sentence in every
+    language as [(code, text), ...], in display order. One turn runs at a time. `language` is
     transcribe.AUTO or one of transcribe.LANGUAGES, checked here; the page's own value never
     reaches the turn unchecked."""
     busy = threading.Lock()
@@ -209,9 +210,18 @@ def make_handler(
                 return
             responded = False
 
-            def respond(reply: str):
+            def respond(reply: str, groups: list | None = None):
                 nonlocal responded
-                self._json(HTTPStatus.OK, {"reply": reply})
+                body = {"reply": reply}
+                if groups:
+                    body["groups"] = [
+                        [
+                            {"code": code, "name": LANGUAGES[code], "text": text}
+                            for code, text in group
+                        ]
+                        for group in groups
+                    ]
+                self._json(HTTPStatus.OK, body)
                 responded = True
 
             try:

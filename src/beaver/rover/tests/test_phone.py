@@ -36,7 +36,12 @@ class PhoneServer(unittest.TestCase):
 
         def answer(wav, upload_ms, respond, language):
             self.turns.append(language)
-            respond(f"reply in {language}")
+            if language == "es":
+                respond(
+                    "Hi. Bye.", [[("es", "Hola."), ("fr", "Salut."), ("en", "Hi.")]]
+                )
+            else:
+                respond(f"reply in {language}")
 
         self.location = LastLocation()
         handler = make_handler(TOKEN, 64 * 1024, answer, self.location)
@@ -70,6 +75,23 @@ class PhoneServer(unittest.TestCase):
         status, body = self.post(f"t={TOKEN}&lang={AUTO}", wav_bytes())
         self.assertEqual((status, body["reply"]), (200, f"reply in {AUTO}"))
         self.assertEqual(self.turns, [AUTO])
+
+    def test_sentence_groups_reach_the_phone_with_language_names(self):
+        status, body = self.post(f"t={TOKEN}&lang=es", wav_bytes())
+        self.assertEqual(status, 200)
+        self.assertEqual(
+            body["groups"],
+            [
+                [
+                    {"code": "es", "name": "Spanish", "text": "Hola."},
+                    {"code": "fr", "name": "French", "text": "Salut."},
+                    {"code": "en", "name": "English", "text": "Hi."},
+                ]
+            ],
+        )
+
+    def test_a_reply_without_groups_sends_none(self):
+        self.assertNotIn("groups", self.post(f"t={TOKEN}&lang=zh", wav_bytes())[1])
 
     def test_unknown_or_missing_language_is_refused(self):
         for query in (

@@ -116,6 +116,33 @@ function encodeWav(samples) {
   return new Blob([view.buffer], { type: "audio/wav" });
 }
 
+// Each sentence in every language the rover sent, the visitor's own first. A reply without groups,
+// such as a request to ask again, shows as one English sentence.
+function showAnswer(body) {
+  const groups = body.groups || [[{ code: "en", name: "English", text: body.reply }]];
+  replyText.replaceChildren(
+    ...groups.map((group) => {
+      const sentence = document.createElement("div");
+      sentence.className = "sentence";
+      for (const { code, name, text } of group) {
+        const line = document.createElement("p");
+        line.className = "line";
+        const label = document.createElement("span");
+        label.className = "line-name";
+        label.textContent = name;
+        const words = document.createElement("span");
+        words.className = "line-text";
+        words.lang = code;
+        words.dir = "auto";
+        words.textContent = text;
+        line.append(label, words);
+        sentence.append(line);
+      }
+      return sentence;
+    }),
+  );
+}
+
 async function send(wav) {
   busy = true;
   talk.disabled = true;
@@ -132,7 +159,7 @@ async function send(wav) {
       setStatus(body.error || "Beaver could not answer. Please try again.");
       return;
     }
-    replyText.textContent = body.reply;
+    showAnswer(body);
     answer.hidden = false;
     setStatus("Beaver is answering through the rover's speaker.");
   } catch {

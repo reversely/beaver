@@ -7,26 +7,18 @@ Either way the result is a list of sentence groups, each group holding one sente
 """
 
 import json
-import re
-import time
-from collections.abc import Iterator
-from concurrent.futures import ThreadPoolExecutor
 
 import argos
-from beaver.core import gemini, speech
+from beaver.core import gemini
 from beaver.core.record import RunRecord
+from beaver.core.sentences import group, split_sentences, synthesize_in_order, translate
 from beaver.core.settings import render_prompt
+
+# Re-exported for run.py and server.py, which call bilingual.synthesize_in_order.
+__all__ = ["answer", "synthesize_in_order"]
 
 OFFICIAL = {"en": ["en"], "fr": ["fr"], "both": ["en", "fr"]}
 NAMES = {"en": "English", "fr": "French"}
-
-# Abbreviations that end in a period but do not end a sentence.
-# fmt: off
-ABBREVIATIONS = {
-    "st", "ste", "mt", "ft", "mr", "mrs", "ms", "dr", "jr", "sr", "no", "vs",
-    "blvd", "ave", "rd", "e.g", "i.e",
-}
-# fmt: on
 
 VISITOR_FIELDS = {
     "question": {
@@ -39,22 +31,6 @@ VISITOR_FIELDS = {
         "description": "BCP 47 tag with the script where it matters, such as ar, es, zh-Hant, zh-Hans",
     },
 }
-
-
-def split_sentences(text: str) -> list[str]:
-    """Split after . ! ? and their CJK forms, keeping abbreviations such as "St." whole."""
-    # Latin punctuation ends a sentence only before a space; CJK punctuation needs none.
-    pieces = re.split(r"(?<=[.!?])\s+|(?<=[。！？])\s*", text.strip())
-    sentences = []
-    for piece in pieces:
-        previous_word = (
-            sentences[-1].rsplit(" ", 1)[-1].rstrip(".").lower() if sentences else ""
-        )
-        if previous_word in ABBREVIATIONS:
-            sentences[-1] += " " + piece
-        elif piece:
-            sentences.append(piece)
-    return sentences
 
 
 def official_codes(config: dict) -> list[str]:
@@ -137,30 +113,9 @@ def _answer_then_translate(config, record, system, question, image, spoken):
         translations.update(found)
         if config["translation"]["fallback"] != "gemini":
             others = []
-    if others:
-        schema = {
-            "type": "object",
-            "properties": {
-                c: {"type": "array", "items": {"type": "string"}} for c in others
-            },
-            "required": others,
-        }
-        prompt = render_prompt(
-            config,
-            "translate_sentences",
-            {
-                "target_languages": ", ".join(f"{names[c]} (key {c})" for c in others),
-                "sentences": "\n".join(
-                    f"{i + 1}. {s}" for i, s in enumerate(sentences)
-                ),
-            },
-        )
-        translated = json.loads(
-            gemini.ask(
-                config, record, "", prompt, schema=schema, label="gemini_translate"
-            )
-        )
-        translations.update(translated)
+    translations.update(
+        translate(config, record, sentences, {c: names[c] for c in others})
+    )
     return _result(reply, visitor, codes, translations, len(sentences), record)
 
 
@@ -221,44 +176,10 @@ def _visitor(reply: dict) -> dict:
 
 
 def _result(reply, visitor, codes, translations, count, record):
-    mismatched = [c for c in codes if len(translations.get(c, [])) != count]
-    if mismatched:
-        # A translation list of the wrong length cannot be paired sentence by sentence.
-        record.data["translation_mismatch"] = mismatched
-        codes = [c for c in codes if c not in mismatched]
-    groups = [[(c, translations[c][i]) for c in codes] for i in range(count)]
+    codes, groups = group(record, codes, translations, count)
     return {
         "question": reply["question"],
         "visitor": visitor,
         "codes": codes,
         "groups": groups,
     }
-
-
-def synthesize_in_order(config: dict, groups: list) -> Iterator[dict]:
-    """Yield each sentence's audio in speaking order. Up to tts.parallel sentences synthesize at
-    once, so later sentences are ready while earlier ones play."""
-    pieces = [(g, code, text) for g, group in enumerate(groups) for code, text in group]
-    # A language the voice model cannot speak is shown without audio; its official-language
-    # partner in the same group is still spoken.
-    spoken = set(config["elevenlabs"]["spoken_languages"])
-    with ThreadPoolExecutor(config["tts"]["parallel"]) as pool:
-        futures = [
-            pool.submit(speech.convert, config, text, code) if code in spoken else None
-            for _, code, text in pieces
-        ]
-        for (group, code, text), future in zip(pieces, futures, strict=True):
-            waited = time.perf_counter()
-            pcm, rate, first_ms, total_ms = (
-                future.result() if future else (None, None, 0, 0)
-            )
-            yield {
-                "group": group,
-                "code": code,
-                "text": text,
-                "pcm": pcm,
-                "rate": rate,
-                "first_audio_ms": first_ms,
-                "synth_ms": total_ms,
-                "waited_ms": round((time.perf_counter() - waited) * 1000),
-            }
