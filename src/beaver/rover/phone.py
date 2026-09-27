@@ -20,7 +20,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from transcribe import LANGUAGES
+from transcribe import AUTO, LANGUAGES
 
 HERE = Path(__file__).parent
 
@@ -49,8 +49,9 @@ def wav_seconds(data: bytes) -> float:
 
 def make_handler(token: str, max_bytes: int, answer):
     """`answer(wav, upload_ms, respond, language)` runs one turn and calls `respond(reply)` once
-    the reply text exists, before the rover speaks it. One turn runs at a time. `language` is one
-    of transcribe.LANGUAGES, checked here; the page's own value never reaches the turn unchecked."""
+    the reply text exists, before the rover speaks it. One turn runs at a time. `language` is
+    transcribe.AUTO or one of transcribe.LANGUAGES, checked here; the page's own value never
+    reaches the turn unchecked."""
     busy = threading.Lock()
 
     class Handler(BaseHTTPRequestHandler):
@@ -97,7 +98,7 @@ def make_handler(token: str, max_bytes: int, answer):
                 self._json(HTTPStatus.FORBIDDEN, {"error": "This link has expired."})
                 return
             language = parse_qs(urlsplit(self.path).query).get("lang", [""])[0]
-            if language not in LANGUAGES:
+            if language != AUTO and language not in LANGUAGES:
                 self._json(
                     HTTPStatus.BAD_REQUEST,
                     {"error": "Please choose the language you will ask in."},

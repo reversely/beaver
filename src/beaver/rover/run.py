@@ -137,12 +137,13 @@ def guard_reply(config, record, reply):
 def cmd_phone(config, args):
     """Take questions from a phone's browser; answer through the rover's camera and speaker.
 
-    Each question is transcribed on the Pi in the language the phone page chose, and the guard
-    redacts the transcript, so Gemini receives only redacted text, never the audio."""
+    Each question is transcribed on the Pi in the language the phone page chose, or in the one
+    Whisper detects when the page asks for automatic detection, and the guard redacts the
+    transcript, so Gemini receives only redacted text, never the audio."""
     import guard
     from camera import Camera
     from phone import serve
-    from transcribe import LANGUAGES, Transcriber
+    from transcribe import AUTO, LANGUAGES, Transcriber
 
     camera = Camera(config) if config["look"]["include_image"] else None
     print(f"Loading Whisper {config['transcribe']['model']}...")
@@ -155,12 +156,28 @@ def cmd_phone(config, args):
         record.data["question_language"] = language
         try:
             record.save_file("question.wav", wav)
+            question = ""
             with record.timed("transcribe"):
-                heard = transcriber(wav, language)
-            question, findings = guard.redact(heard)
-            record.data["question"] = question
-            record.data["guard_question"] = [f.rule for f in findings]
-            if not question:
+                if language == AUTO:
+                    language, heard, probability = transcriber.detect_and_transcribe(
+                        wav
+                    )
+                    record.data["detected_language"] = {
+                        "language": language,
+                        "probability": round(probability, 2),
+                    }
+                else:
+                    heard = transcriber(wav, language)
+            if language:
+                question, findings = guard.redact(heard)
+                record.data["question"] = question
+                record.data["guard_question"] = [f.rule for f in findings]
+            if language is None:
+                reply = (
+                    "I could not tell which language you spoke. "
+                    "Please choose your language on the page and ask again."
+                )
+            elif not question:
                 reply = "I did not catch that. Please hold the button and ask again."
             else:
                 prompt = render_prompt(config, "typed_question", {"question": question})

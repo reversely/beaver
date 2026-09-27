@@ -45,11 +45,15 @@ uv run --group rover python src/beaver/rover/run.py <command> [words] [--set sec
 prints the page's HTTPS address and a QR code of it in the terminal. The address carries a random
 token; the server answers 403 to any request without it, and a new token replaces it at every start.
 
-The person opens the page on a phone, picks their language, and holds the button while asking.
-The browser records the phone's microphone, converts it to 16 kHz mono WAV, and uploads it with the
-language, which the phone remembers for next time. The rover transcribes the question on the Pi,
-redacts it, sends Gemini the redacted text with a camera frame, returns the reply text to the phone,
-and speaks the reply. A language outside the page's list gets a 400.
+The person opens the page on a phone, picks their language or leaves it on "Detect
+automatically", and holds the button while asking. The browser records the phone's microphone,
+converts it to 16 kHz mono WAV, and uploads it with the choice, which the phone remembers for next
+time. The rover transcribes the question on the Pi, redacts it, sends Gemini the redacted text with
+a camera frame, returns the reply text to the phone, and speaks the reply. A choice outside the
+page's list gets a 400. For automatic detection, Whisper base detects the language among the page's
+eight and transcribes in one pass; under `transcribe.detect_min_probability` (0.7) the rover asks
+the visitor to choose a language and sends nothing to Gemini. Tiny detects faster but heard a real
+Chinese question as English with 0.79 (docs/measurements.md).
 It answers one question at a time and tells a second phone to wait.
 
 A quick tunnel needs no Cloudflare account and connects outward over port 443, so it works on
@@ -88,7 +92,7 @@ With a microphone on the Pi, `trigger.modes` lists how a question starts, checke
 
 `guard.py` checks text for personal information and length, entirely on the Pi. Every phone turn
 transcribes the question on the Pi (`transcribe.py`, Whisper base in the language the phone page
-sends), redacts the transcript before Gemini sees it, and redacts and, if needed, shortens the
+sends or detects), redacts the transcript before Gemini sees it, and redacts and, if needed, shortens the
 reply before it is spoken or saved. `[transcribe]` in `config.toml` sets the model, precision, and
 threads.
 

@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from phone import PAGE, make_handler
-from transcribe import LANGUAGES
+from transcribe import AUTO, LANGUAGES, pick_language
 
 TOKEN = "test-token"
 
@@ -65,8 +65,18 @@ class PhoneServer(unittest.TestCase):
         self.assertEqual((status, body["reply"]), (200, "reply in zh"))
         self.assertEqual(self.turns, ["zh"])
 
+    def test_automatic_detection_reaches_the_turn(self):
+        status, body = self.post(f"t={TOKEN}&lang={AUTO}", wav_bytes())
+        self.assertEqual((status, body["reply"]), (200, f"reply in {AUTO}"))
+        self.assertEqual(self.turns, [AUTO])
+
     def test_unknown_or_missing_language_is_refused(self):
-        for query in (f"t={TOKEN}&lang=xx", f"t={TOKEN}", f"t={TOKEN}&lang=en%00"):
+        for query in (
+            f"t={TOKEN}&lang=xx",
+            f"t={TOKEN}",
+            f"t={TOKEN}&lang=en%00",
+            f"t={TOKEN}&lang=AUTO",
+        ):
             self.assertEqual(self.post(query, wav_bytes())[0], 400, query)
         self.assertEqual(self.turns, [])
 
@@ -81,7 +91,23 @@ class PageLanguages(unittest.TestCase):
     def test_page_offers_exactly_the_server_list(self):
         html = (PAGE / "index.html").read_text()
         offered = re.findall(r'<option value="([a-z]+)"', html)
-        self.assertEqual(offered, list(LANGUAGES))
+        self.assertEqual(offered, [AUTO, *LANGUAGES])
+
+
+class PickLanguage(unittest.TestCase):
+    def test_most_likely_supported_language_wins(self):
+        probabilities = [("pt", 0.6), ("es", 0.3), ("en", 0.05)]
+        self.assertEqual(pick_language(probabilities, 0.2), ("es", 0.3))
+
+    def test_below_the_threshold_means_ask(self):
+        self.assertEqual(pick_language([("fr", 0.55), ("en", 0.4)], 0.7), (None, 0.55))
+
+    def test_threshold_is_inclusive(self):
+        self.assertEqual(pick_language([("zh", 0.7)], 0.7), ("zh", 0.7))
+
+    def test_no_supported_language_means_ask(self):
+        self.assertEqual(pick_language([("pt", 0.9), ("de", 0.1)], 0.7), (None, 0.0))
+        self.assertEqual(pick_language([], 0.7), (None, 0.0))
 
 
 if __name__ == "__main__":

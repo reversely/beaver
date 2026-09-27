@@ -1,6 +1,6 @@
 // Record the question while the button is held, convert it to 16 kHz mono WAV, and send it to the
-// rover with the chosen language, which the rover transcribes in. The session token comes from the
-// QR code's address.
+// rover with the chosen language, which the rover transcribes in; "auto" asks the rover to detect it.
+// The session token comes from the QR code's address.
 
 const RATE = 16000;
 // Stays under phone.max_upload_bytes (1 MiB holds 32 s at 16 kHz, 16-bit).

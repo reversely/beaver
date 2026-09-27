@@ -112,6 +112,29 @@ With the language given in advance, as the phone page now sends it, the same run
 | tiny | 1.0 s; "Emily Carre" | 1.3 s; "你可以幫我介紹一下Mlycon" |
 | base | 1.8 s; all correct | 5.6 s; "你可以幫我接受一下 Emily Car" (接受 for 介紹) |
 
+### Spoken-language detection
+
+When the phone page asks for automatic detection, Whisper detects the language before transcribing.
+Detection alone, on three real phone questions (6.8 s English, 3.0 s English, 2.6 s Chinese with the
+English name "Emily Carr"):
+
+| Model | Detection time | Real English | Real Chinese |
+|---|---|---|---|
+| tiny | 0.77 to 0.81 s | en 0.90 to 0.92 | en 0.79 |
+| base | 1.50 to 1.55 s | en 0.96 to 0.97 | en 0.40, zh 0.22 |
+| small | 4.71 to 4.88 s | en 0.97 to 0.99 | zh 0.87 |
+
+On eight synthetic questions from macOS `say` voices (English, French, Spanish, Chinese; 2.1 to
+2.9 s), tiny detected all eight correctly at 0.81 to 0.99, so synthetic voices did not show tiny's
+error on real speech.
+
+The rover detects with base in one pass that also transcribes, and asks the visitor to choose a
+language when the most likely of the page's eight scores under 0.7. With that setting: all eight
+synthetic questions and both real English ones were detected and transcribed in 3.16 to 3.44 s;
+the real Chinese question (0.40) and a German question (0.00; German is not on the page) got the
+request to choose, in 1.49 and 1.58 s, with no text sent to Gemini. The lowest correct detection
+was a synthetic Spanish voice at 0.79.
+
 A full phone turn through the tunnel with base, a 4.5 s spoken English question containing a phone
 number: transcription 2.4 s, Gemini 1.1 s, ElevenLabs first audio 2.2 s, question end to speech
 5.8 s (5.4 s before on-board transcription). Gemini received "my phone number is a phone number"

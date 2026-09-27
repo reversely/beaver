@@ -118,6 +118,11 @@ keyfile = ""
 model = "base"
 compute_type = "int8"
 cpu_threads = 2
+# When the page asks for automatic detection, `model` detects the language among the page's eight
+# and transcribes in it, in one pass. Below this probability the rover asks the visitor to choose a
+# language instead of guessing: base gave a real Chinese question only 0.40 for English, and real
+# English questions 0.96 to 0.97.
+detect_min_probability = 0.7
 
 [look]
 # false sends the question without the image, for comparison.
