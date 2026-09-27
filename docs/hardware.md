@@ -42,9 +42,15 @@ stuck HAT controller makes a servo call hang; `robot_hat.reset_mcu()` resets the
 which the servos moved normally on 2026-09-27. Only one program may drive the HAT at a time.
 
 The v4 HAT uses GPIO 20 for the speaker enable, which is also the data-in pin of the I2S block the
-DAC uses (GPIO 18 to 21), so an I2S microphone cannot share that block with the speaker. SunFounder's
-installer adds `hifiberry-dac` to `/boot/firmware/config.txt`; switching it to
-`googlevoicehat-soundcard` replaces the speaker driver.
+DAC uses (GPIO 18 to 21), so an I2S microphone cannot share that block with the speaker. The
+speaker needs `dtoverlay=hifiberry-dac` in `/boot/firmware/config.txt`, which SunFounder's installer
+adds and `setup-pi.sh` checks for; switching it to `googlevoicehat-soundcard` replaces the speaker
+driver.
+
+The DAC accepts only its own sample rates, so opening it directly for an ElevenLabs reply fails with
+`Invalid sample rate`. `setup-pi.sh` writes a resampling ALSA device named `speaker` to
+`~/.asoundrc`, and the rover's `speaker.device` names it. On 2026-09-27 a fresh card with only
+`setup-pi.sh` played a reply through it.
 
 The camera is detected only at boot (`camera_auto_detect=1`). After reseating the ribbon, with the
 power off, `rpicam-hello --list-cameras` should list the OV5647.

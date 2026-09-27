@@ -34,14 +34,30 @@ if ! command -v cloudflared >/dev/null && [ ! -x "$HOME/.local/bin/cloudflared" 
   chmod +x "$HOME/.local/bin/cloudflared"
 fi
 
+# The HAT's PCM5102A DAC takes only its own sample rates, so replies play through a resampling
+# device named "speaker", the name SunFounder's installer also gives it. A file already there is
+# left alone.
+if [ ! -e "$HOME/.asoundrc" ]; then
+  cat > "$HOME/.asoundrc" <<'EOF'
+pcm.speaker {
+  type plug
+  slave.pcm "hw:sndrpihifiberry,0"
+  hint { show on description "Robot HAT speaker" }
+}
+EOF
+fi
+if ! grep -q '^dtoverlay=hifiberry-dac' /boot/firmware/config.txt; then
+  echo "The speaker needs dtoverlay=hifiberry-dac in /boot/firmware/config.txt, then a reboot."
+fi
+
 # Fetch the stand-in wake word model and openWakeWord's feature models.
 uv run --group rover python -c \
   "from openwakeword import utils; utils.download_models(model_names=['hey_jarvis'])"
 
 cat <<'EOF'
 
-Setup finished. The speaker on the Robot HAT v4 uses the hifiberry-dac overlay, which SunFounder's
-robot-hat installer (i2samp.sh) adds to /boot/firmware/config.txt. Do not switch it to
+Setup finished. The speaker on the Robot HAT v4 uses the hifiberry-dac overlay in
+/boot/firmware/config.txt, which SunFounder's robot-hat installer (i2samp.sh) also adds. Do not switch it to
 googlevoicehat-soundcard: that overlay replaces the speaker driver. Check the hardware:
 
   aplay -l                      # snd_rpi_hifiberry_dac should appear as a playback device
