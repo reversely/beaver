@@ -67,14 +67,16 @@ function humpProfile() {
   return shape;
 }
 
-// The head's side profile: a block with its top front corner rounded.
+// The head's side profile: a tall block with its top front corner rounded. The face plate covers
+// the lower part of its front, the eyes sit just above the plate, and the head rises well above
+// them, as on the prototype.
 function headProfile() {
   const shape = new THREE.Shape();
   shape.moveTo(-0.35, -0.42);
   shape.lineTo(0.35, -0.42);
-  shape.lineTo(0.35, 0.18);
-  shape.quadraticCurveTo(0.35, 0.42, 0.1, 0.42);
-  shape.lineTo(-0.35, 0.42);
+  shape.lineTo(0.35, 0.3);
+  shape.quadraticCurveTo(0.35, 0.64, 0.02, 0.64);
+  shape.lineTo(-0.35, 0.64);
   shape.lineTo(-0.35, -0.42);
   return shape;
 }
@@ -348,7 +350,7 @@ export function createBeaver() {
   face.add(screen);
   for (const side of [-1, 1]) {
     const eye = new THREE.Mesh(new THREE.CircleGeometry(0.035, 20), black);
-    eye.position.set(side * 0.2, 0.37, 0.001);
+    eye.position.set(side * 0.2, 0.36, 0.001);
     face.add(eye);
   }
 
