@@ -1,4 +1,4 @@
-"""Guard rules: python -m unittest discover -s experiments/002-raspberry-pi/tests"""
+"""Guard rules: python -m unittest discover -s src/beaver/rover/tests"""
 
 import sys
 import time

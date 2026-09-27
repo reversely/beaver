@@ -4,7 +4,7 @@
 |---|---|
 | Status | Active |
 | Started | 2026-09-26 |
-| Builds on | [Experiment 001](../001-gemini-elevenlabs/README.md), [Experiment 002](../002-raspberry-pi/README.md) |
+| Builds on | [Experiment 001](../src/beaver/desktop/README.md), [Experiment 002](../src/beaver/rover/README.md) |
 | Tickets | [#9](https://github.com/reversely/beaver/issues/9), [#10](https://github.com/reversely/beaver/issues/10), [#15](https://github.com/reversely/beaver/issues/15) |
 
 This folder is a static page that introduces Beaver on a laptop. It needs no API key and no
@@ -19,7 +19,7 @@ the desktop app, clearly enough to run unattended at a table?
 ## Running it
 
 ```
-uv run python -m http.server 8766 -d experiments/003-demo
+uv run python -m http.server 8766 -d demo
 ```
 
 Then open `http://127.0.0.1:8766`. Scroll, press the arrow keys, or press **Play demo**, which
@@ -55,7 +55,7 @@ Every spoken line is an MP3 in `audio/`, generated once by `audio/build_audio.py
 `audio/clips.json`, which holds each clip's exact text, language, and voice role:
 
 ```
-uv run --group sandbox python experiments/003-demo/audio/build_audio.py
+uv run --group sandbox python demo/audio/build_audio.py
 ```
 
 | Role | ElevenLabs voice | Used for |
@@ -102,7 +102,7 @@ branches are used.
 
 ```
 uv run --with pillow --with numpy --with opencv-python-headless \
-    python experiments/003-demo/art/build_layers.py
+    python demo/art/build_layers.py
 ```
 
 `build_layers.py` removes the master's cream sky by flood fill from the top edge, cuts Parliament's

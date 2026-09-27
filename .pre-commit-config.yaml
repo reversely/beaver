@@ -36,7 +36,7 @@ repos:
     hooks:
       - id: artifact-specs
         name: artifact registry matches its spec
-        entry: node --test experiments/001-gemini-elevenlabs/tests/artifacts.test.mjs
+        entry: node --test src/beaver/desktop/tests/artifacts.test.mjs
         language: system
         pass_filenames: false
-        files: ^experiments/001-gemini-elevenlabs/(artifacts\.md|notebooks\.py|ui/artifact-specs\.js|tests/)
+        files: ^src/beaver/desktop/(artifacts\.md|notebooks\.py|ui/artifact-specs\.js|tests/)

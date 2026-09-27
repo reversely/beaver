@@ -26,22 +26,22 @@ docs/plans/
 docs/prd*.md
 
 # Experiment run output: prompts, replies, recordings, camera frames
-experiments/*/runs/
+src/beaver/*/runs/
 
 # Downloaded test images, kept local for licensing
-experiments/*/test-images/
+src/beaver/*/test-images/
 
 # Settings saved from the experiment 001 web interface
-experiments/*/settings.local.json
+src/beaver/*/settings.local.json
 
 # Review notebooks built by the experiment 001 interface
-experiments/*/notebooks/
+src/beaver/*/notebooks/
 
 # Downloaded translation models
-experiments/*/models/
+src/beaver/*/models/
 
 # TLS certificates and keys, such as the phone hotspot certificate for experiment 002.
 *.pem
 
 # Rover turns pulled by the desktop app for its notebooks
-experiments/*/rover-runs/
+src/beaver/*/rover-runs/

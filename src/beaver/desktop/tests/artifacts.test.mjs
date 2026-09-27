@@ -1,5 +1,5 @@
 // Keeps the artifact registry, its spec, and the notebook code in agreement.
-// Run: node --test experiments/001-gemini-elevenlabs/tests/
+// Run: node --test src/beaver/desktop/tests/
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";

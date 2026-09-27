@@ -21,7 +21,7 @@ The experiment's libraries live in the `sandbox` dependency group, and the API k
 `GEMINI_API_KEY` and `ELEVENLABS_API_KEY` in the repo's `.env`.
 
 ```
-uv run --group sandbox python experiments/001-gemini-elevenlabs/run.py <step> [words] [--set section.key=value]
+uv run --group sandbox python src/beaver/desktop/run.py <step> [words] [--set section.key=value]
 ```
 
 | Step | What it does |
@@ -54,7 +54,7 @@ pointing at it.
 ## Desktop interface
 
 ```
-uv run --group sandbox python experiments/001-gemini-elevenlabs/run.py serve
+uv run --group sandbox python src/beaver/desktop/run.py serve
 ```
 
 `serve` opens a local page at `http://127.0.0.1:8765` (`server.port`). The page takes a question by
@@ -134,7 +134,7 @@ desktop app pulls those folders and files each answered turn into the same noteb
 exchanges, so every memory lives in `notebooks/notebooks.json` on the laptop.
 
 ```
-uv run --group sandbox python experiments/001-gemini-elevenlabs/run.py sync
+uv run --group sandbox python src/beaver/desktop/run.py sync
 ```
 
 `run.py sync` runs one pass; `run.py serve` also runs a pass every `sync.interval_seconds` (60)

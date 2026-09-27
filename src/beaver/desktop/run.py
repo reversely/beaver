@@ -1,6 +1,6 @@
 """Experiment 001: Gemini and ElevenLabs voice loop on the laptop. See README.md.
 
-uv run --group sandbox python experiments/001-gemini-elevenlabs/run.py <step> [--set section.key=value ...]
+uv run --group sandbox python src/beaver/desktop/run.py <step> [--set section.key=value ...]
 """
 
 import argparse
@@ -390,7 +390,7 @@ def main():
     )
     args = parser.parse_args()
 
-    load_dotenv(HERE.parents[1] / ".env")
+    load_dotenv(HERE.parents[2] / ".env")
     missing = [
         key
         for key in ("GEMINI_API_KEY", "ELEVENLABS_API_KEY")

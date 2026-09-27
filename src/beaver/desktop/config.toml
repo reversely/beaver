@@ -172,7 +172,7 @@ max_concepts = 2
 # pulls over SSH with the key already set up for the Pi.
 enabled = true
 host = "pi@100.126.130.50"
-remote_runs = "~/beaver/experiments/002-raspberry-pi/runs"
+remote_runs = "~/beaver/src/beaver/rover/runs"
 # Gitignored; one folder per rover turn, with a filed.json marker once it is in a notebook.
 local_dir = "rover-runs"
 interval_seconds = 60

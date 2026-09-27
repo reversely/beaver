@@ -44,4 +44,4 @@ override-dependencies = ["tflite-runtime; python_version < '3.12'"]
 [tool.ruff]
 # Each experiment folder runs as its own script root, so its modules (record, gemini, ...) are
 # first-party imports there.
-src = [".", "experiments/*"]
+src = [".", "src/beaver/*"]

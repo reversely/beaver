@@ -1,7 +1,7 @@
 """Generate the demo's spoken clips and ambience with ElevenLabs, once, into audio/*.mp3.
 
 Run from the repo root (reads ELEVENLABS_API_KEY from .env and never prints it):
-    uv run --group sandbox python experiments/003-demo/audio/build_audio.py
+    uv run --group sandbox python demo/audio/build_audio.py
 
 clips.json lists every clip: its id, voice role, language, and exact text. A clip whose MP3
 already exists is skipped, so re-running only spends characters on new or deleted clips.
@@ -30,7 +30,7 @@ def post(path: str, body: dict, key: str) -> bytes:
 
 
 def main() -> None:
-    load_dotenv(HERE.parents[2] / ".env")
+    load_dotenv(HERE.parents[1] / ".env")
     key = os.environ["ELEVENLABS_API_KEY"]
     spec = json.loads((HERE / "clips.json").read_text())
     spent = 0

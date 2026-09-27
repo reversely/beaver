@@ -4,7 +4,7 @@
 |---|---|
 | Status | Active |
 | Started | 2026-09-26 |
-| Builds on | [Experiment 001](../001-gemini-elevenlabs/README.md) |
+| Builds on | [Experiment 001](../desktop/README.md) |
 | Ticket | [#2](https://github.com/reversely/beaver/issues/2) |
 
 This folder is a sandbox experiment. Code in `src/beaver/` never imports from it. It copies
@@ -40,7 +40,7 @@ L/R connects to ground, and on the right channel (channel 1) when it connects to
    ```
 2. On the Pi, from `~/beaver`:
    ```
-   bash experiments/002-raspberry-pi/setup-pi.sh
+   bash src/beaver/rover/setup-pi.sh
    ```
    The script installs `python3-picamera2`, `python3-gpiozero`, `python3-lgpio`, and
    `libportaudio2` with apt, creates the venv with `--system-site-packages` so it can import them,
@@ -57,7 +57,7 @@ L/R connects to ground, and on the right channel (channel 1) when it connects to
 ## Bring-up order
 
 Each command tests one part before the full loop depends on it. All commands run as
-`uv run --group pi python experiments/002-raspberry-pi/run.py <command>`.
+`uv run --group pi python src/beaver/rover/run.py <command>`.
 
 | Command | What it checks |
 |---|---|
@@ -170,7 +170,7 @@ Names are not covered: a pattern cannot tell a visitor's name from a historical 
 tests include answers full of years and dates that must pass unchanged:
 
 ```
-uv run python -m unittest discover -s experiments/002-raspberry-pi/tests
+uv run python -m unittest discover -s src/beaver/rover/tests
 ```
 
 ## Dependencies

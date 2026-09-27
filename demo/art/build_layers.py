@@ -2,7 +2,7 @@
 
 Run from the repo root:
     uv run --with pillow --with numpy --with opencv-python-headless \
-        python experiments/003-demo/art/build_layers.py
+        python demo/art/build_layers.py
 
 Sources (GPT Image 2 generations, stored as WebP in art/source/):
     master.webp      the painted panorama: sky, hills, Parliament Hill, river, maples

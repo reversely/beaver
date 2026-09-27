@@ -1,6 +1,6 @@
 """Experiment 002: the Gemini and ElevenLabs loop on a Raspberry Pi 5. See README.md.
 
-uv run --group pi python experiments/002-raspberry-pi/run.py <command> [words] [--set section.key=value ...]
+uv run --group pi python src/beaver/rover/run.py <command> [words] [--set section.key=value ...]
 """
 
 import argparse
@@ -284,7 +284,7 @@ def main():
     )
     args = parser.parse_args()
 
-    load_dotenv(HERE.parents[1] / ".env")
+    load_dotenv(HERE.parents[2] / ".env")
     missing = [
         k for k in ("GEMINI_API_KEY", "ELEVENLABS_API_KEY") if not os.environ.get(k)
     ]

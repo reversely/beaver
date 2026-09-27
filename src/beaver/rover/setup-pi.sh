@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Set up experiment 002 on a Raspberry Pi 5 running 64-bit Raspberry Pi OS with Python 3.13.
-# Run from the repo root: bash experiments/002-raspberry-pi/setup-pi.sh
+# Run from the repo root: bash src/beaver/rover/setup-pi.sh
 set -euo pipefail
 
 if ! python3 -c 'import sys; sys.exit(sys.version_info[:2] != (3, 13))'; then
@@ -51,5 +51,5 @@ Then check the hardware:
   arecord -l                    # the I2S card should appear as a capture device
   aplay -l                      # and as a playback device
   rpicam-hello --list-cameras   # the OV5647 should appear
-  uv run --group pi python experiments/002-raspberry-pi/run.py devices
+  uv run --group pi python src/beaver/rover/run.py devices
 EOF
