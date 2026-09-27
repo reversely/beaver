@@ -20,7 +20,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-import segno
+from transcribe import LANGUAGES
 
 HERE = Path(__file__).parent
 
@@ -48,8 +48,9 @@ def wav_seconds(data: bytes) -> float:
 
 
 def make_handler(token: str, max_bytes: int, answer):
-    """`answer(wav, upload_ms, respond)` runs one turn and calls `respond(reply)` once the reply
-    text exists, before the rover speaks it. One turn runs at a time."""
+    """`answer(wav, upload_ms, respond, language)` runs one turn and calls `respond(reply)` once
+    the reply text exists, before the rover speaks it. One turn runs at a time. `language` is one
+    of transcribe.LANGUAGES, checked here; the page's own value never reaches the turn unchecked."""
     busy = threading.Lock()
 
     class Handler(BaseHTTPRequestHandler):
@@ -95,6 +96,13 @@ def make_handler(token: str, max_bytes: int, answer):
             if not self._authorized():
                 self._json(HTTPStatus.FORBIDDEN, {"error": "This link has expired."})
                 return
+            language = parse_qs(urlsplit(self.path).query).get("lang", [""])[0]
+            if language not in LANGUAGES:
+                self._json(
+                    HTTPStatus.BAD_REQUEST,
+                    {"error": "Please choose the language you will ask in."},
+                )
+                return
             try:
                 length = int(self.headers.get("Content-Length", ""))
             except ValueError:
@@ -133,7 +141,7 @@ def make_handler(token: str, max_bytes: int, answer):
                 responded = True
 
             try:
-                answer(wav, upload_ms, respond)
+                answer(wav, upload_ms, respond, language)
             # Any failure in a turn must reach the phone as an error reply, not end the server.
             except (SystemExit, Exception) as error:  # noqa: BLE001
                 print(f"Turn failed: {error}")
@@ -219,6 +227,8 @@ def serve(config: dict, answer) -> None:
         base = f"https://{lan_address()}:{port}"
     else:
         raise SystemExit("phone.tunnel must be cloudflare or none")
+    import segno
+
     url = f"{base}/?t={token}"
     print("\nScan this code with the phone's camera, or open the address below.\n")
     segno.make(url, error="l").terminal(compact=True)

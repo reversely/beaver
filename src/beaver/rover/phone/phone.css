@@ -113,3 +113,22 @@ h2 {
     transition: none;
   }
 }
+
+.language {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-self: stretch;
+  font-weight: 600;
+}
+
+.language select {
+  font: inherit;
+  font-weight: 400;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--ink-2);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+}

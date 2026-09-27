@@ -11,11 +11,15 @@ speaker but no microphone (see [hardware.md](hardware.md)), so questions arrive 
 1. `run.py phone` starts a web server on port 8770 and a Cloudflare quick tunnel to it, then prints
    the page's HTTPS address and a QR code of it in the terminal. The address carries a random token
    that changes at every start; the server answers 403 to any request without it.
-2. The person holds the button on the phone page while asking. The browser records the phone's
-   microphone, converts it to 16 kHz mono WAV, and uploads it through the tunnel.
-3. The rover takes a camera frame, sends the question audio and the frame to Gemini with the shared
-   system prompt, returns the reply text to the phone, and speaks it through ElevenLabs on its
-   speaker. It answers one question at a time.
+2. The person picks their language on the phone page (English, French, Spanish, Arabic, Chinese,
+   Punjabi, Tagalog, or Ukrainian) and holds the button while asking. The browser records the
+   phone's microphone, converts it to 16 kHz mono WAV, and uploads it through the tunnel with the
+   language. The rover accepts only a language from its fixed list.
+3. The rover transcribes the question on the Pi with Whisper base in that language, and the guard
+   redacts personal information from the transcript. The rover takes a camera frame and sends
+   Gemini the redacted text and the frame, never the audio. It redacts the reply, shortens it at a
+   sentence end if it is over the ElevenLabs limit, returns it to the phone, and speaks it through
+   ElevenLabs on its speaker. It answers one question at a time.
 
 The tunnel exists because phone browsers open the microphone only on HTTPS pages, and because
 eduroam blocks connections between devices on the same network. A quick tunnel connects outward
@@ -70,9 +74,13 @@ numbers written as digits.
 `src/beaver/rover/guard.py` finds personal information (emails, phone numbers, postal codes,
 addresses, social insurance numbers, Quebec and Ontario health card numbers, and payment card
 numbers) and over-long text, replaces findings with a spoken phrase such as "a phone number", and
-cuts text at a sentence end. It runs entirely on the Pi. The rover does not call it yet: the next
-part transcribes the phone's audio on the Pi, so the guard can redact a question before any of it
-reaches Gemini, and then checks every reply before it is spoken or saved.
+cuts text at a sentence end. It runs entirely on the Pi, on every phone turn: on the transcript
+before Gemini receives it, and on the reply before it is spoken or saved. The run record keeps the
+redacted question, the chosen language, and which rules fired, never the unredacted text.
+
+The rover still saves the question audio (`question.wav`) in its run folder, and the desktop app's
+sync pulls it and has Gemini transcribe it for the notebooks, so an unredacted question can reach
+Gemini from the laptop. Filing from the rover's redacted transcript instead is the next change.
 
 ## Security
 

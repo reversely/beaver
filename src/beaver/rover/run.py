@@ -120,27 +120,53 @@ def cmd_loop(config, args):
             print("\nStopped.")
 
 
+def guard_reply(config, record, reply):
+    """Redact personal information from a reply, then shorten it at a sentence end when it is over
+    elevenlabs.max_characters. Records which rules fired and how much was cut, never the original."""
+    import guard
+
+    text, findings = guard.redact(reply)
+    text, dropped = guard.shorten(text, config["elevenlabs"]["max_characters"])
+    record.data["guard_reply"] = {
+        "rules": [f.rule for f in findings],
+        "shortened_share": round(dropped, 2),
+    }
+    return text
+
+
 def cmd_phone(config, args):
-    """Take questions from a phone's browser; answer through the rover's camera and speaker."""
+    """Take questions from a phone's browser; answer through the rover's camera and speaker.
+
+    Each question is transcribed on the Pi in the language the phone page chose, and the guard
+    redacts the transcript, so Gemini receives only redacted text, never the audio."""
+    import guard
     from camera import Camera
-    from phone import serve, wav_seconds
+    from phone import serve
+    from transcribe import LANGUAGES, Transcriber
 
     camera = Camera(config) if config["look"]["include_image"] else None
+    print(f"Loading Whisper {config['transcribe']['model']}...")
+    transcriber = Transcriber(config)
 
-    def answer(wav, upload_ms, respond):
+    def answer(wav, upload_ms, respond, language):
         record = RunRecord(config, "phone")
         question_end = time.perf_counter()
         record.data["timings_ms"]["upload"] = upload_ms
+        record.data["question_language"] = language
         try:
-            path = record.save_file("question.wav", wav)
-            question = [
-                (
-                    wav,
-                    "audio/wav",
-                    f"{path.name}: {wav_seconds(wav):.1f} s of phone microphone audio",
-                )
-            ]
-            reply = ask_with_frame(config, record, camera, question)
+            record.save_file("question.wav", wav)
+            with record.timed("transcribe"):
+                heard = transcriber(wav, language)
+            question, findings = guard.redact(heard)
+            record.data["question"] = question
+            record.data["guard_question"] = [f.rule for f in findings]
+            if not question:
+                reply = "I did not catch that. Please hold the button and ask again."
+            else:
+                prompt = render_prompt(config, "typed_question", {"question": question})
+                note = f"The visitor asked in {LANGUAGES[language]}."
+                reply = ask_with_frame(config, record, camera, [note, prompt])
+                reply = guard_reply(config, record, reply)
             respond(reply)
             speak(config, record, reply, question_end)
         except (SystemExit, Exception) as error:

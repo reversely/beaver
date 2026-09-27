@@ -105,7 +105,19 @@ covers one question, after the model loaded.
 | base | 2.3 s | 3.2 to 3.4 s | Correct | Heard as English (confidence 0.40) |
 | small | 6.6 s | 9.9 to 10.3 s | Correct | Correct language (zh, 0.87): "你可以幫我介紹一下Emily Carm" |
 
-During the run the CPU peaked at 69.2 °C, the 5 V input stayed at or above 5.11 V, and
+With the language given in advance, as the phone page now sends it, the same run was faster:
+
+| Model | English question | Chinese question |
+|---|---|---|
+| tiny | 1.0 s; "Emily Carre" | 1.3 s; "你可以幫我介紹一下Mlycon" |
+| base | 1.8 s; all correct | 5.6 s; "你可以幫我接受一下 Emily Car" (接受 for 介紹) |
+
+A full phone turn through the tunnel with base, a 4.5 s spoken English question containing a phone
+number: transcription 2.4 s, Gemini 1.1 s, ElevenLabs first audio 2.2 s, question end to speech
+5.8 s (5.4 s before on-board transcription). Gemini received "my phone number is a phone number"
+and no audio.
+
+During the first run the CPU peaked at 69.2 °C, the 5 V input stayed at or above 5.11 V, and
 `get_throttled` read `0x0`. Only `small` understood the Chinese question, and it adds about 10 s
 before Gemini receives the question.
 

@@ -1,5 +1,6 @@
 // Record the question while the button is held, convert it to 16 kHz mono WAV, and send it to the
-// rover. The session token comes from the QR code's address.
+// rover with the chosen language, which the rover transcribes in. The session token comes from the
+// QR code's address.
 
 const RATE = 16000;
 // Stays under phone.max_upload_bytes (1 MiB holds 32 s at 16 kHz, 16-bit).
@@ -11,6 +12,18 @@ const talk = document.getElementById("talk");
 const statusLine = document.getElementById("status");
 const answer = document.getElementById("answer");
 const replyText = document.getElementById("reply");
+const language = document.getElementById("language");
+
+// The chosen language stays on this phone between visits; storage can be blocked, so it is optional.
+try {
+  const saved = localStorage.getItem("beaver-language");
+  if (saved && [...language.options].some((o) => o.value === saved)) language.value = saved;
+} catch {}
+language.addEventListener("change", () => {
+  try {
+    localStorage.setItem("beaver-language", language.value);
+  } catch {}
+});
 
 let stream = null;
 let recorder = null;
@@ -108,7 +121,8 @@ async function send(wav) {
   talk.disabled = true;
   setStatus("Beaver is thinking about your question.");
   try {
-    const response = await fetch(`/api/ask?t=${encodeURIComponent(token)}`, {
+    const query = `t=${encodeURIComponent(token)}&lang=${encodeURIComponent(language.value)}`;
+    const response = await fetch(`/api/ask?${query}`, {
       method: "POST",
       headers: { "Content-Type": "audio/wav" },
       body: wav,
