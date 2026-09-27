@@ -1,9 +1,10 @@
 // Page logic: settings, hold-to-talk recording, camera frames, and in-order sentence playback.
-import { openNotebook, refreshNotebooks, showConversation } from "./notebooks.js";
+import { notebookHash, refreshNotebooks } from "./notebooks.js";
+import { go, start } from "./router.js";
 
 const $ = (selector) => document.querySelector(selector);
 const talk = $("#talk");
-const askButton = $(".ask");
+const askButton = $("#typed .ask");
 const typedInput = $("#typed-input");
 const statusLine = $("#status");
 const thread = $("#thread");
@@ -64,12 +65,14 @@ async function showPlace() {
   const place = await fetch("/api/place").then((r) => r.json()).catch(() => ({}));
   $("#place-field").hidden = !place.municipality;
   if (place.municipality) $("#place-name").textContent = `${place.municipality}, ${place.province}`;
+  const around = place.municipality || "you";
+  document.querySelectorAll("[data-place-prompt]").forEach((line) => {
+    line.textContent = `Ask about anything you see around ${around}`;
+  });
 }
 showPlace();
 setInterval(showPlace, 60000);
 
-// Settings start collapsed on narrow screens, where the sidebar stacks above the conversation.
-if (window.matchMedia("(max-width: 899px)").matches) $("#settings").open = false;
 
 // ---- Status ---------------------------------------------------------------------------------
 
@@ -218,6 +221,18 @@ $("#typed").addEventListener("submit", (event) => {
   ask({ text });
 });
 
+// The overview's Ask Beaver tile sends its question from the Ask view, where the reply plays.
+$("#overview-ask").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const input = $("#overview-input");
+  const text = input.value.trim();
+  if (!text || busy) return;
+  input.value = "";
+  typedInput.value = text;
+  go("#/ask");
+  $("#typed").requestSubmit();
+});
+
 // ---- Turns ----------------------------------------------------------------------------------
 
 function languageName(code) {
@@ -284,7 +299,7 @@ class Player {
 }
 
 async function ask(payload) {
-  showConversation();
+  go("#/ask");
   setBusy(true);
   const sentAt = performance.now();
   const frame = captureFrame();
@@ -356,12 +371,11 @@ function handleEvent(event, turn, groups, player) {
     wait();
   } else if (event.type === "notebook") {
     refreshNotebooks();
-    const link = document.createElement("button");
-    link.type = "button";
+    const link = document.createElement("a");
     link.className = "tag tag-link";
     link.textContent = event.title_en;
     link.title = "Open notebook";
-    link.addEventListener("click", () => openNotebook(event.id));
+    link.href = notebookHash(event.id);
     turn.querySelector(".turn-meta").append(link);
   } else if (event.type === "notebook_error") {
     addTag(turn, "not filed");
@@ -369,3 +383,5 @@ function handleEvent(event, turn, groups, player) {
     setStatus(event.message, true);
   }
 }
+
+start();

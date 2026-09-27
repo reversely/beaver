@@ -1,13 +1,16 @@
-// Notebook list in the sidebar and the notebook view. All notebook text is model output, so it
-// is set with textContent and never parsed as HTML.
+// The Notebooks view (the list and one notebook) and the overview's Notebooks tile. All notebook
+// text is model output, so it is set with textContent and never parsed as HTML.
 import { artifactImage, pieceFor } from "./artifacts.js";
+import { onRoute } from "./router.js";
 
 const list = document.getElementById("notebook-list");
-const emptyNote = document.getElementById("notebooks-empty");
-const conversationView = document.getElementById("conversation-view");
+const index = document.getElementById("notebook-index");
+const recent = document.getElementById("overview-notebooks");
+const emptyNotes = document.querySelectorAll("[data-notebooks-empty]");
 const notebookView = document.getElementById("notebook-view");
-const conversationButton = document.getElementById("nav-conversation");
 const LANGUAGE_NAMES = new Intl.DisplayNames(["en"], { type: "language" });
+// The overview's tile shows this many notebooks, the last ones filed first.
+const RECENT = 3;
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -20,52 +23,46 @@ function span(start, end) {
   return start === end ? String(start) : `${start}–${end}`;
 }
 
-function setActive(button) {
-  document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("is-active", b === button));
+export function notebookHash(id) {
+  return `#/notebooks/${encodeURIComponent(id)}`;
 }
 
-export function showConversation() {
-  if (location.hash) history.replaceState(null, "", location.pathname);
-  notebookView.hidden = true;
-  conversationView.hidden = false;
-  setActive(conversationButton);
+function listItem(notebook) {
+  const item = el("li");
+  const link = el("a", "nav-item notebook-item");
+  link.href = notebookHash(notebook.id);
+  const image = el("img", "notebook-thumb");
+  image.alt = "";
+  image.src = artifactImage(pieceFor(notebook));
+  const text = el("span", "notebook-item-text");
+  text.append(el("span", "notebook-item-title", notebook.title_en));
+  const meta = el("span", "notebook-item-meta");
+  meta.append(el("span", null, span(notebook.year_start, notebook.year_end)), el("span", null, `${notebook.entries} ${notebook.entries === 1 ? "question" : "questions"}`));
+  text.append(meta);
+  link.append(image, text);
+  item.append(link);
+  return item;
 }
-conversationButton.addEventListener("click", showConversation);
 
 export async function refreshNotebooks() {
-  const notebooks = await (await fetch("/api/notebooks")).json();
-  list.replaceChildren();
-  emptyNote.hidden = notebooks.length > 0;
-  for (const notebook of notebooks) {
-    const item = el("li");
-    const button = el("button", "nav-item notebook-item");
-    button.type = "button";
-    button.dataset.id = notebook.id;
-    const image = el("img", "notebook-thumb");
-    image.alt = "";
-    image.src = artifactImage(pieceFor(notebook));
-    const text = el("span", "notebook-item-text");
-    text.append(el("span", "notebook-item-title", notebook.title_en));
-    const meta = el("span", "notebook-item-meta");
-    meta.append(el("span", null, span(notebook.year_start, notebook.year_end)), el("span", null, `${notebook.entries} ${notebook.entries === 1 ? "question" : "questions"}`));
-    text.append(meta);
-    button.append(image, text);
-    button.addEventListener("click", () => openNotebook(notebook.id));
-    item.append(button);
-    list.append(item);
+  const notebooks = await fetch("/api/notebooks").then((r) => r.json()).catch(() => null);
+  if (!notebooks) {
+    emptyNotes.forEach((note) => (note.textContent = "The notebooks could not be loaded."));
+    return;
   }
+  emptyNotes.forEach((note) => (note.hidden = notebooks.length > 0));
+  list.replaceChildren(...notebooks.map(listItem));
+  recent.replaceChildren(...notebooks.slice(-RECENT).reverse().map(listItem));
 }
 
-export async function openNotebook(id) {
+async function openNotebook(id) {
   const response = await fetch(`/api/notebooks/${encodeURIComponent(id)}`);
-  if (!response.ok) return;
+  if (!response.ok) {
+    notebookView.replaceChildren(el("p", "empty card view-note", "This notebook could not be found."));
+    return;
+  }
   const notebook = await response.json();
-  history.replaceState(null, "", `#notebook=${encodeURIComponent(id)}`);
-  setActive(list.querySelector(`[data-id="${CSS.escape(id)}"]`));
-  conversationView.hidden = true;
-  notebookView.hidden = false;
   notebookView.replaceChildren(header(notebook), timeline(notebook), vocabulary(notebook), concepts(notebook), questions(notebook));
-  notebookView.scrollIntoView({ block: "start" });
 }
 
 function header(notebook) {
@@ -196,6 +193,12 @@ function questions(notebook) {
   return node;
 }
 
-// A #notebook=<id> link opens that notebook on load.
-const linked = new URLSearchParams(location.hash.slice(1)).get("notebook");
-refreshNotebooks().then(() => linked && openNotebook(linked));
+// #/notebooks shows the list; #/notebooks/<id> shows that notebook in its place.
+onRoute(({ route, id }) => {
+  if (route !== "notebooks") return;
+  index.hidden = Boolean(id);
+  notebookView.hidden = !id;
+  if (id) openNotebook(id);
+});
+
+refreshNotebooks();

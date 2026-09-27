@@ -1,5 +1,7 @@
-// The Rover panel: start and stop the rover's phone page on the Pi and show its address.
+// The Rover view: start and stop the rover's phone page on the Pi and show its address. The
+// overview's Rover tile repeats the view's status line.
 const status = document.getElementById("rover-status");
+const tileStatus = document.getElementById("overview-rover");
 const link = document.getElementById("rover-link");
 const qr = document.getElementById("rover-qr");
 const address = document.getElementById("rover-address");
@@ -20,6 +22,7 @@ function show(state) {
     status.textContent = `The phone page stopped: ${state.log.at(-1)}`;
     status.classList.add("is-error");
   }
+  mirror();
   link.hidden = state.state !== "running";
   if (state.state === "running") {
     // The SVG is built by segno on this laptop from the rover's address, not from page input.
@@ -38,9 +41,15 @@ function show(state) {
   if (state.state === "unreachable") polling = setTimeout(refresh, 15000);
 }
 
+function mirror() {
+  tileStatus.textContent = status.textContent;
+  tileStatus.classList.toggle("is-error", status.classList.contains("is-error"));
+}
+
 function fail(message) {
   status.textContent = message;
   status.classList.add("is-error");
+  mirror();
   toggle.hidden = false;
   toggle.disabled = false;
 }

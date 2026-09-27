@@ -18,13 +18,13 @@
   <div class="app">
     <aside class="side card">
       <div data-site-nav></div>
-      <div class="brand">
+      <a class="brand" href="#/overview" aria-label="Beaver overview">
         <span class="brand-line">your guide to Canada</span>
         <span class="brand-word">beaver</span>
         <span class="brand-line brand-fr">votre guide du Canada</span>
-      </div>
+      </a>
 
-      <details class="panel settings" id="settings" open>
+      <details class="panel settings" id="settings">
         <summary class="settings-summary"><h2 id="settings-heading">Settings</h2></summary>
 
         <div class="field">
@@ -72,31 +72,83 @@
         </div>
       </details>
 
-      <section class="panel rover" id="rover" aria-labelledby="rover-heading">
-        <h2 id="rover-heading">Rover</h2>
-        <p class="empty" id="rover-status" role="status">Checking the rover</p>
-        <div class="rover-link" id="rover-link" hidden>
-          <div class="rover-qr" id="rover-qr"></div>
-          <a id="rover-address" target="_blank" rel="noreferrer">Open the phone page</a>
-        </div>
-        <button type="button" class="ask" id="rover-toggle" hidden>Start</button>
-      </section>
-
-      <section class="panel" aria-labelledby="notebooks-heading">
-        <h2 id="notebooks-heading">Notebooks</h2>
-        <nav class="notebook-nav" aria-labelledby="notebooks-heading">
-          <button type="button" class="nav-item is-active" id="nav-conversation">Conversation</button>
-          <ul class="notebook-list" id="notebook-list"></ul>
-          <p class="empty" id="notebooks-empty">Notebooks fill as you ask questions</p>
-        </nav>
-      </section>
+      <nav class="panel topics" aria-labelledby="topics-heading">
+        <h2 id="topics-heading">Topics</h2>
+        <a class="nav-item" href="#/deadlines" data-route-link="deadlines">Deadlines and duties</a>
+        <a class="nav-item" href="#/documents" data-route-link="documents">Documents</a>
+        <a class="nav-item" href="#/ask" data-route-link="ask">Ask Beaver</a>
+        <a class="nav-item" href="#/notebooks" data-route-link="notebooks">Notebooks</a>
+        <a class="nav-item" href="#rover" data-route-link="rover">Rover</a>
+      </nav>
     </aside>
 
     <main class="main">
-      <div id="conversation-view">
+      <section class="view overview" data-route="overview" aria-labelledby="overview-heading">
+        <h1 class="view-title" id="overview-heading">Overview</h1>
+        <div class="tiles">
+          <article class="tile card">
+            <h2><a href="#/deadlines">Deadlines and duties</a></h2>
+            <p class="empty">No deadline sources are connected yet.</p>
+          </article>
+          <article class="tile card">
+            <h2><a href="#/documents">Documents</a></h2>
+            <p class="empty">Document summaries are not built yet.</p>
+          </article>
+          <article class="tile card">
+            <h2><a href="#/ask">Ask Beaver</a></h2>
+            <form class="typed" id="overview-ask">
+              <input id="overview-input" type="text" autocomplete="off" placeholder="Type a question in any language" aria-label="Question">
+              <button type="submit" class="ask">Ask</button>
+            </form>
+            <p class="empty" data-place-prompt>Ask about anything you see around you</p>
+          </article>
+          <article class="tile card">
+            <h2><a href="#/notebooks">Notebooks</a></h2>
+            <ul class="tile-list" id="overview-notebooks"></ul>
+            <p class="empty" data-notebooks-empty>Notebooks fill as you ask questions</p>
+          </article>
+          <article class="tile card">
+            <h2><a href="#rover">Rover</a></h2>
+            <p class="empty" id="overview-rover" role="status">Checking the rover</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" data-route="deadlines" aria-labelledby="deadlines-heading" hidden>
+        <h1 class="view-title" id="deadlines-heading">Deadlines and duties</h1>
+        <p class="empty card view-note">No deadline sources are connected yet.</p>
+      </section>
+
+      <section class="view" data-route="documents" aria-labelledby="documents-heading" hidden>
+        <h1 class="view-title" id="documents-heading">Documents</h1>
+        <p class="empty card view-note">Document summaries are not built yet.</p>
+      </section>
+
+      <section class="view" data-route="notebooks" aria-labelledby="notebooks-heading" hidden>
+        <h1 class="view-title" id="notebooks-heading">Notebooks</h1>
+        <div class="notebook-index" id="notebook-index">
+          <ul class="notebook-list" id="notebook-list"></ul>
+          <p class="empty card view-note" data-notebooks-empty>Notebooks fill as you ask questions</p>
+        </div>
+        <div class="notebook-view" id="notebook-view" hidden></div>
+      </section>
+
+      <section class="view rover" id="rover" data-route="rover" aria-labelledby="rover-heading" hidden>
+        <h1 class="view-title" id="rover-heading">Rover</h1>
+        <div class="card view-note">
+          <p class="empty" id="rover-status" role="status">Checking the rover</p>
+          <div class="rover-link" id="rover-link" hidden>
+            <div class="rover-qr" id="rover-qr"></div>
+            <a id="rover-address" target="_blank" rel="noreferrer">Open the phone page</a>
+          </div>
+          <button type="button" class="ask" id="rover-toggle" hidden>Start</button>
+        </div>
+      </section>
+
+      <section class="view" id="conversation-view" data-route="ask" aria-labelledby="ask-heading" hidden>
       <header class="hero">
         <canvas id="scene" aria-hidden="true"></canvas>
-        <h1 class="hero-title">Hey Beaver…</h1>
+        <h1 class="hero-title" id="ask-heading">Hey Beaver…</h1>
       </header>
 
       <section class="composer card" aria-label="Ask">
@@ -120,10 +172,9 @@
       </section>
 
       <section class="thread" id="thread" aria-live="polite">
-        <p class="empty thread-empty" id="thread-empty">Ask about anything you see around Ottawa</p>
+        <p class="empty thread-empty" id="thread-empty" data-place-prompt>Ask about anything you see around you</p>
       </section>
-      </div>
-      <div class="notebook-view" id="notebook-view" hidden></div>
+      </section>
     </main>
   </div>
   <script src="background.js"></script>
