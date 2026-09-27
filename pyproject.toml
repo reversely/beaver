@@ -6,6 +6,14 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
 
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# src/beaver holds the shared core and both apps; installing it lets each app import beaver.core.
+module-name = "beaver"
+
 [dependency-groups]
 dev = [
     "detect-secrets>=1.5.0",
@@ -44,4 +52,4 @@ override-dependencies = ["tflite-runtime; python_version < '3.12'"]
 [tool.ruff]
 # Each experiment folder runs as its own script root, so its modules (record, gemini, ...) are
 # first-party imports there.
-src = [".", "src/beaver/*"]
+src = [".", "src", "src/beaver/*"]

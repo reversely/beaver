@@ -6,7 +6,7 @@ import time
 from elevenlabs import ElevenLabs
 from elevenlabs.core import ApiError
 
-from record import RunRecord
+from beaver.core.record import RunRecord
 
 
 def pcm_sample_rate(output_format: str) -> int:
@@ -18,8 +18,20 @@ def pcm_sample_rate(output_format: str) -> int:
     return int(rate)
 
 
+def check_length(config: dict, text: str) -> None:
+    """Refuse text over elevenlabs.max_characters before anything is logged or sent, so a record
+    never shows a request that did not go out."""
+    limit = config["elevenlabs"]["max_characters"]
+    if len(text) > limit:
+        raise SystemExit(
+            f"Text is {len(text)} characters, over elevenlabs.max_characters ({limit}); "
+            "nothing was sent to ElevenLabs"
+        )
+
+
 def synthesize(config: dict, record: RunRecord, text: str) -> tuple[bytes, int]:
     """Return (16-bit mono PCM bytes, sample rate)."""
+    check_length(config, text)
     record.data["elevenlabs_characters"] = len(text)
     record.sent(
         "ElevenLabs",
@@ -42,11 +54,7 @@ def convert(
     elevenlabs.send_language_code is on, since only some models accept it."""
     settings = config["elevenlabs"]
     rate = pcm_sample_rate(settings["output_format"])
-    if len(text) > settings["max_characters"]:
-        raise SystemExit(
-            f"Text is {len(text)} characters, over elevenlabs.max_characters "
-            f"({settings['max_characters']}); nothing was sent to ElevenLabs"
-        )
+    check_length(config, text)
     extra = {}
     if language_code and settings.get("send_language_code"):
         extra["language_code"] = language_code

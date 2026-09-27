@@ -11,11 +11,14 @@ import json
 import subprocess
 import threading
 import time
+from pathlib import Path
 
-import gemini
 import notebooks
-from record import RunRecord
-from settings import HERE, render_prompt
+from beaver.core import gemini
+from beaver.core.record import RunRecord
+from beaver.core.settings import render_prompt
+
+HERE = Path(__file__).parent
 
 # Only what filing needs; the rover's reply audio stays on the rover.
 PULLED = ["record.json", "question.wav", "frame.jpg"]

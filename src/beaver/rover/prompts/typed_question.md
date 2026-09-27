@@ -1,1 +1,0 @@
-The visitor asks: "${question}"

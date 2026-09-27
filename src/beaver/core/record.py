@@ -6,14 +6,15 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from settings import HERE
+from beaver.core.settings import app_dir
 
 
 class RunRecord:
     def __init__(self, config: dict, step: str):
         # Local time, so folder names match the clock on the machine that ran them.
         stamp = datetime.now(UTC).astimezone().strftime("%Y%m%d-%H%M%S")
-        self.dir = HERE / config["output"]["runs_dir"] / f"{stamp}-{step}"
+        self.base = app_dir(config)
+        self.dir = self.base / config["output"]["runs_dir"] / f"{stamp}-{step}"
         self.dir.mkdir(parents=True)
         self.show_prompts = config["output"]["show_prompts"]
         self.data = {
@@ -60,10 +61,12 @@ class RunRecord:
         print("\n----- timings (ms) -----")
         for label, ms in self.data["timings_ms"].items():
             print(f"{label:>24}  {ms}")
-        if tokens := self.data.get("gemini_tokens"):
+        for key, tokens in self.data.items():
+            if not key.endswith("_tokens"):
+                continue
             by_type = ", ".join(f"{k} {v}" for k, v in tokens["prompt_by_type"].items())
             print(
-                f"\nGemini tokens: prompt {tokens['prompt']} ({by_type}), "
-                f"reply {tokens['reply']}, thinking {tokens['thinking']}"
+                f"\n{key.removesuffix('_tokens')} tokens: prompt {tokens['prompt']} "
+                f"({by_type}), reply {tokens['reply']}, thinking {tokens['thinking']}"
             )
-        print(f"\nSaved to {self.dir.relative_to(HERE)}")
+        print(f"\nSaved to {self.dir.relative_to(self.base)}")

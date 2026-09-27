@@ -5,11 +5,14 @@ Every trigger is checked once per 80 ms microphone frame, so any mix of them can
 import select
 import sys
 import time
+from pathlib import Path
 
 import numpy as np
 
 from audio import FRAME, RATE, Microphone, level_dbfs
-from settings import HERE
+
+HERE = Path(__file__).parent
+
 
 FRAME_SECONDS = FRAME / RATE
 

@@ -13,10 +13,9 @@ from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 
 import argos
-import gemini
-import speech
-from record import RunRecord
-from settings import render_prompt
+from beaver.core import gemini, speech
+from beaver.core.record import RunRecord
+from beaver.core.settings import render_prompt
 
 OFFICIAL = {"en": ["en"], "fr": ["fr"], "both": ["en", "fr"]}
 NAMES = {"en": "English", "fr": "French"}

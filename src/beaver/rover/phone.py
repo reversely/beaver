@@ -22,7 +22,8 @@ from urllib.parse import parse_qs, urlsplit
 
 import segno
 
-from settings import HERE
+HERE = Path(__file__).parent
+
 
 PAGE = HERE / "phone"
 # Path -> (file in PAGE, content type, needs the token)

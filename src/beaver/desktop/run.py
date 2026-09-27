@@ -13,10 +13,11 @@ from dotenv import load_dotenv
 
 import bilingual
 import devices
-import gemini
-import speech
-from record import RunRecord
-from settings import HERE, load_config, render_prompt
+from beaver.core import gemini, speech
+from beaver.core.record import RunRecord
+from beaver.core.settings import load_config, render_prompt
+
+HERE = Path(__file__).parent
 
 
 def speak(config, record, text):

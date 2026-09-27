@@ -6,7 +6,7 @@ import time
 from google import genai
 from google.genai import errors, types
 
-from record import RunRecord
+from beaver.core.record import RunRecord
 
 
 def _part(attachment):
@@ -76,7 +76,7 @@ def ask(
         media_resolution=resolution,
         response_mime_type="application/json" if schema else None,
         response_json_schema=schema,
-        # The experiment declares no tools, so the SDK's automatic tool calling stays off.
+        # Beaver declares no tools, so the SDK's automatic tool calling stays off.
         automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
     )
     record.sent(

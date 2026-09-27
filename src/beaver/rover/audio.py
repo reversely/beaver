@@ -10,7 +10,7 @@ import numpy as np
 import sounddevice as sd
 from scipy import signal
 
-from record import RunRecord
+from beaver.core.record import RunRecord
 
 RATE = 16000
 # 80 ms at 16 kHz: the frame size openWakeWord expects.

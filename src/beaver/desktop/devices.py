@@ -6,7 +6,7 @@ import wave
 
 import numpy as np
 
-from record import RunRecord
+from beaver.core.record import RunRecord
 
 
 def _device(value):

@@ -12,9 +12,10 @@ import time
 import urllib.request
 import zipfile
 from collections import OrderedDict
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
-from settings import HERE
+HERE = Path(__file__).parent
+
 
 INDEX_URL = (
     "https://raw.githubusercontent.com/argosopentech/argospm-index/main/index.json"

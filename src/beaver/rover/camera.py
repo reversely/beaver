@@ -2,8 +2,9 @@
 
 import io
 import time
+from pathlib import Path
 
-from settings import HERE
+HERE = Path(__file__).parent
 
 
 class Camera:

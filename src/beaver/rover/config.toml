@@ -120,7 +120,8 @@ keyfile = ""
 include_image = true
 
 [prompts]
-# Files in prompts/, one per role; copied unchanged from experiment 001.
+# Prompt files per role; each is looked up in this app's prompts/ folder, then in
+# src/beaver/core/prompts/, where the shared system, look, text, and typed-question prompts live.
 system = "system.md"
 text = "text.md"
 look = "look.md"
@@ -130,6 +131,8 @@ typed_question = "typed_question.md"
 guide_name = "Beaver"
 answer_language = "English"
 max_sentences = 3
+# The shared system prompt keeps each sentence to one idea under this many words.
+max_words = 20
 question = "Why does Canada have two official languages?"
 
 [output]

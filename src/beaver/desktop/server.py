@@ -21,8 +21,10 @@ from pathlib import Path
 import bilingual
 import devices
 import notebooks
-from record import RunRecord
-from settings import HERE, render_prompt
+from beaver.core.record import RunRecord
+from beaver.core.settings import render_prompt
+
+HERE = Path(__file__).parent
 
 UI = HERE / "ui"
 # Settings changed on the page; gitignored, applied over config.toml at startup.
