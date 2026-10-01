@@ -29,6 +29,8 @@ function showSettings(settings) {
     const [section, key] = settingPath(input);
     input.checked = Boolean(settings[section][key]);
   });
+  // live-session.js shows the session link when the provider is Cloudflare.
+  document.dispatchEvent(new CustomEvent("settings", { detail: settings }));
 }
 
 async function saveSetting(section, key, value) {

@@ -9,6 +9,7 @@ import shutil
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -56,6 +57,8 @@ class FakeAgent(BaseHTTPRequestHandler):
                 json.dumps({"translations": translations, "ms": 1}).encode(),
                 "application/json",
             )
+        elif action == "publish":
+            self._send(b'{"turns": 1}', "application/json")
         elif action == "speak":
             self._send(b"ID3fake", "audio/mpeg")
 
@@ -107,7 +110,7 @@ class CloudflareProvider(unittest.TestCase):
         # The question and every sentence to speak are guarded. The translate request carries the
         # model's own answer before the reply guard, as the Gemini path does: that text came from
         # the agent, so it shows the agent nothing new.
-        bodies = {action: [] for action in ("ask", "translate", "speak")}
+        bodies = {action: [] for action in ("ask", "translate", "speak", "publish")}
         for _, _, action, body in FakeAgent.calls:
             bodies[action].append(body)
         self.assertNotIn("0142", json.dumps(bodies["ask"] + bodies["speak"]))
@@ -144,6 +147,48 @@ class CloudflareProvider(unittest.TestCase):
             body["lang"] for _, _, action, body in FakeAgent.calls if action == "speak"
         }
         self.assertEqual(spoken, {"en"})
+
+    def published(self):
+        """The turn the server published in the background, waiting up to two seconds."""
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            bodies = [b for _, _, action, b in FakeAgent.calls if action == "publish"]
+            if bodies:
+                return bodies[0]
+            time.sleep(0.02)
+        self.fail("no turn was published")
+
+    def test_the_published_turn_holds_guarded_text_only(self):
+        self.turn("my phone number is 613 555 0142, what is poutine?")
+        turn = self.published()
+        self.assertNotIn("0142", json.dumps(turn))
+        self.assertEqual(
+            turn["question"], "my phone number is a phone number, what is poutine?"
+        )
+        self.assertEqual(turn["visitor"], {"name": "English", "code": "en"})
+        self.assertEqual(
+            [(s["group"], s["code"]) for s in turn["sentences"]],
+            [(0, "en"), (0, "fr"), (1, "en"), (1, "fr")],
+        )
+
+    def test_viewer_key_matches_the_worker(self):
+        # agent/test/turns.test.ts asserts the same key for the same inputs.
+        key = cloudflare.viewer_key("secret", "desktop")
+        self.assertEqual(len(key), 32)
+        self.assertNotEqual(key, cloudflare.viewer_key("secret", "other"))
+        with mock.patch.dict(os.environ, {"BEAVER_AGENT_TOKEN": "secret"}):
+            link = cloudflare.viewer_link(self.config)
+        self.assertTrue(link.endswith(f"/session.html?s=desktop&key={key}"))
+        self.assertNotIn("secret", link)
+
+    def test_session_card_needs_cloudflare_and_a_token(self):
+        with mock.patch.dict(os.environ, {"BEAVER_AGENT_TOKEN": "secret"}):
+            self.assertIn("qr_svg", server._session_state(self.config))
+            self.config["provider"]["name"] = "gemini"
+            self.assertEqual(server._session_state(self.config), {"link": None})
+        self.config["provider"]["name"] = "cloudflare"
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertIn("note", server._session_state(self.config))
 
     def test_missing_token_stops_before_any_request(self):
         with mock.patch.dict(os.environ, {}, clear=True), self.assertRaises(SystemExit):

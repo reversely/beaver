@@ -1,0 +1,43 @@
+/* The live session viewer (#61), in the desktop app's night theme tokens (ui/style.css). */
+:root {
+  --field: #07110f;
+  --surface: #0e1715;
+  --hairline: rgba(255, 255, 255, 0.1);
+  --ink: #f4efe6;
+  --ink-2: #cfc6b8;
+  --ink-3: #a39a8c;
+  --accent-text: #e3a86f;
+  --error: #f0907c;
+  --font: "Inria Sans", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--field);
+  color: var(--ink);
+  font: 17px/1.5 var(--font);
+}
+.page {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 24px 16px calc(32px + env(safe-area-inset-bottom));
+}
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+h1 { margin: 0; font-size: 1.75rem; color: var(--accent-text); }
+.status { margin: 0; font-size: 0.875rem; color: var(--ink-3); }
+.status.error { color: var(--error); }
+.empty { color: var(--ink-2); }
+.turns { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+.turn {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.question { margin: 0 0 12px; font-weight: 700; }
+.group { margin: 0; padding: 8px 0; border-top: 1px solid var(--hairline); }
+.line { display: grid; grid-template-columns: 2.5rem 1fr; gap: 8px; margin: 0; }
+.code { color: var(--ink-3); font-size: 0.8125rem; text-transform: uppercase; padding-top: 2px; }
+.line + .line .text { color: var(--ink-2); }

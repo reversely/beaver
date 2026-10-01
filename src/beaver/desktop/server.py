@@ -20,6 +20,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import bilingual
+import cloudflare
 import devices
 import notebooks
 import provider
@@ -110,6 +111,8 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
         image = _image(record, payload)
         result = guard_answer(bilingual.answer(config, record, question, image), record)
         record.mark("text_ready", start)
+        if provider.is_cloudflare(config):
+            _publish_in_background(config, record, result)
         yield {
             "type": "question",
             "question": result["question"],
@@ -165,6 +168,39 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
         message = str(error) or type(error).__name__
         record.finish(error=f"{type(error).__name__}: {message}")
         yield {"type": "error", "message": message}
+
+
+def _publish_in_background(config, record, result):
+    """Show the guarded turn on every viewer of the session (#61) without delaying the first
+    audio. A failure is noted in the run record; the turn still plays on this laptop."""
+
+    def run():
+        try:
+            cloudflare.publish(config, result)
+        except (SystemExit, Exception) as error:  # noqa: BLE001 -- viewers are optional
+            record.data["publish_error"] = str(error)
+
+    threading.Thread(target=run, daemon=True).start()
+
+
+def _session_state(config: dict) -> dict:
+    """The live session's viewer link and its QR code, when the Cloudflare provider is on."""
+    if not provider.is_cloudflare(config):
+        return {"link": None}
+    link = cloudflare.viewer_link(config)
+    if link is None:
+        return {
+            "link": None,
+            "note": "Set BEAVER_AGENT_TOKEN in .env to share the session",
+        }
+    import segno
+
+    return {
+        "link": link,
+        "qr_svg": segno.make(link, error="m").svg_inline(
+            scale=3, border=4, dark="#2b1a14", light="#fffaf2"
+        ),
+    }
 
 
 def _question(config, record, payload, transcribe):
@@ -304,6 +340,8 @@ def make_handler(app: App):
                     self._json(HTTPStatus.OK, found[0])
                 else:
                     self.send_error(HTTPStatus.NOT_FOUND)
+            elif path == "/api/session":
+                self._json(HTTPStatus.OK, _session_state(app.snapshot()))
             elif path == "/api/rover":
                 self._rover(rover_phone.status)
             elif path.startswith("/runs/"):

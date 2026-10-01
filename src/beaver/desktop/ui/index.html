@@ -179,6 +179,15 @@
         <p class="status" id="status" role="status"></p>
       </section>
 
+      <section class="session card" id="session" aria-labelledby="session-heading" hidden>
+        <div class="session-qr" id="session-qr"></div>
+        <div class="session-text">
+          <h2 id="session-heading">Follow on another screen</h2>
+          <p class="session-note" id="session-note">Scan the code to see each question and answer as it happens.</p>
+          <a id="session-link" target="_blank" rel="noreferrer">Open the session page</a>
+        </div>
+      </section>
+
       <section class="thread" id="thread" aria-live="polite">
         <p class="empty thread-empty" id="thread-empty" data-place-prompt>Ask about anything you see around you</p>
       </section>
@@ -189,6 +198,7 @@
   <script type="module" src="scene.js"></script>
   <script type="module" src="app.js"></script>
   <script type="module" src="rover.js"></script>
+  <script type="module" src="live-session.js"></script>
   <script type="module" src="/nav.js"></script>
 </body>
 </html>

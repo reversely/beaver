@@ -6,13 +6,51 @@ Worker refuses any request without the shared token in BEAVER_AGENT_TOKEN.
 """
 
 import base64
+import hashlib
+import hmac
 import json
 import os
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from beaver.core.record import RunRecord
+
+
+def viewer_key(token: str, session: str) -> str:
+    """The key in a viewer link: HMAC-SHA256 of the session name under the shared token, as 32 hex
+    characters. The Worker derives the same key (agent/src/auth.ts) and opens a read-only
+    connection to that session only."""
+    return hmac.new(token.encode(), session.encode(), hashlib.sha256).hexdigest()[:32]
+
+
+def viewer_link(config: dict) -> str | None:
+    """The live session page for other screens (#61), or None without a token."""
+    token = os.environ.get("BEAVER_AGENT_TOKEN")
+    if not token:
+        return None
+    settings = config["cloudflare"]
+    query = urllib.parse.urlencode(
+        {"s": settings["session"], "key": viewer_key(token, settings["session"])}
+    )
+    return f"{settings['url'].rstrip('/')}/session.html?{query}"
+
+
+def publish(config: dict, result: dict) -> None:
+    """Send one guarded turn to the session's agent, which shows it on every viewer (#61). Call
+    only with the result of server.guard_answer, so the agent holds checked text alone."""
+    sentences = [
+        {"group": g, "code": code, "text": text}
+        for g, group in enumerate(result["groups"])
+        for code, text in group
+    ]
+    visitor = {"name": result["visitor"]["name"], "code": result["visitor"]["code"]}
+    _post(
+        config,
+        "publish",
+        {"question": result["question"], "visitor": visitor, "sentences": sentences},
+    )
 
 
 def _url(config: dict, action: str) -> str:

@@ -3,9 +3,13 @@
 //   POST /agents/beaver-guide/<session>/ask        rendered prompts and parts -> reply text
 //   POST /agents/beaver-guide/<session>/translate  sentences and target codes -> translations
 //   POST /agents/beaver-guide/<session>/speak      one guarded sentence -> MP3
+//   POST /agents/beaver-guide/<session>/publish    one guarded turn -> the session's state
+// Viewers (session.html) open a read-only WebSocket on /agents/beaver-guide/<session>?key=<key>
+// and receive the state each time it changes.
 
-import { Agent, routeAgentRequest } from "agents";
-import { hasToken } from "./auth.ts";
+import { Agent, type Connection, routeAgentRequest } from "agents";
+import { hasToken, sameText, viewerKey } from "./auth.ts";
+import { addTurn, checkTurn, type Turn } from "./turns.ts";
 import {
   type AskRequest,
   audioBytes,
@@ -41,7 +45,20 @@ async function readJson<T>(request: Request): Promise<T> {
   return JSON.parse(text) as T;
 }
 
-export class BeaverGuide extends Agent<Env> {
+export interface State {
+  turns: Turn[];
+}
+
+export class BeaverGuide extends Agent<Env, State> {
+  initialState: State = { turns: [] };
+
+  /** Every WebSocket client is a viewer: it receives state and can never change it. */
+  onConnect(connection: Connection) {
+    this.setConnectionReadonly(connection, true);
+  }
+
+  onMessage() {}
+
   async onRequest(request: Request): Promise<Response> {
     if (request.method !== "POST") return json({ error: "Use POST" }, 405);
     const action = new URL(request.url).pathname.split("/").pop();
@@ -49,9 +66,15 @@ export class BeaverGuide extends Agent<Env> {
       if (action === "ask") return await this.ask(await readJson<AskRequest>(request));
       if (action === "translate") return await this.translate(await readJson(request));
       if (action === "speak") return await this.speak(await readJson(request));
+      if (action === "publish") return this.publish(await readJson(request));
       return json({ error: `Unknown action ${action}` }, 404);
     } catch (error) {
-      const status = error instanceof RangeError ? 413 : error instanceof SyntaxError ? 400 : 502;
+      const status =
+        error instanceof RangeError
+          ? 413
+          : error instanceof SyntaxError || error instanceof TypeError
+            ? 400
+            : 502;
       // The message names the failure; it never carries question or answer text.
       return json({ error: error instanceof Error ? error.message : String(error) }, status);
     }
@@ -84,6 +107,12 @@ export class BeaverGuide extends Agent<Env> {
     });
   }
 
+  publish(body: unknown): Response {
+    const turn = checkTurn(body);
+    this.setState({ ...this.state, turns: addTurn(this.state.turns, turn) });
+    return json({ turns: this.state.turns.length });
+  }
+
   async speak(body: { text: string; lang: string }): Promise<Response> {
     if (!MELOTTS_LANGUAGES.has(body.lang)) {
       return json({ error: `MeloTTS does not speak ${body.lang}` }, 422);
@@ -100,9 +129,20 @@ export class BeaverGuide extends Agent<Env> {
   }
 }
 
+/** A WebSocket request whose `key` matches its session's viewer key. */
+async function isViewer(request: Request, env: Env): Promise<boolean> {
+  if (!env.BEAVER_AGENT_TOKEN) return false;
+  const url = new URL(request.url);
+  const session = url.pathname.split("/")[3];
+  const key = url.searchParams.get("key") ?? "";
+  return Boolean(session) && sameText(key, await viewerKey(env.BEAVER_AGENT_TOKEN, session));
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    if (!hasToken(request, env.BEAVER_AGENT_TOKEN)) {
+    if (request.headers.get("Upgrade") === "websocket") {
+      if (!(await isViewer(request, env))) return json({ error: "Wrong viewer key" }, 401);
+    } else if (!hasToken(request, env.BEAVER_AGENT_TOKEN)) {
       return json({ error: "Missing or wrong token" }, 401);
     }
     return (await routeAgentRequest(request, env)) ?? json({ error: "Not found" }, 404);

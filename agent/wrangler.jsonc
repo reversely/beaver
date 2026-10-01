@@ -6,6 +6,8 @@
   "compatibility_date": "2026-09-27",
   "compatibility_flags": ["nodejs_compat"],
   "ai": { "binding": "AI" },
+  // session.html, the live session's viewer page (#61); static files skip the Worker.
+  "assets": { "directory": "./public" },
   "durable_objects": {
     "bindings": [{ "name": "BeaverGuide", "class_name": "BeaverGuide" }]
   },
