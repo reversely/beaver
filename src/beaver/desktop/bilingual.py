@@ -7,6 +7,7 @@ Either way the result is a list of sentence groups, each group holding one sente
 """
 
 import json
+import re
 
 import argos
 import cloudflare
@@ -26,12 +27,54 @@ VISITOR_FIELDS = {
         "type": "string",
         "description": "The visitor's question, word for word, in their language.",
     },
-    "visitor_language_name": {"type": "string"},
+    "visitor_language_name": {
+        "type": "string",
+        "description": "The English name of the language the visitor used.",
+    },
     "visitor_language_code": {
         "type": "string",
         "description": "BCP 47 tag with the script where it matters, such as ar, es, zh-Hant, zh-Hans",
     },
 }
+
+
+ANSWER_FIELD = {
+    "type": "string",
+    "description": "Only the reply to the question; never mention the visitor's language.",
+}
+
+# A sentence that addresses the visitor, names their language, and gives its code or "ISO" is a
+# report of the language, which the schema asks for in its own fields; some models (Workers AI
+# Llama 4 Scout, #68) also write it into the answer. Fixed words, so model output never sets the rule.
+ADDRESSES_VISITOR = ("visitor", "visiteur", "you ", "you'", "vous")
+
+
+def names_visitor_language(sentence: str, name: str, code: str) -> bool:
+    """True for a sentence such as "The visitor spoke Spanish, es." or "Le visiteur parlait
+    anglais, code en." that only reports the visitor's language. French names the language in
+    French, so a French sentence counts by its verb or "langue" in place of the English name."""
+    lower = sentence.lower()
+    if not any(word in lower for word in ADDRESSES_VISITOR):
+        return False
+    named = bool(name) and name.lower() in lower
+    french = ("visiteur" in lower or "vous" in lower) and (
+        "parl" in lower or "langue" in lower
+    )
+    if not (named or french):
+        return False
+    return (
+        "iso" in lower
+        or re.search(rf"(?<![a-z]){re.escape(code.lower())}(?![a-z])", lower)
+        is not None
+    )
+
+
+def drop_language_reports(sentences: list[str], visitor: dict) -> list[str]:
+    return [
+        s
+        for s in sentences
+        if not names_visitor_language(s, visitor["name"], visitor["code"])
+    ]
 
 
 def official_codes(config: dict) -> list[str]:
@@ -76,7 +119,7 @@ def _answer_then_translate(config, record, system, question, image, spoken):
     source = official_codes(config)[0]
     schema = {
         "type": "object",
-        "properties": {**VISITOR_FIELDS, "answer": {"type": "string"}},
+        "properties": {**VISITOR_FIELDS, "answer": ANSWER_FIELD},
         "required": [*VISITOR_FIELDS, "answer"],
     }
     instruction = _instruction(
@@ -99,7 +142,7 @@ def _answer_then_translate(config, record, system, question, image, spoken):
         )
     )
     visitor = _visitor(reply)
-    sentences = split_sentences(reply["answer"])
+    sentences = drop_language_reports(split_sentences(reply["answer"]), visitor)
     codes = ordered_codes(config, visitor["code"])
     names = {**NAMES, visitor["code"]: visitor["name"]}
     translations = {source: sentences}
@@ -135,6 +178,7 @@ def _answer_inline(config, record, system, question, image, spoken):
             **VISITOR_FIELDS,
             "sentences": {
                 "type": "array",
+                "description": "Only the reply to the question; never mention the visitor's language.",
                 "items": {
                     "type": "object",
                     "properties": {k: {"type": "string"} for k in keys},
@@ -167,7 +211,13 @@ def _answer_inline(config, record, system, question, image, spoken):
     )
     visitor = _visitor(reply)
     codes = ordered_codes(config, visitor["code"])
-    rows = reply["sentences"]
+    rows = [
+        row
+        for row in reply["sentences"]
+        if not names_visitor_language(
+            row.get(official[0], ""), visitor["name"], visitor["code"]
+        )
+    ]
     translations = {c: [row[c] for row in rows] for c in official}
     translations[visitor["code"]] = [row["visitor"] for row in rows]
     return _result(reply, visitor, codes, translations, len(rows), record)

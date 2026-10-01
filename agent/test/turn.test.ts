@@ -114,3 +114,28 @@ test("joined WAV clips keep one header and every sample", () => {
   assert.equal(view.getUint32(40, true), 6);
   assert.deepEqual([...new Int16Array(joined.buffer.slice(44))], [1, 2, 3]);
 });
+
+test("a sentence reporting the visitor's language is recognised as the Python rule does", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { namesVisitorLanguage } = await import("../src/turn.ts");
+  const cases = JSON.parse(readFileSync(new URL("../../src/beaver/desktop/tests/language_report_cases.json", import.meta.url), "utf8"));
+  for (const c of cases) assert.equal(namesVisitorLanguage(c.sentence, c.name, c.code), c.drop, c.sentence);
+});
+
+test("a translate-mode turn drops the model's language report before translating", async () => {
+  const calls: string[] = [];
+  const run: Run = async (model, input) => {
+    if (model === "m2m100") {
+      calls.push(String(input.text));
+      return { translated_text: `[fr] ${input.text}` };
+    }
+    return { response: { question: "q", visitor_language_name: "Spanish", visitor_language_code: "es", answer: "The visitor spoke Spanish, es. Ottawa is the capital." } };
+  };
+  const result = await answerTurn(run, config, {
+    question: "q",
+    languages: { official: "en", include_visitor_language: true, order: "official_first" },
+    mode: "translate",
+  });
+  assert.deepEqual(result.groups, [[["en", "Ottawa is the capital."], ["es", "[fr] Ottawa is the capital."]]]);
+  assert.deepEqual(calls, ["Ottawa is the capital."]);
+});

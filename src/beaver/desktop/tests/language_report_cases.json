@@ -1,0 +1,68 @@
+[
+ {
+  "sentence": "The visitor spoke Spanish, es.",
+  "name": "Spanish",
+  "code": "es",
+  "drop": true
+ },
+ {
+  "sentence": "The language you used is English, en.",
+  "name": "English",
+  "code": "en",
+  "drop": true
+ },
+ {
+  "sentence": "The visitor spoke in French, also known as langue française, with the ISO 639-1 code 'fr'.",
+  "name": "French",
+  "code": "fr",
+  "drop": true
+ },
+ {
+  "sentence": "Le visiteur parlait anglais, code en.",
+  "name": "English",
+  "code": "en",
+  "drop": true
+ },
+ {
+  "sentence": "Le visiteur a parlé en français, avec le code ISO 639-1 fr.",
+  "name": "French",
+  "code": "fr",
+  "drop": true
+ },
+ {
+  "sentence": "The visitor spoke Breton, a Celtic language from Brittany, with ISO 639-1 code br.",
+  "name": "Breton",
+  "code": "br",
+  "drop": true
+ },
+ {
+  "sentence": "Canada has two official languages, English and French.",
+  "name": "English",
+  "code": "en",
+  "drop": false
+ },
+ {
+  "sentence": "You can say bonjour in French.",
+  "name": "French",
+  "code": "fr",
+  "drop": false
+ },
+ {
+  "sentence": "The capital of Canada is Ottawa.",
+  "name": "English",
+  "code": "en",
+  "drop": false
+ },
+ {
+  "sentence": "Spanish speakers often visit Quebec, es una provincia.",
+  "name": "Spanish",
+  "code": "es",
+  "drop": false
+ },
+ {
+  "sentence": "Vous pouvez dire bonjour en français.",
+  "name": "French",
+  "code": "fr",
+  "drop": false
+ }
+]

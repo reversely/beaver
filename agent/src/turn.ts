@@ -55,12 +55,30 @@ export interface TurnResult {
 
 const VISITOR_FIELDS = {
   question: { type: "string", description: "The visitor's question, word for word, in their language." },
-  visitor_language_name: { type: "string" },
+  visitor_language_name: { type: "string", description: "The English name of the language the visitor used." },
   visitor_language_code: {
     type: "string",
     description: "BCP 47 tag with the script where it matters, such as ar, es, zh-Hant, zh-Hans",
   },
 };
+
+const ANSWER_ONLY = "Only the reply to the question; never mention the visitor's language.";
+
+// A sentence that addresses the visitor, names their language, and gives its code or "ISO" is a
+// report of the language, which the schema asks for in its own fields; Llama 4 Scout also writes
+// it into the answer (#68). Ported from bilingual.names_visitor_language; both pass
+// src/beaver/desktop/tests/language_report_cases.json. Fixed words, never model output.
+const ADDRESSES_VISITOR = ["visitor", "visiteur", "you ", "you'", "vous"];
+
+export function namesVisitorLanguage(sentence: string, name: string, code: string): boolean {
+  const lower = sentence.toLowerCase();
+  if (!ADDRESSES_VISITOR.some((w) => lower.includes(w))) return false;
+  const named = Boolean(name) && lower.includes(name.toLowerCase());
+  const french = (lower.includes("visiteur") || lower.includes("vous")) && (lower.includes("parl") || lower.includes("langue"));
+  if (!named && !french) return false;
+  const escaped = code.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return lower.includes("iso") || new RegExp(`(?<![a-z])${escaped}(?![a-z])`).test(lower);
+}
 
 function instruction(config: TurnConfig, role: "answer" | "answer_inline", image: boolean, values: object) {
   const notes = image ? [render(config.prompts.image_note, config.vars)] : [];
@@ -81,6 +99,7 @@ export async function answerTurn(run: Run, config: TurnConfig, input: TurnInput)
           ...VISITOR_FIELDS,
           sentences: {
             type: "array",
+            description: ANSWER_ONLY,
             items: {
               type: "object",
               properties: Object.fromEntries(keys.map((k) => [k, { type: "string" }])),
@@ -92,7 +111,7 @@ export async function answerTurn(run: Run, config: TurnConfig, input: TurnInput)
       }
     : {
         type: "object",
-        properties: { ...VISITOR_FIELDS, answer: { type: "string" } },
+        properties: { ...VISITOR_FIELDS, answer: { type: "string", description: ANSWER_ONLY } },
         required: [...Object.keys(VISITOR_FIELDS), "answer"],
       };
   const values = inline
@@ -133,12 +152,16 @@ export async function answerTurn(run: Run, config: TurnConfig, input: TurnInput)
   let translations: Record<string, string[]>;
   let count: number;
   if (inline) {
-    const rows: Record<string, string>[] = Array.isArray(reply.sentences) ? reply.sentences : [];
+    const rows: Record<string, string>[] = (Array.isArray(reply.sentences) ? reply.sentences : []).filter(
+      (r: Record<string, string>) => !namesVisitorLanguage(String(r[source] ?? ""), visitor.name, visitor.code),
+    );
     translations = Object.fromEntries(official.map((c) => [c, rows.map((r) => String(r[c] ?? ""))]));
     translations[visitor.code] ??= rows.map((r) => String(r.visitor ?? ""));
     count = rows.length;
   } else {
-    const sentences = splitSentences(String(reply.answer ?? ""));
+    const sentences = splitSentences(String(reply.answer ?? "")).filter(
+      (s) => !namesVisitorLanguage(s, visitor.name, visitor.code),
+    );
     count = sentences.length;
     translations = { [source]: sentences };
     const others = codes.filter((c) => c !== source);
