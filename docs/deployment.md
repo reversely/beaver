@@ -48,6 +48,9 @@ Object. It deploys by hand from `agent/`, separately from the public site's `bea
 | Deploy | `cd agent && npx wrangler deploy` after `npx wrangler login` |
 | Shared token | The Worker secret `BEAVER_AGENT_TOKEN` (`npx wrangler secret put BEAVER_AGENT_TOKEN`) and the same value as `BEAVER_AGENT_TOKEN` in the repo's `.env` |
 | Viewer page | `/session.html?s=<session>&key=<key>`; the desktop app builds the link and its QR code |
+| Whisper files | The R2 bucket `beaver-models` (binding `MODELS`) holds the seven files in `agent/src/models.ts` under `onnx-community/whisper-base/`; upload each with `npx wrangler r2 object put beaver-models/onnx-community/whisper-base/<file> --file <file> --remote` |
+| App links | `cd agent && npm run link -- <session>` prints the app link and the viewer link for a session |
+| Voice client | `npm run build:client` bundles the SDK's voice client into `public/voice-client.js`; wrangler runs it before every deploy and dev run |
 | Local run | `cd agent && npx wrangler dev -c test/dev/wrangler.jsonc`, with Workers AI replaced by canned replies, since the real binding needs a login |
 
 Changing the token on one side only makes every request fail with 401, and invalidates every
