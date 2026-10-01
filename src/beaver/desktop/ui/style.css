@@ -509,7 +509,7 @@ a.nav-item, a.tag-link { text-decoration: none; }
 .session { display: flex; align-items: center; gap: 16px; padding: 16px; margin-top: 12px; }
 .session h2 { margin: 0 0 4px; font-size: 17px; }
 .session-note { margin: 0 0 8px; color: var(--ink-2); font-size: 15px; }
-.session a { color: var(--accent-text); font-size: 15px; }
+.session a { display: inline-block; padding: 4px 0; color: var(--accent-text); font-size: 15px; }
 .session-qr svg { display: block; max-width: 100%; height: auto; border-radius: 8px; shape-rendering: crispEdges; }
 @media (max-width: 480px) {
   .session { flex-direction: column; align-items: flex-start; }
