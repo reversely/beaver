@@ -514,3 +514,25 @@ a.nav-item, a.tag-link { text-decoration: none; }
 @media (max-width: 480px) {
   .session { flex-direction: column; align-items: flex-start; }
 }
+
+/* Words to review (#63): each due word with its French and the visitor's form, and two actions. */
+.review { padding: 16px; margin-bottom: 16px; }
+.review h2 { margin: 0 0 8px; font-size: 17px; }
+.review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.review-word {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 16px;
+  padding: 10px 0; border-top: 1px solid var(--hairline);
+}
+.review-words { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 18px; overflow-wrap: anywhere; }
+.review-fr, .review-visitor { color: var(--ink-2); }
+.review-meaning { margin: 0; grid-column: 1; color: var(--ink-3); font-size: 15px; }
+.review-actions { grid-column: 2; grid-row: 1 / span 2; display: flex; gap: 8px; }
+.review-forgot {
+  font: inherit; font-size: 15px; color: var(--ink); background: var(--tint);
+  border: 0; border-radius: 999px; padding: 0 18px; min-height: 48px; cursor: pointer;
+}
+.review-forgot:hover { background: var(--tint-strong); }
+@media (max-width: 480px) {
+  .review-word { grid-template-columns: minmax(0, 1fr); }
+  .review-actions { grid-column: 1; grid-row: auto; }
+}

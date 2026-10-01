@@ -6,6 +6,7 @@
 //   POST /agents/beaver-guide/<session>/publish    one guarded turn -> the session's state, and
 //                                                  with `notebook`, a queued filing (#62)
 //   GET  /agents/beaver-guide/<session>/notebooks[/<id>]  the session's notebooks (#62)
+//   POST /agents/beaver-guide/<session>/review     a due word remembered or forgotten (#63)
 // Viewers (session.html) open a read-only WebSocket on /agents/beaver-guide/<session>?key=<key>
 // and receive the state each time it changes.
 
@@ -18,6 +19,13 @@ import {
   newId,
   type NotebookRow,
 } from "./notebooks.ts";
+import {
+  addDue,
+  type DueWord,
+  firstInterval,
+  nextInterval,
+  removeDue,
+} from "./reviews.ts";
 import { addTurn, checkTurn, type Turn } from "./turns.ts";
 import {
   type AskRequest,
@@ -56,10 +64,17 @@ async function readJson<T>(request: Request): Promise<T> {
 
 export interface State {
   turns: Turn[];
+  // Notebook words whose review has fallen due (#63), shown on every screen.
+  reviews_due: DueWord[];
+}
+
+interface ReviewRow extends DueWord {
+  interval_seconds: number;
+  first_seconds: number;
 }
 
 export class BeaverGuide extends Agent<Env, State> {
-  initialState: State = { turns: [] };
+  initialState: State = { turns: [], reviews_due: [] };
 
   /** Every WebSocket client is a viewer: it receives state and can never change it. */
   onConnect(connection: Connection) {
@@ -75,6 +90,9 @@ export class BeaverGuide extends Agent<Env, State> {
     this.sql`CREATE TABLE IF NOT EXISTS entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT, notebook_id TEXT, at TEXT, question TEXT,
       visitor TEXT, answer TEXT, vocabulary TEXT, concepts TEXT, moments TEXT)`;
+    this.sql`CREATE TABLE IF NOT EXISTS reviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, notebook_id TEXT, en TEXT, fr TEXT, visitor TEXT,
+      meaning TEXT, interval_seconds INTEGER, first_seconds INTEGER)`;
   }
 
   async onRequest(request: Request): Promise<Response> {
@@ -90,6 +108,7 @@ export class BeaverGuide extends Agent<Env, State> {
       if (action === "translate") return await this.translate(await readJson(request));
       if (action === "speak") return await this.speak(await readJson(request));
       if (action === "publish") return await this.publish(await readJson(request));
+      if (action === "review") return await this.review(await readJson(request));
       return json({ error: `Unknown action ${action}` }, 404);
     } catch (error) {
       const status =
@@ -167,7 +186,38 @@ export class BeaverGuide extends Agent<Env, State> {
       moments) VALUES (${id}, ${turn.at}, ${turn.question}, ${JSON.stringify(turn.visitor)},
       ${filing.answer.slice(0, 2000)}, ${JSON.stringify(result.vocabulary)},
       ${JSON.stringify(result.concepts)}, ${JSON.stringify(result.moments)})`;
+    const first = firstInterval(filing.review_first_seconds);
+    for (const word of result.vocabulary) {
+      const [row] = this.sql<{ id: number }>`INSERT INTO reviews (notebook_id, en, fr, visitor,
+        meaning, interval_seconds, first_seconds) VALUES (${id}, ${word.en}, ${word.fr},
+        ${word.visitor}, ${word.meaning}, ${first}, ${first}) RETURNING id`;
+      await this.schedule(first, "reviewDue", { id: row.id });
+    }
     return id;
+  }
+
+  /** The scheduler's callback when a word's review falls due (#63). */
+  async reviewDue({ id }: { id: number }) {
+    const [row] = this.sql<ReviewRow>`SELECT * FROM reviews WHERE id = ${id}`;
+    if (!row) return;
+    const word = { id: row.id, en: row.en, fr: row.fr, visitor: row.visitor, meaning: row.meaning };
+    this.setState({ ...this.state, reviews_due: addDue(this.state.reviews_due ?? [], word) });
+  }
+
+  /** A due word marked remembered or forgotten: schedule its next review and clear it. */
+  async review(body: { id?: unknown; remembered?: unknown }): Promise<Response> {
+    const due = this.state.reviews_due ?? [];
+    if (!Number.isInteger(body.id) || typeof body.remembered !== "boolean") {
+      throw new TypeError("A review needs a word id and remembered true or false");
+    }
+    const id = body.id as number;
+    const [row] = this.sql<ReviewRow>`SELECT * FROM reviews WHERE id = ${id}`;
+    if (!row || !due.some((w) => w.id === id)) return json({ error: "That word is not due" }, 404);
+    const interval = nextInterval(row.interval_seconds, body.remembered, row.first_seconds);
+    this.sql`UPDATE reviews SET interval_seconds = ${interval} WHERE id = ${id}`;
+    await this.schedule(interval, "reviewDue", { id });
+    this.setState({ ...this.state, reviews_due: removeDue(due, id) });
+    return json({ next_review_seconds: interval });
   }
 
   notebookSummaries(): NotebookRow[] {

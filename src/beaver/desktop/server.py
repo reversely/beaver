@@ -204,6 +204,7 @@ def _session_state(config: dict) -> dict:
 
     return {
         "link": link,
+        "socket": cloudflare.socket_url(link),
         "qr_svg": segno.make(link, error="m").svg_inline(
             scale=3, border=4, dark="#2b1a14", light="#fffaf2"
         ),
@@ -415,12 +416,35 @@ def make_handler(app: App):
                     },
                 )
 
+        def _review(self):
+            """A due word marked on this laptop's page (#63); the agent checks the id."""
+            if not self._local():
+                self._json(HTTPStatus.FORBIDDEN, {"error": "reviews are local only"})
+                return
+            try:
+                payload = self._body()
+                word_id, remembered = payload["id"], payload["remembered"]
+                if type(word_id) is not int or type(remembered) is not bool:
+                    raise ValueError(
+                        "A review needs a word id and remembered true or false"
+                    )
+                self._json(
+                    HTTPStatus.OK, cloudflare.review(app.config, word_id, remembered)
+                )
+            except (ValueError, KeyError, TypeError) as error:
+                self._json(HTTPStatus.BAD_REQUEST, {"error": str(error)})
+            except SystemExit as error:
+                self._json(HTTPStatus.BAD_GATEWAY, {"error": str(error)})
+
         def do_POST(self):
             if self.path == "/api/rover/start":
                 self._rover(rover_phone.start)
                 return
             if self.path == "/api/rover/stop":
                 self._rover(rover_phone.stop)
+                return
+            if self.path == "/api/review":
+                self._review()
                 return
             try:
                 payload = self._body()

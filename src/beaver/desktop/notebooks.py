@@ -167,6 +167,7 @@ def filing_request(config: dict, result: dict) -> dict:
         "max_vocabulary": settings["max_vocabulary"],
         "max_concepts": settings["max_concepts"],
         "answer": _answer(result),
+        "review_first_seconds": config["review"]["first_interval_seconds"],
     }
 
 

@@ -11,6 +11,8 @@ export interface FilingRequest {
   max_concepts: number;
   // The answer in the first official language, which the notebook entry keeps.
   answer: string;
+  // Seconds before a filed word's first review (#63).
+  review_first_seconds?: number;
 }
 
 export interface NotebookRow {

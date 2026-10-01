@@ -7,6 +7,8 @@ const key = params.get("key") ?? "";
 const statusLine = document.getElementById("status");
 const list = document.getElementById("turns");
 const empty = document.getElementById("empty");
+const due = document.getElementById("due");
+const dueList = document.getElementById("due-list");
 
 function setStatus(text, isError = false) {
   statusLine.textContent = text;
@@ -41,7 +43,19 @@ function turnItem(turn) {
   return item;
 }
 
+// Words whose review has fallen due (#63). The laptop marks them; this page only lists them.
+function dueItem(word) {
+  const item = element("li", "due-word");
+  const french = element("span", "due-fr", word.fr);
+  french.lang = "fr";
+  item.append(element("span", "due-en", word.en), french, element("span", "due-meaning", word.meaning));
+  return item;
+}
+
 export function render(state) {
+  const words = state?.reviews_due ?? [];
+  due.hidden = words.length === 0;
+  dueList.replaceChildren(...words.map(dueItem));
   const turns = state?.turns ?? [];
   empty.hidden = turns.length > 0;
   list.replaceChildren(...turns.slice().reverse().map(turnItem));

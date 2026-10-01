@@ -59,6 +59,29 @@ def publish(config: dict, result: dict, filing: dict | None = None) -> None:
     )
 
 
+def review(config: dict, word_id: int, remembered: bool) -> dict:
+    """Mark a due word remembered or forgotten; the agent schedules its next review (#63)."""
+    body, _ = _post(config, "review", {"id": word_id, "remembered": remembered})
+    return json.loads(body)
+
+
+def socket_url(link: str) -> str:
+    """The viewer WebSocket for a viewer link, so this app's page can follow the session's state."""
+    parts = urllib.parse.urlsplit(link)
+    query = urllib.parse.parse_qs(parts.query)
+    scheme = "wss" if parts.scheme == "https" else "ws"
+    path = f"/agents/beaver-guide/{urllib.parse.quote(query['s'][0], safe='')}"
+    return urllib.parse.urlunsplit(
+        (
+            scheme,
+            parts.netloc,
+            path,
+            urllib.parse.urlencode({"key": query["key"][0]}),
+            "",
+        )
+    )
+
+
 def notebooks(config: dict, notebook_id: str | None = None) -> tuple[int, bytes]:
     """The session's notebooks from the agent (#62): the summaries, or one notebook by id, as
     (HTTP status, JSON body)."""

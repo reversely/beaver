@@ -193,6 +193,12 @@ store = "notebooks/notebooks.json"
 max_vocabulary = 4
 max_concepts = 2
 
+[review]
+# With the Cloudflare provider, the agent schedules each filed word's first review this many
+# seconds later (#63); a remembered word then waits 2.5 times longer each time. Ten minutes shows
+# a due word within one session; a day (86400) suits real study.
+first_interval_seconds = 600
+
 [sync]
 # Pull the rover's turns from the Pi and file them into the notebooks (run.py sync, and every
 # interval while run.py serve runs). The Pi cannot open connections to the laptop, so this app

@@ -70,6 +70,8 @@ class FakeAgent(BaseHTTPRequestHandler):
             )
         elif action == "publish":
             self._send(b'{"turns": 1}', "application/json")
+        elif action == "review":
+            self._send(b'{"next_review_seconds": 1500}', "application/json")
         elif action == "speak":
             self._send(b"ID3fake", "audio/mpeg")
 
@@ -220,6 +222,49 @@ class CloudflareProvider(unittest.TestCase):
                 "/agents/beaver-guide/desktop/notebooks",
                 "/agents/beaver-guide/desktop/notebooks/nope",
             ],
+        )
+
+    def test_filing_carries_the_first_review_interval(self):
+        self.config["notebooks"]["enabled"] = True
+        self.config["review"]["first_interval_seconds"] = 120
+        with mock.patch("server.notebooks.file_exchange"):
+            self.turn("what is poutine?")
+        self.assertEqual(self.published()["notebook"]["review_first_seconds"], 120)
+
+    def test_review_route_is_local_and_checks_its_fields(self):
+        app = server.App(self.config)
+        app.config = self.config
+        local = ThreadingHTTPServer(("127.0.0.1", 0), server.make_handler(app))
+        threading.Thread(target=local.serve_forever, daemon=True).start()
+        self.addCleanup(local.server_close)
+        self.addCleanup(local.shutdown)
+        url = f"http://127.0.0.1:{local.server_address[1]}/api/review"
+
+        def post(body, headers):
+            request = urllib.request.Request(
+                url, data=json.dumps(body).encode(), headers=headers, method="POST"
+            )
+            try:
+                with urllib.request.urlopen(request) as response:
+                    return response.status, json.loads(response.read())
+            except urllib.error.HTTPError as error:
+                return error.code, None
+
+        with mock.patch.dict(os.environ, {"BEAVER_AGENT_TOKEN": TOKEN}):
+            self.assertEqual(post({"id": 1, "remembered": True}, {})[0], 403)
+            local_page = {"X-Beaver": "1"}
+            self.assertEqual(post({"id": "1", "remembered": True}, local_page)[0], 400)
+            self.assertEqual(post({"id": 1, "remembered": 1}, local_page)[0], 400)
+            status, body = post({"id": 1, "remembered": True}, local_page)
+        self.assertEqual((status, body), (200, {"next_review_seconds": 1500}))
+        reviews = [b for _, _, action, b in FakeAgent.calls if action == "review"]
+        self.assertEqual(reviews, [{"id": 1, "remembered": True}])
+
+    def test_socket_url_follows_the_viewer_link(self):
+        link = "https://beaver-agent.example.dev/session.html?s=desktop&key=abc"
+        self.assertEqual(
+            cloudflare.socket_url(link),
+            "wss://beaver-agent.example.dev/agents/beaver-guide/desktop?key=abc",
         )
 
     def test_viewer_key_matches_the_worker(self):
