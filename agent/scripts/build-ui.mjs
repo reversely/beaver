@@ -3,6 +3,7 @@
 // (wrangler.jsonc "build"); the copies are gitignored.
 //   src/beaver/desktop/ui/  ->  agent/public/app/
 //   web/nav.css, web/nav.js ->  agent/public/  (the site menu the interface loads from /)
+//   web/companion.js, web/beaver.js -> agent/public/  (Beaver in the Ask view's header, #69)
 import { cpSync, mkdirSync, rmSync } from "node:fs";
 
 const repo = new URL("../../", import.meta.url);
@@ -16,5 +17,5 @@ cpSync(new URL("src/beaver/desktop/ui/", repo), app, {
   recursive: true,
   filter: (source) => !source.includes("__pycache__"),
 });
-for (const file of ["nav.css", "nav.js"]) cpSync(new URL(`web/${file}`, repo), new URL(file, out));
+for (const file of ["nav.css", "nav.js", "companion.js", "beaver.js"]) cpSync(new URL(`web/${file}`, repo), new URL(file, out));
 console.log("Copied the interface into agent/public/app/");

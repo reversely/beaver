@@ -4,6 +4,7 @@
 import * as backend from "./backend.js";
 import { notebookHash, refreshNotebooks } from "./notebooks.js";
 import { go, start } from "./router.js";
+import { speak } from "./scene.js";
 
 const $ = (selector) => document.querySelector(selector);
 const talk = $("#talk");
@@ -450,7 +451,8 @@ class Player {
     }, { once: true });
     audio.addEventListener("ended", () => this.next());
     audio.addEventListener("error", () => this.next());
-    audio.play().catch(() => this.next());
+    // Beaver's mouth in the header follows the clip (#69).
+    speak(audio).catch(() => this.next());
   }
 }
 
