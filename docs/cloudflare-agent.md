@@ -8,9 +8,9 @@ each question taught come back for review on a schedule. It lives on the `cloudf
 Agents SDK (`agents` 0.24.0).
 
 The newcomer reaches it two ways. The Beaver page (see Beaver page) needs only a browser and a
-link: the Worker serves the desktop app's own interface and hosts the agent in one deployment. The desktop app's Settings
-panel also switches between Gemini and the agent with "Answers from: Gemini / Cloudflare"
-(`provider.name`). The rover keeps using Gemini and ElevenLabs in every case.
+link: the Worker serves the desktop app's own interface and hosts the agent in one deployment. The desktop app on the laptop
+also answers through the agent; on this branch Cloudflare is its only provider (#66), and
+`--set provider.name=gemini` still selects Gemini for comparison. The rover keeps using Gemini and ElevenLabs in every case.
 
 ## Parts
 
@@ -132,6 +132,29 @@ whole app, with no laptop server and no install.
   `[answer]`, `[notebooks]`, and `[review]` from the desktop `config.toml` (`agent/src/prompts.ts`).
   `ui/guard.js` ports `guard.py`, and `src/beaver/core/guard_cases.json` holds 26 cases both must pass.
 
+## Demo mode
+
+The demo mode shows a viewer of a demo what happened to each question: which machine handled
+each step, which model, how long it took, and exactly what text left the device. It is off by
+default. The "Show how it works" switch in Settings turns it on, `?demo=1` in a link opens the page
+with it on, and the browser remembers the choice.
+
+With the mode on, each answer carries a "How it ran" panel: a numbered list of steps, each with a
+label for where it ran (This browser, Laptop, Cloudflare Worker, Durable Object, or Workers AI), its
+duration with a bar scaled to the longest step, its facts, and, for the guard steps, the redacted
+text that was sent. The panel is built for every turn and shown only in the mode, so switching it on
+shows earlier turns too, and it adds no request.
+
+| Path | Who records the steps |
+|---|---|
+| Typed or "This device" on the Cloudflare page | `backend.js` times the recording, browser Whisper, the guard, each request's round trip, and the speech clips, and reads each response's `cf-ray` header. The agent's `turn` action adds spans for its Durable Object and each model call (`agent/src/trace.ts`, `turn.ts`) |
+| Cloudflare voice call | The agent records the transcription, the guard result, the model calls, the state broadcast, and the queued filing, and stores them with the turn in its state once the filing is queued. The page draws the panel from the state |
+| Laptop app | `server.py`'s `_trace` builds the spans from the run record and sends them as a `trace` event before `done` |
+
+The Ray ID on a request is Cloudflare's own identifier for it, so each step can be found in
+Workers Observability in the Cloudflare dashboard; its suffix names the data centre that handled it
+(for example `YYZ` for Toronto).
+
 ## Agent actions
 
 Every action lives under `/agents/beaver-guide/<session>/`. The Agents SDK's `routeAgentRequest`
@@ -143,9 +166,9 @@ default).
 |---|---|---|
 | `POST ask` | `system`, `instruction`, `parts` (each `{text}` or `{image_jpeg}` in base64), optional `schema`, `temperature`, `max_tokens` | `{text, usage: {prompt, reply}, model, ms}` |
 | `POST translate` | `sentences`, `source` code, `targets` codes | `{translations: {code: [sentences]}, ms}` |
-| `POST speak` | `text`, `lang` | Audio bytes, with `Content-Type` from the bytes and `X-Synth-Ms`; 422 for a language MeloTTS does not speak |
-| `POST turn` | `question` (guarded, up to 2,000 characters), optional `image_jpeg` | `{question, visitor, codes, groups, timings_ms}`, answered under the session's settings |
-| `POST publish` | `question`, `visitor: {name, code}`, `sentences: [{group, code, text}]`, and a `notebook` filing request (desktop app) or `file: true` (page) | `{turns, filing}`, where `filing` is the queued task's id |
+| `POST speak` | `text`, `lang` | Audio bytes, with `Content-Type` from the bytes, `X-Synth-Ms`, and `X-Model`; 422 for a language MeloTTS does not speak |
+| `POST turn` | `question` (guarded, up to 2,000 characters), optional `image_jpeg` | `{question, visitor, codes, groups, timings_ms, trace}`, answered under the session's settings |
+| `POST publish` | `question`, `visitor: {name, code}`, `sentences: [{group, code, text}]`, and a `notebook` filing request (desktop app) or `file: true` (page) | `{turns, filing, screens}`, where `filing` is the queued task's id and `screens` the connections the state reached |
 | `POST settings` | `languages: {official, include_visitor_language, order}`, `mode` | The checked settings, now in the state |
 | `GET viewer` | None | `{key}`, the session's viewer key, for the page's watch-only link |
 | `GET notebooks` | None | The session's notebook summaries, in the shape `/api/notebooks` returned before |
