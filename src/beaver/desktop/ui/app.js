@@ -251,6 +251,7 @@ async function toggleCall() {
 // During a call the agent publishes each turn to the session's state; live-session.js passes the
 // state on, and new turns are drawn here like any other. The call's own audio plays from the
 // voice client, so these lines carry none.
+const drawnCallTurns = new Map();
 document.addEventListener("session-state", (event) => {
   const turns = event.detail.turns ?? [];
   if (!call?.inCall) {
@@ -263,9 +264,16 @@ document.addEventListener("session-state", (event) => {
     const player = new Player(() => {});
     handleEvent({ type: "question", question: done.question, visitor: done.visitor }, turn, groups, player);
     for (const s of done.sentences) handleEvent({ type: "sentence", ...s, audio: null, spokenElsewhere: true }, turn, groups, player);
+    drawnCallTurns.set(done.at, turn);
   }
   callTurns = turns.length;
+  // The agent adds a call turn's trace in a second state change, once its filing is queued (#67).
+  for (const done of turns) {
+    const turn = drawnCallTurns.get(done.at);
+    if (turn && done.trace && !turn.querySelector(".trace")) renderTrace(turn, done.trace);
+  }
 });
+
 
 $("#typed").addEventListener("submit", (event) => {
   event.preventDefault();
@@ -286,6 +294,100 @@ $("#overview-ask").addEventListener("submit", (event) => {
   go("#/ask");
   $("#typed").requestSubmit();
 });
+
+// ---- Demo mode: how each answer ran (#67) -------------------------------------------------------
+
+// Off by default; the Settings switch or ?demo=1 turns it on, and this browser remembers it. The
+// panels are built for every turn and only shown in the mode, so switching it on shows past turns.
+const demoToggle = $("#demo-toggle");
+const demoParam = new URLSearchParams(location.search).get("demo");
+let demo = demoParam === "1" || (demoParam !== "0" && recall("beaver-demo") === "1");
+
+function showDemo() {
+  document.body.classList.toggle("is-demo", demo);
+  demoToggle.checked = demo;
+}
+demoToggle.addEventListener("change", () => {
+  demo = demoToggle.checked;
+  remember("beaver-demo", demo ? "1" : "0");
+  showDemo();
+});
+showDemo();
+
+const WHERE = {
+  browser: "This browser",
+  laptop: "Laptop",
+  worker: "Cloudflare Worker",
+  agent: "Durable Object",
+  "workers-ai": "Workers AI",
+};
+
+function duration(ms) {
+  if (ms === null || ms === undefined || Number.isNaN(ms)) return "";
+  return ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`;
+}
+
+/** The "How it ran" panel for one turn: each step, where it ran, its time, and its facts. Every
+ * value is set as text. */
+function renderTrace(turn, spans) {
+  turn.querySelector(".trace")?.remove();
+  const panel = document.createElement("details");
+  panel.className = "trace";
+  panel.open = true;
+  const summary = document.createElement("summary");
+  const timed = spans.filter((s) => typeof s.ms === "number");
+  summary.textContent = `How it ran: ${spans.length} steps`;
+  panel.append(summary);
+  const longest = Math.max(1, ...timed.map((s) => s.ms));
+  const list = document.createElement("ol");
+  list.className = "trace-steps";
+  for (const s of spans) {
+    const item = document.createElement("li");
+    item.className = "trace-step";
+    const head = document.createElement("div");
+    head.className = "trace-head";
+    const where = document.createElement("span");
+    where.className = `where where-${s.where}`;
+    where.textContent = WHERE[s.where] ?? s.where;
+    const name = document.createElement("span");
+    name.className = "trace-name";
+    name.textContent = s.step;
+    const time = document.createElement("span");
+    time.className = "trace-ms";
+    time.textContent = duration(s.ms);
+    head.append(where, name, time);
+    item.append(head);
+    if (typeof s.ms === "number") {
+      const bar = document.createElement("div");
+      bar.className = `trace-bar where-${s.where}`;
+      bar.style.setProperty("--share", String(Math.max(0.01, s.ms / longest)));
+      bar.setAttribute("aria-hidden", "true");
+      item.append(bar);
+    }
+    if (s.facts?.length) {
+      const facts = document.createElement("dl");
+      facts.className = "trace-facts";
+      for (const [label, value] of s.facts) {
+        const dt = document.createElement("dt");
+        dt.textContent = label;
+        const dd = document.createElement("dd");
+        dd.textContent = value;
+        facts.append(dt, dd);
+      }
+      item.append(facts);
+    }
+    if (s.text) {
+      const sent = document.createElement("p");
+      sent.className = "trace-text";
+      sent.dir = "auto";
+      sent.textContent = s.text;
+      item.append(sent);
+    }
+    list.append(item);
+  }
+  panel.append(list);
+  turn.append(panel);
+}
 
 // ---- Turns ----------------------------------------------------------------------------------
 
@@ -415,6 +517,8 @@ function handleEvent(event, turn, groups, player) {
     link.title = "Open notebook";
     link.href = notebookHash(event.id);
     turn.querySelector(".turn-meta").append(link);
+  } else if (event.type === "trace") {
+    renderTrace(turn, event.spans);
   } else if (event.type === "notebook_pending") {
     // The agent files the turn after it is published, a few seconds later (#62).
     setTimeout(refreshNotebooks, 8000);

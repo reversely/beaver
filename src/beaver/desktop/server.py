@@ -164,6 +164,7 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
             }
         record.mark("all_synthesized", start)
         record.data["sentences"] = sentences
+        yield {"type": "trace", "spans": _trace(config, record, sentences)}
         if config["notebooks"]["enabled"] and not provider.is_cloudflare(config):
             # After every sentence is synthesized, so filing never delays the first audio.
             try:
@@ -184,6 +185,125 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
         message = str(error) or type(error).__name__
         record.finish(error=f"{type(error).__name__}: {message}")
         yield {"type": "error", "message": message}
+
+
+def _span(step, where, ms, facts, text=None):
+    span = {"step": step, "where": where, "ms": ms, "facts": facts}
+    if text is not None:
+        span["text"] = text
+    return span
+
+
+def _trace(config: dict, record, sentences: list) -> list:
+    """The steps of this turn for the demo mode's "How it ran" panel (#67), from the run record:
+    where each ran, how long it took, and facts about it. Never the unredacted question."""
+    data, ms = record.data, record.data["timings_ms"]
+    spans = []
+    if "transcribe" in ms:
+        spans.append(
+            _span(
+                "Transcribe",
+                "laptop",
+                ms["transcribe"],
+                [
+                    [
+                        "Model",
+                        f"Whisper {config['transcribe']['model']} on this laptop's CPU",
+                    ],
+                    [
+                        "Language",
+                        str(data.get("detected_language", {}).get("language")),
+                    ],
+                ],
+            )
+        )
+    rules = data.get("guard_question", [])
+    spans.append(
+        _span(
+            "Guard the question",
+            "laptop",
+            None,
+            [
+                ["Rules fired", ", ".join(rules) or "none"],
+                ["Sent onward", "the text below"],
+            ],
+            data.get("question"),
+        )
+    )
+    cloudflare = provider.is_cloudflare(config)
+    label = "workers_ai" if cloudflare else "gemini"
+    tokens = data.get(f"{label}_answer_tokens", {})
+    model = tokens.get("model") or config["gemini"]["model"]
+    spans.append(
+        _span(
+            "Answer",
+            "workers-ai" if cloudflare else "laptop",
+            ms.get(f"{label}_answer"),
+            [
+                ["Model", model],
+                [
+                    "Tokens",
+                    f"{tokens.get('prompt', 0)} in, {tokens.get('reply', 0)} out",
+                ],
+                ["Session", f'BeaverGuide "{config["cloudflare"]["session"]}"']
+                if cloudflare
+                else ["Service", "Gemini API"],
+            ],
+        )
+    )
+    if f"{label}_translate" in ms:
+        spans.append(
+            _span(
+                "Translate",
+                "workers-ai" if cloudflare else "laptop",
+                ms[f"{label}_translate"],
+                [["Model", "@cf/meta/m2m100-1.2b" if cloudflare else model]],
+            )
+        )
+    reply_rules = data.get("guard_reply", {}).get("rules", [])
+    spans.append(
+        _span(
+            "Guard every sentence",
+            "laptop",
+            None,
+            [["Rules fired", ", ".join(reply_rules) or "none"]],
+        )
+    )
+    if cloudflare:
+        spans.append(
+            _span(
+                "Publish and file",
+                "agent",
+                None,
+                [["How", "in the background, so the first audio does not wait"]],
+            )
+        )
+    spoken = [s["synth_ms"] for s in sentences if s.get("synth_ms")]
+    if spoken:
+        spans.append(
+            _span(
+                "Speak",
+                "workers-ai" if cloudflare else "laptop",
+                max(spoken),
+                [
+                    [
+                        "Model",
+                        "@cf/myshell-ai/melotts"
+                        if cloudflare
+                        else config["elevenlabs"]["model"],
+                    ],
+                    [
+                        "Clips",
+                        f"{len(spoken)}, {config['tts']['parallel']} at a time, {min(spoken)} to {max(spoken)} ms each",
+                    ],
+                    [
+                        "First audio ready",
+                        f"{ms.get('first_audio_ready')} ms after the question",
+                    ],
+                ],
+            )
+        )
+    return spans
 
 
 def _publish_in_background(config, record, result, filing=None):

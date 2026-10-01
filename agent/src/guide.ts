@@ -25,6 +25,7 @@ import { render } from "./render.ts";
 import { addDue, type DueWord, firstInterval, nextInterval, removeDue } from "./reviews.ts";
 import { DEFAULT_LANGUAGES, type LanguageSettings } from "./sentences.ts";
 import { answerTurn, type TurnConfig, type TurnResult } from "./turn.ts";
+import { type Span, span } from "./trace.ts";
 import { addTurn, checkTurn, type Turn } from "./turns.ts";
 import { base64, UtteranceCutter, wav } from "./utterances.ts";
 import { joinWavs, splitTagged, tagged } from "./voice-text.ts";
@@ -163,6 +164,10 @@ const VoiceAgent = withVoice(Agent, { audioFormat: "wav" });
 export class BeaverGuide extends VoiceAgent<Env, State> {
   initialState: State = { turns: [], reviews_due: [], settings: DEFAULT_SETTINGS };
 
+  // The voice pipeline's last transcription and guard result, for that turn's trace (#67).
+  lastHeard: { ms: number; seconds: number; language: string } | null = null;
+  lastGuard: { rules: string[]; text: string } | null = null;
+
   // The voice pipeline's speech-to-text: utterances cut at silence, each sent to Whisper.
   transcriber: Transcriber = {
     createSession: (options?: TranscriberSessionOptions) => this.whisperSession(options),
@@ -217,8 +222,9 @@ export class BeaverGuide extends VoiceAgent<Env, State> {
 
   /** The guard proxy on the voice transcript, before the answer model sees it. */
   afterTranscribe(transcript: string): string | null {
-    const text = redact(transcript.trim()).text;
-    return text || null;
+    const guarded = redact(transcript.trim());
+    this.lastGuard = { rules: guarded.rules, text: guarded.text };
+    return guarded.text || null;
   }
 
   /** The guard again on every chunk about to be spoken. */
@@ -227,11 +233,46 @@ export class BeaverGuide extends VoiceAgent<Env, State> {
   }
 
   async onTurn(transcript: string): Promise<TextSource> {
-    const { result } = guardTurn(
-      await answerTurn(this.run, this.turnConfig(), { question: transcript, ...this.settings }),
-    );
+    const started = Date.now();
+    const answered = await answerTurn(this.run, this.turnConfig(), { question: transcript, ...this.settings });
+    const { result, rules } = guardTurn(answered);
+    const heard = this.lastHeard;
+    const guard = this.lastGuard;
+    const trace: Span[] = [
+      span("Stream the microphone", "browser", null, [["Audio", "16 kHz PCM over the session's WebSocket"]]),
+      span("Cut the utterance at silence", "agent", null, [["Rule", "800 ms of silence ends it"]]),
+      span("Transcribe", "workers-ai", heard?.ms ?? null, [
+        ["Model", this.env.TRANSCRIBE_MODEL],
+        ["Audio", heard ? `${heard.seconds.toFixed(1)} s` : "unknown"],
+        ["Language", heard?.language || "detected by the model"],
+      ]),
+      span(
+        "Guard the question",
+        "agent",
+        null,
+        [["Rules fired", guard?.rules.length ? guard.rules.join(", ") : "none"]],
+        guard?.text,
+      ),
+      span("Session agent", "agent", Date.now() - started, [["Durable Object", `BeaverGuide "${this.name}"`]]),
+      ...answered.trace,
+      span("Guard every sentence", "agent", null, [["Rules fired", rules.length ? rules.join(", ") : "none"]]),
+    ];
+    // The turn is shown at once; its trace follows once the filing is queued, complete.
     const turn = this.recordTurn(result);
-    this.queueFiling(turn, result);
+    const filing = await this.queueFiling(turn, result);
+    trace.push(
+      span("Publish and file", "agent", null, [
+        ["State", `turn sent to ${[...this.getConnections()].length} open screen(s)`],
+        ["Notebook filing", `queued task ${filing}`],
+      ]),
+      span("Speak", "workers-ai", null, [
+        ["Model", this.env.SPEECH_MODEL],
+        ["How", "each chunk of the streamed reply, split by language tag"],
+      ]),
+    );
+    // The state holds a copy of the turn, so it is found by its time and question.
+    const same = (t: Turn) => t.at === turn.at && t.question === turn.question;
+    this.setState({ ...this.state, turns: this.state.turns.map((t) => (same(t) ? { ...t, trace } : t)) });
     return tagged(result.groups);
   }
 
@@ -313,12 +354,18 @@ export class BeaverGuide extends VoiceAgent<Env, State> {
     if (body.image_jpeg !== undefined && typeof body.image_jpeg !== "string") {
       throw new TypeError("image_jpeg must be base64 text");
     }
+    const started = Date.now();
     const result = await answerTurn(this.run, this.turnConfig(), {
       question: body.question,
       image_jpeg: body.image_jpeg as string | undefined,
       ...this.settings,
     });
-    return json(result);
+    const settings = this.settings;
+    const agentSpan = span("Session agent", "agent", Date.now() - started, [
+      ["Durable Object", `BeaverGuide "${this.name}"`],
+      ["Settings", `reply in ${settings.languages.official}, ${settings.mode === "inline" ? "translated in the answer" : "translated by m2m100"}`],
+    ]);
+    return json({ ...result, trace: [agentSpan, ...result.trace] });
   }
 
   saveSettings(body: unknown): Response {
@@ -328,12 +375,14 @@ export class BeaverGuide extends VoiceAgent<Env, State> {
   }
 
   /** Add a guarded turn to the state, which every connected screen receives. */
-  recordTurn(result: TurnResult): Turn {
-    const turn = checkTurn({
+  recordTurn(result: TurnResult, trace?: Span[]): Turn {
+    const checked = checkTurn({
       question: result.question,
       visitor: { name: result.visitor.name, code: result.visitor.code },
       sentences: result.groups.flatMap((g, group) => g.map(([code, text]) => ({ group, code, text }))),
     });
+    // The trace comes from the agent itself, so it skips checkTurn, which keeps a client's fields only.
+    const turn = trace ? { ...checked, trace } : checked;
     this.setState({ ...this.state, turns: addTurn(this.state.turns ?? [], turn) });
     return turn;
   }
@@ -386,9 +435,15 @@ export class BeaverGuide extends VoiceAgent<Env, State> {
         codes,
         groups: [...groups.values()],
         timings_ms: {},
+        trace: [],
       });
     }
-    return json({ turns: this.state.turns.length, filing: queued });
+    return json({
+      turns: this.state.turns.length,
+      filing: queued,
+      // How many screens the state change reached, for the demo mode's panel (#67).
+      screens: [...this.getConnections()].length,
+    });
   }
 
   /** File one published turn into a notebook: the queued task behind publish (#62). */
@@ -487,7 +542,11 @@ export class BeaverGuide extends VoiceAgent<Env, State> {
     const start = Date.now();
     const audio = await this.melo(body.text, body.lang);
     return new Response(audio, {
-      headers: { "Content-Type": audioType(audio), "X-Synth-Ms": String(Date.now() - start) },
+      headers: {
+        "Content-Type": audioType(audio),
+        "X-Synth-Ms": String(Date.now() - start),
+        "X-Model": this.env.SPEECH_MODEL,
+      },
     });
   }
 
@@ -497,10 +556,16 @@ export class BeaverGuide extends VoiceAgent<Env, State> {
     let closed = false;
     const transcribe = async (clip: Int16Array) => {
       try {
+        const started = Date.now();
         const output = (await this.run(this.env.TRANSCRIBE_MODEL, {
           audio: base64(wav(clip)),
           ...(options?.language ? { language: options.language } : {}),
-        })) as { text?: string };
+        })) as { text?: string; transcription_info?: { language?: string } };
+        this.lastHeard = {
+          ms: Date.now() - started,
+          seconds: clip.length / 16000,
+          language: output.transcription_info?.language ?? "",
+        };
         const text = (output.text ?? "").trim();
         if (text && !closed) options?.onUtterance?.(text);
       } catch (error) {

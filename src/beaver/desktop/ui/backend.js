@@ -205,9 +205,16 @@ async function* askLaptop(payload) {
   }
 }
 
+// A step for the demo mode's "How it ran" panel (#67): where it ran, how long, and facts about it.
+const span = (step, where, ms, facts = [], text) => ({ step, where, ms: ms === null ? null : Math.round(ms), facts, ...(text === undefined ? {} : { text }) });
+const ray = (response) => response.headers.get("cf-ray") ?? "none";
+const kb = (bytes) => (bytes < 1024 ? `${bytes} bytes` : `${(bytes / 1024).toFixed(1)} KB`);
+
 async function* askAgent(payload, { language = "en", status = () => {} }) {
   const started = performance.now();
+  const trace = [];
   let heard = payload.text ?? "";
+  if (payload.text) trace.push(span("Type the question", "browser", null, [["Input", `${payload.text.length} characters`]]));
   if (payload.audio) {
     const { transcribe, to16k } = await import("./whisper.js");
     status("transcribing on this device");
@@ -218,41 +225,97 @@ async function* askAgent(payload, { language = "en", status = () => {} }) {
       samples.set(c, at);
       at += c.length;
     }
-    heard = await transcribe(to16k(samples, rate), language, (fraction) =>
-      status(`loading the speech model on this device: ${Math.round(fraction * 100)}%`),
+    trace.push(span("Record", "browser", (samples.length / rate) * 1000, [["Audio", "kept on this device"]]));
+    let downloaded = false;
+    const transcribeStart = performance.now();
+    heard = await transcribe(to16k(samples, rate), language, (fraction) => {
+      downloaded = true;
+      status(`loading the speech model on this device: ${Math.round(fraction * 100)}%`);
+    });
+    trace.push(
+      span("Transcribe", "browser", performance.now() - transcribeStart, [
+        ["Model", "Whisper base, 8-bit, through transformers.js"],
+        ["Language", language],
+        ["Model files", downloaded ? "downloaded from /models/ (R2 through the Worker)" : "from the browser cache"],
+      ]),
     );
     status("thinking");
   }
   // The guard proxy, here in the browser, before the question leaves the device.
-  const question = redact(heard.trim()).text;
+  const guardStart = performance.now();
+  const guarded = redact(heard.trim());
+  const question = guarded.text;
+  trace.push(
+    span(
+      "Guard the question",
+      "browser",
+      performance.now() - guardStart,
+      [["Rules fired", guarded.rules.length ? guarded.rules.join(", ") : "none"], ["Sent to Cloudflare", "the text below"]],
+      question,
+    ),
+  );
   if (!question) {
     yield { type: "error", message: "Beaver did not catch that. Please ask again." };
     return;
   }
-  const result = await (
-    await agent("turn", { question, ...(payload.image_jpeg ? { image_jpeg: payload.image_jpeg } : {}) })
-  ).json();
+  const turnBody = { question, ...(payload.image_jpeg ? { image_jpeg: payload.image_jpeg } : {}) };
+  const turnStart = performance.now();
+  const turnResponse = await agent("turn", turnBody);
+  const result = await turnResponse.json();
+  const turnMs = performance.now() - turnStart;
+  const agentMs = (result.trace ?? []).find((s) => s.where === "agent")?.ms ?? 0;
+  trace.push(
+    span("Send to Cloudflare", "worker", turnMs - agentMs, [
+      ["Request", `POST ${AGENT_BASE}/turn, ${kb(JSON.stringify(turnBody).length)}`],
+      ["Checked", "the session key in the X-Session-Key header"],
+      ["Ray ID", ray(turnResponse)],
+      ["Time shown", "the round trip less the agent's own time"],
+    ]),
+    ...(result.trace ?? []),
+  );
   const textReady = Math.round(performance.now() - started);
   // And again on every sentence before it is shown, published, or spoken.
-  const groups = result.groups.map((g) => g.map(([code, text]) => [code, redact(text).text]));
+  const replyRules = [];
+  const groups = result.groups.map((g) =>
+    g.map(([code, text]) => {
+      const r = redact(text);
+      replyRules.push(...r.rules);
+      return [code, r.text];
+    }),
+  );
+  trace.push(span("Guard every sentence", "browser", null, [["Rules fired", replyRules.length ? replyRules.join(", ") : "none"]]));
   yield { type: "question", question, visitor: result.visitor, codes: result.codes };
   const sentences = groups.flatMap((g, group) => g.map(([code, text]) => ({ group, code, text })));
   // The agent files the published turn into a notebook after this request returns.
+  const publishStart = performance.now();
   const published = agent("publish", {
     question,
     visitor: { name: result.visitor.name, code: result.visitor.code },
     sentences,
     file: true,
-  }).catch(() => null);
+  })
+    .then(async (response) => {
+      const body = await response.json();
+      return span("Publish and file", "agent", performance.now() - publishStart, [
+        ["State", `turn ${body.turns} sent to ${body.screens} open screen(s)`],
+        ["Notebook filing", `queued task ${body.filing}`],
+        ["Ray ID", ray(response)],
+      ]);
+    })
+    .catch(() => span("Publish and file", "agent", null, [["Result", "failed"]]));
   // Two sentences synthesize at once, as tts.parallel does on the laptop; each is yielded in
   // speaking order as soon as it and every sentence before it are ready.
   const limit = twoAtOnce();
+  const speech = [];
   const clips = sentences.map((s) =>
     AGENT_SPOKEN.has(s.code)
       ? limit(() =>
           agent("speak", { text: s.text, lang: s.code })
-            .then((r) => r.blob())
-            .then((blob) => URL.createObjectURL(blob))
+            .then(async (r) => {
+              const blob = await r.blob();
+              speech.push({ ms: Number(r.headers.get("X-Synth-Ms")), bytes: blob.size, model: r.headers.get("X-Model") });
+              return URL.createObjectURL(blob);
+            })
             .catch(() => null),
         )
       : Promise.resolve(null),
@@ -263,7 +326,20 @@ async function* askAgent(payload, { language = "en", status = () => {} }) {
     firstAudio ??= audio ? Math.round(performance.now() - started) : null;
     yield { type: "sentence", ...sentences[i], audio };
   }
-  await published;
+  trace.push(await published);
+  const unspoken = sentences.filter((s) => !AGENT_SPOKEN.has(s.code)).length;
+  if (speech.length) {
+    const times = speech.map((c) => c.ms);
+    trace.push(
+      span("Speak", "workers-ai", Math.max(...times), [
+        ["Model", speech[0].model ?? "MeloTTS"],
+        ["Clips", `${speech.length}, two at a time, ${Math.min(...times)} to ${Math.max(...times)} ms each`],
+        ["Audio", `${kb(speech.reduce((n, c) => n + c.bytes, 0))} of WAV`],
+        ...(unspoken ? [["Shown only", `${unspoken} sentence(s) in a language MeloTTS lacks`]] : []),
+      ]),
+    );
+  }
+  yield { type: "trace", spans: trace };
   yield { type: "notebook_pending" };
   yield {
     type: "done",

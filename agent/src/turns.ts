@@ -9,6 +9,8 @@ export interface Sentence {
 
 export interface Turn {
   at: string;
+  // Steps of a voice-call turn, added by the agent itself (#67).
+  trace?: unknown[];
   question: string;
   visitor: { name: string; code: string };
   sentences: Sentence[];

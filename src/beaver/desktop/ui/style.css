@@ -559,3 +559,41 @@ a.nav-item, a.tag-link { text-decoration: none; }
 /* The Cloudflare page opened without a session link (#65). */
 .no-session { color: var(--ink); line-height: 1.5; }
 .no-session code { font-size: 0.9em; color: var(--accent-text); }
+
+/* Demo mode (#67): how each answer ran. Each place a step runs in has one hue, used on its label
+   and its bar, so a reader can follow a turn from the browser to Cloudflare and back. */
+.trace { display: none; }
+.is-demo .trace { display: block; margin-top: 14px; border-top: 1px solid var(--hairline); padding-top: 10px; }
+.trace summary { cursor: pointer; font-size: 14px; color: var(--accent-text); min-height: 32px; display: flex; align-items: center; }
+.trace-steps { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 10px; counter-reset: step; }
+.trace-step { display: grid; gap: 4px; counter-increment: step; }
+.trace-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.trace-head::before { content: counter(step); color: var(--ink-3); font-size: 13px; min-width: 1.2em; }
+.trace-name { color: var(--ink); font-size: 15px; }
+.trace-ms { margin-left: auto; color: var(--ink-2); font-size: 14px; font-variant-numeric: tabular-nums; }
+.where { font-size: 12px; border-radius: 999px; padding: 1px 8px; color: #10130f; white-space: nowrap; }
+.where-browser { --where: #e3a86f; }
+.where-laptop { --where: #cfc6b8; }
+.where-worker { --where: #f0b36a; }
+.where-agent { --where: #9fd3a8; }
+.where-workers-ai { --where: #9cc4e8; }
+.where { background: var(--where); }
+.trace-bar { height: 4px; border-radius: 2px; background: var(--tint); position: relative; overflow: hidden; }
+.trace-bar::after {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: calc(var(--share) * 100%);
+  background: var(--where); border-radius: 2px;
+}
+.trace-facts { display: grid; grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); gap: 2px 12px; margin: 0; font-size: 13px; }
+.trace-facts dt { color: var(--ink-3); }
+.trace-facts dd { margin: 0; color: var(--ink-2); overflow-wrap: anywhere; }
+.trace-text {
+  margin: 2px 0 0; padding: 6px 10px; border-left: 3px solid var(--where, var(--accent-text));
+  background: var(--tint); border-radius: 0 8px 8px 0; font-size: 14px; color: var(--ink); overflow-wrap: anywhere;
+}
+.trace-step:has(.where-browser) .trace-text { --where: #e3a86f; }
+.trace-step:has(.where-laptop) .trace-text { --where: #cfc6b8; }
+.trace-step:has(.where-agent) .trace-text { --where: #9fd3a8; }
+@media (max-width: 480px) {
+  .trace-facts { grid-template-columns: minmax(0, 1fr); }
+  .trace-facts dd { margin-bottom: 4px; }
+}

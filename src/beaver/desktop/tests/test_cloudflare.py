@@ -287,6 +287,20 @@ class CloudflareProvider(unittest.TestCase):
         with mock.patch.dict(os.environ, {}, clear=True):
             self.assertIn("note", server._session_state(self.config))
 
+    def test_the_trace_shows_guarded_text_only(self):
+        events = self.turn("my phone number is 613 555 0142, what is poutine?")
+        trace = next(e for e in events if e["type"] == "trace")["spans"]
+        self.assertNotIn("0142", json.dumps(trace))
+        steps = [s["step"] for s in trace]
+        self.assertEqual(steps[:2], ["Guard the question", "Answer"])
+        self.assertIn("Speak", steps)
+        guard = trace[0]
+        self.assertEqual(
+            guard["text"], "my phone number is a phone number, what is poutine?"
+        )
+        self.assertIn(["Rules fired", "phone"], guard["facts"])
+        self.assertEqual(trace[1]["where"], "workers-ai")
+
     def test_cloudflare_is_the_default_provider(self):
         self.assertEqual(CONFIG["provider"]["name"], "cloudflare")
         self.assertNotIn("provider", server.EDITABLE)

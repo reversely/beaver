@@ -13,7 +13,8 @@ import {
   splitSentences,
   visitorOf,
 } from "./sentences.ts";
-import { chatInput, replyText } from "./workers-ai.ts";
+import { type Span, span } from "./trace.ts";
+import { chatInput, replyText, usage } from "./workers-ai.ts";
 
 export type Run = (model: string, input: Record<string, unknown>) => Promise<unknown>;
 
@@ -48,6 +49,8 @@ export interface TurnResult {
   codes: string[];
   groups: Group[];
   timings_ms: Record<string, number>;
+  // The model calls this turn made, for the demo mode's panel (#67).
+  trace: Span[];
 }
 
 const VISITOR_FIELDS = {
@@ -116,6 +119,14 @@ export async function answerTurn(run: Run, config: TurnConfig, input: TurnInput)
     }),
   );
   timings.answer = Date.now() - start;
+  const tokens = usage(output);
+  const trace: Span[] = [
+    span(inline ? "Answer and translate" : "Answer", "workers-ai", timings.answer, [
+      ["Model", config.answer_model],
+      ["Tokens", `${tokens.prompt} in, ${tokens.reply} out`],
+      ["Image", input.image_jpeg ? `${Math.round((input.image_jpeg.length * 3) / 4 / 1024)} KB camera frame` : "none"],
+    ]),
+  ];
   const reply = JSON.parse(replyText(output));
   const visitor = visitorOf(String(reply.visitor_language_name), String(reply.visitor_language_code));
   const codes = orderedCodes(input.languages, visitor.code);
@@ -148,6 +159,14 @@ export async function answerTurn(run: Run, config: TurnConfig, input: TurnInput)
       translations[target] = done.slice(t * count, (t + 1) * count);
     });
     timings.translate = Date.now() - start;
+    if (others.length) {
+      trace.push(
+        span("Translate", "workers-ai", timings.translate, [
+          ["Model", config.translate_model],
+          ["Requests", `${others.length * count} at once: ${count} sentences into ${others.join(", ")}`],
+        ]),
+      );
+    }
   }
   const grouped = group(codes, translations, count);
   return {
@@ -156,5 +175,6 @@ export async function answerTurn(run: Run, config: TurnConfig, input: TurnInput)
     codes: grouped.codes,
     groups: grouped.groups,
     timings_ms: timings,
+    trace,
   };
 }
