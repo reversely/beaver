@@ -2,7 +2,7 @@
 // guards each question, then asks the agent to answer, translate, and speak with Workers AI.
 //   POST /agents/beaver-guide/<session>/ask        rendered prompts and parts -> reply text
 //   POST /agents/beaver-guide/<session>/translate  sentences and target codes -> translations
-//   POST /agents/beaver-guide/<session>/speak      one guarded sentence -> MP3
+//   POST /agents/beaver-guide/<session>/speak      one guarded sentence -> WAV or MP3
 //   POST /agents/beaver-guide/<session>/publish    one guarded turn -> the session's state, and
 //                                                  with `notebook`, a queued filing (#62)
 //   GET  /agents/beaver-guide/<session>/notebooks[/<id>]  the session's notebooks (#62)
@@ -30,6 +30,7 @@ import { addTurn, checkTurn, type Turn } from "./turns.ts";
 import {
   type AskRequest,
   audioBytes,
+  audioType,
   chatInput,
   collectTranslations,
   MELOTTS_LANGUAGES,
@@ -254,7 +255,7 @@ export class BeaverGuide extends Agent<Env, State> {
     } as never);
     const audio = await audioBytes(output);
     return new Response(audio, {
-      headers: { "Content-Type": "audio/mpeg", "X-Synth-Ms": String(Date.now() - start) },
+      headers: { "Content-Type": audioType(audio), "X-Synth-Ms": String(Date.now() - start) },
     });
   }
 }

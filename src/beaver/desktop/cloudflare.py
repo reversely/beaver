@@ -17,6 +17,10 @@ import urllib.request
 
 from beaver.core.record import RunRecord
 
+# Cloudflare's edge refuses the default Python-urllib user agent (error 1010) before the Worker
+# runs, so every request names this app.
+USER_AGENT = "beaver-desktop/1"
+
 
 def viewer_key(token: str, session: str) -> str:
     """The key in a viewer link: HMAC-SHA256 of the session name under the shared token, as 32 hex
@@ -94,7 +98,8 @@ def notebooks(config: dict, notebook_id: str | None = None) -> tuple[int, bytes]
         f"/{urllib.parse.quote(notebook_id, safe='')}" if notebook_id else ""
     )
     request = urllib.request.Request(
-        _url(config, path), headers={"Authorization": f"Bearer {token}"}
+        _url(config, path),
+        headers={"Authorization": f"Bearer {token}", "User-Agent": USER_AGENT},
     )
     try:
         with urllib.request.urlopen(
@@ -125,6 +130,7 @@ def _post(config: dict, action: str, payload: dict) -> tuple[bytes, dict]:
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
+            "User-Agent": USER_AGENT,
         },
         method="POST",
     )
@@ -218,9 +224,20 @@ def translate(
     return json.loads(body)["translations"]
 
 
+def audio_extension(audio: bytes) -> str:
+    """The file extension for encoded speech, from its first bytes. MeloTTS has returned WAV
+    where its schema says MP3."""
+    if audio[:4] == b"RIFF":
+        return ".wav"
+    if audio[:4] == b"OggS":
+        return ".ogg"
+    return ".mp3"
+
+
 def convert(config: dict, text: str, code: str) -> tuple[bytes, None, int, int]:
-    """One sentence as MP3 from Workers AI MeloTTS. The rate is None because the audio is MP3,
-    which the page plays as is; speech.convert returns PCM with its rate."""
+    """One sentence as an encoded audio file from Workers AI MeloTTS. The rate is None because
+    the file carries its own format, which the page plays as is; speech.convert returns raw PCM
+    with its rate."""
     limit = config["cloudflare"]["max_characters"]
     if len(text) > limit:
         raise SystemExit(

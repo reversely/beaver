@@ -73,7 +73,7 @@ class FakeAgent(BaseHTTPRequestHandler):
         elif action == "review":
             self._send(b'{"next_review_seconds": 1500}', "application/json")
         elif action == "speak":
-            self._send(b"ID3fake", "audio/mpeg")
+            self._send(b"RIFF\x00\x00\x00\x00WAVEfake", "audio/wav")
 
     def _send(self, data, content_type):
         self.send_response(200)
@@ -141,7 +141,8 @@ class CloudflareProvider(unittest.TestCase):
         ]
         self.assertEqual(len(spoken), 4)  # two sentences, in English and French
         sentences = [e for e in events if e["type"] == "sentence"]
-        self.assertTrue(all(e["audio"].endswith(".mp3") for e in sentences))
+        # The fake agent returns WAV bytes, as MeloTTS does live, so the files are .wav.
+        self.assertTrue(all(e["audio"].endswith(".wav") for e in sentences))
 
     def test_a_language_melotts_lacks_shows_without_audio(self):
         self.config["languages"].update(official="en", include_visitor_language=True)

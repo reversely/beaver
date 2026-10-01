@@ -4,6 +4,7 @@ import { test } from "node:test";
 import { hasToken, sameText } from "../src/auth.ts";
 import {
   audioBytes,
+  audioType,
   chatInput,
   collectTranslations,
   replyText,
@@ -62,4 +63,11 @@ test("speech audio decodes from base64 or bytes", async () => {
   assert.deepEqual(await audioBytes({ audio: btoa("ID3") }), new TextEncoder().encode("ID3"));
   assert.deepEqual(await audioBytes(new Uint8Array([1, 2])), new Uint8Array([1, 2]));
   await assert.rejects(audioBytes({}), /no audio/);
+});
+
+test("the audio label follows the bytes", () => {
+  const bytes = (text: string) => new TextEncoder().encode(text);
+  assert.equal(audioType(bytes("RIFF....WAVE")), "audio/wav");
+  assert.equal(audioType(bytes("ID3\x04")), "audio/mpeg");
+  assert.equal(audioType(bytes("OggS")), "audio/ogg");
 });

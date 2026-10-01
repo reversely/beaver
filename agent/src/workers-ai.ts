@@ -94,3 +94,12 @@ export async function audioBytes(output: unknown): Promise<Uint8Array> {
   if (typeof audio === "string") return Uint8Array.from(atob(audio), (c) => c.charCodeAt(0));
   throw new Error("MeloTTS returned no audio");
 }
+
+/** The audio's media type from its first bytes: MeloTTS has returned WAV where its schema says
+ * MP3, so the label follows the bytes. */
+export function audioType(audio: Uint8Array): string {
+  const head = String.fromCharCode(...audio.slice(0, 4));
+  if (head === "RIFF") return "audio/wav";
+  if (head === "OggS") return "audio/ogg";
+  return "audio/mpeg";
+}

@@ -138,9 +138,10 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
             audio = None
             if piece["pcm"] is not None:
                 name = f"g{piece['group'] + 1}-{piece['code']}"
-                # ElevenLabs returns PCM with its rate; Workers AI MeloTTS returns MP3 (rate None).
+                # ElevenLabs returns raw PCM with its rate; Workers AI MeloTTS returns an encoded
+                # file (rate None), saved as is under the extension its bytes show.
                 if piece["rate"] is None:
-                    name += ".mp3"
+                    name += cloudflare.audio_extension(piece["pcm"])
                     record.save_file(name, piece["pcm"])
                 else:
                     name += ".wav"
