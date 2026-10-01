@@ -40,6 +40,7 @@ The desktop app's Cloudflare provider sends each guarded question to the Worker 
 https://beaver-agent.shereenlee-ds.workers.dev/. The Worker answers, translates, and speaks with
 Workers AI, and keeps each session's live turns, notebooks, and review schedule in its Durable
 Object. It deploys by hand from `agent/`, separately from the public site's `beaver` Worker.
+[cloudflare-agent.md](cloudflare-agent.md) describes how a turn flows through it.
 
 | Item | Value |
 |---|---|
