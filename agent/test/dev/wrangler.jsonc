@@ -5,11 +5,14 @@
   "compatibility_date": "2026-09-27",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": "../../public" },
+  "r2_buckets": [{ "binding": "MODELS", "bucket_name": "beaver-models" }],
+  "rules": [{ "type": "Text", "globs": ["**/*.md", "**/*.toml"], "fallthrough": true }],
   "durable_objects": { "bindings": [{ "name": "BeaverGuide", "class_name": "BeaverGuide" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BeaverGuide"] }],
   "vars": {
     "ANSWER_MODEL": "stub-answer",
     "TRANSLATE_MODEL": "stub-m2m100",
-    "SPEECH_MODEL": "stub-melotts"
+    "SPEECH_MODEL": "stub-melotts",
+    "TRANSCRIBE_MODEL": "stub-whisper"
   }
 }

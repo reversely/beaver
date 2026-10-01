@@ -34,3 +34,23 @@ export async function viewerKey(token: string, session: string): Promise<string>
   const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, encoder.encode(session)));
   return Array.from(signature, (b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
 }
+
+/** The key in an app link (#64): it lets a page call its own session's actions and start a voice
+ * call there. Derived like the viewer key with a "use:" prefix, so neither key yields the other. */
+export function sessionKey(token: string, session: string): Promise<string> {
+  return viewerKey(token, `use:${session}`);
+}
+
+export type Role = "member" | "viewer";
+
+/** Which key a request carries for its session, or null for neither. */
+export async function roleFor(
+  token: string | undefined,
+  session: string,
+  key: string,
+): Promise<Role | null> {
+  if (!token || !session || !key) return null;
+  if (sameText(key, await sessionKey(token, session))) return "member";
+  if (sameText(key, await viewerKey(token, session))) return "viewer";
+  return null;
+}

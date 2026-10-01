@@ -1,7 +1,8 @@
 // Local run of the agent with a stub in place of Workers AI, which `wrangler dev` can only reach
 // with a Cloudflare login. It exercises the Durable Object, state sync, SQL, and the scheduler:
 //   npx wrangler dev -c test/dev/wrangler.jsonc
-import worker, { BeaverGuide as Real, type Env } from "../../src/index.ts";
+import type { Env } from "../../src/guide.ts";
+import worker, { BeaverGuide as Real } from "../../src/index.ts";
 
 const ANSWER = {
   question: "What is poutine?",

@@ -1,13 +1,21 @@
-// The beaver-agent Worker: the desktop app's Cloudflare Agent (#60). Separate from the public
-// site's `beaver` Worker so the two deploy independently.
+// The beaver-agent Worker: the Beaver page, its viewer, the Whisper model files, and the
+// BeaverGuide agent in one deployment (#60 to #64). Separate from the public site's `beaver`
+// Worker so the two deploy independently.
 {
   "name": "beaver-agent",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-27",
   "compatibility_flags": ["nodejs_compat"],
+  // Bundles the SDK's voice client for the page before every deploy and dev run.
+  "build": { "command": "npm run build:client" },
   "ai": { "binding": "AI" },
-  // session.html, the live session's viewer page (#61); static files skip the Worker.
+  // The app page, the viewer page, and their scripts; static files skip the Worker.
   "assets": { "directory": "./public" },
+  // Whisper base for in-browser transcription; its decoder (54 MB) is over the 25 MiB limit
+  // for a static file, so it lives in R2.
+  "r2_buckets": [{ "binding": "MODELS", "bucket_name": "beaver-models" }],
+  // The prompt files and config.toml that src/prompts.ts imports as text.
+  "rules": [{ "type": "Text", "globs": ["**/*.md", "**/*.toml"], "fallthrough": true }],
   "durable_objects": {
     "bindings": [{ "name": "BeaverGuide", "class_name": "BeaverGuide" }]
   },
@@ -16,7 +24,9 @@
     // Workers AI vision model with JSON mode; the answer prompt sends a camera frame.
     "ANSWER_MODEL": "@cf/meta/llama-4-scout-17b-16e-instruct",
     "TRANSLATE_MODEL": "@cf/meta/m2m100-1.2b",
-    "SPEECH_MODEL": "@cf/myshell-ai/melotts"
+    "SPEECH_MODEL": "@cf/myshell-ai/melotts",
+    // Speech-to-text for voice calls (#64): multilingual, one clip per request.
+    "TRANSCRIBE_MODEL": "@cf/openai/whisper-large-v3-turbo"
   },
   "observability": { "enabled": true }
 }
