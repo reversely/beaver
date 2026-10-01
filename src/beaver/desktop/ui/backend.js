@@ -7,11 +7,40 @@
 import { redact } from "./guard.js";
 
 const params = new URLSearchParams(location.search);
-const session = params.get("s") ?? "";
-const key = params.get("key") ?? "";
+// The laptop's server listens on 127.0.0.1 only (server.py), as the site menu assumes (/nav.js).
+const ON_LAPTOP = ["127.0.0.1", "localhost"].includes(location.hostname);
+const SAVED = "beaver-session";
 
-/** "agent" on the Cloudflare page, "laptop" on the desktop app. */
-export const BACKEND = session && key ? "agent" : "laptop";
+function savedLink() {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED) ?? "null");
+  } catch {
+    return null;
+  }
+}
+
+// A session link opened once on this browser is kept, so /app/ alone reopens that session; the
+// URL then shows the link again so it can be copied.
+let session = params.get("s") ?? "";
+let key = params.get("key") ?? "";
+if (session && key) {
+  try {
+    localStorage.setItem(SAVED, JSON.stringify({ session, key }));
+  } catch {}
+} else if (!ON_LAPTOP) {
+  const saved = savedLink();
+  if (saved?.session && saved?.key) {
+    ({ session, key } = saved);
+    const url = new URL(location.href);
+    url.searchParams.set("s", session);
+    url.searchParams.set("key", key);
+    history.replaceState(null, "", url);
+  }
+}
+
+/** "agent" on the Cloudflare page, "laptop" on the desktop app, "none" on the Cloudflare page
+ * opened without a session link, where no backend can answer. */
+export const BACKEND = session && key ? "agent" : ON_LAPTOP ? "laptop" : "none";
 const AGENT_BASE = `/agents/beaver-guide/${encodeURIComponent(session)}`;
 // MeloTTS's languages (agent/src/workers-ai.ts); other sentences show without audio.
 const AGENT_SPOKEN = new Set(["en", "es", "fr", "zh"]);
@@ -19,7 +48,8 @@ const AGENT_SPOKEN = new Set(["en", "es", "fr", "zh"]);
 // Elements marked data-backend="laptop" or "agent" show only on that backend. The site menu
 // (/nav.js) runs after this module and reads data-site, so the Cloudflare page counts as online.
 document.querySelectorAll("[data-backend]").forEach((el) => (el.hidden = el.dataset.backend !== BACKEND));
-if (BACKEND === "agent") document.body.dataset.site = "online";
+if (BACKEND !== "laptop") document.body.dataset.site = "online";
+const NO_LINK = "Open Beaver with the session link you were given; this address alone has no session.";
 
 async function agent(path, body) {
   const response = await fetch(`${AGENT_BASE}/${path}`, {
@@ -44,6 +74,7 @@ function fromAgent(settings) {
 }
 
 export async function getSettings() {
+  if (BACKEND === "none") return {};
   if (BACKEND === "laptop") return (await fetch("/api/settings")).json();
   // The settings live in the agent's state; this reads them once, and the state socket keeps them.
   const state = await nextState();
@@ -52,6 +83,7 @@ export async function getSettings() {
 
 /** Save one setting; returns every setting, or throws with the server's message. */
 export async function saveSetting(section, name, value) {
+  if (BACKEND === "none") throw new Error(NO_LINK);
   if (BACKEND === "laptop") {
     const response = await fetch("/api/settings", {
       method: "POST",
@@ -71,19 +103,21 @@ export async function saveSetting(section, name, value) {
 // ---- Place: the province and municipality from the rover's phone (laptop only) ---------------
 
 export async function getPlace() {
-  if (BACKEND === "agent") return {};
+  if (BACKEND !== "laptop") return {};
   return fetch("/api/place").then((r) => r.json()).catch(() => ({}));
 }
 
 // ---- Notebooks ----------------------------------------------------------------------------
 
 export async function getNotebooks() {
+  if (BACKEND === "none") return [];
   const response = BACKEND === "laptop" ? await fetch("/api/notebooks") : await agent("notebooks");
   return response.ok ? response.json() : null;
 }
 
 /** One notebook, or null when it cannot be found. */
 export async function getNotebook(id) {
+  if (BACKEND === "none") return null;
   try {
     const path = `notebooks/${encodeURIComponent(id)}`;
     const response = BACKEND === "laptop" ? await fetch(`/api/${path}`) : await agent(path);
@@ -97,6 +131,7 @@ export async function getNotebook(id) {
 
 /** { link, qr_svg?, socket, note? } for the session card, or { link: null } without one. */
 export async function getSession() {
+  if (BACKEND === "none") return { link: null };
   if (BACKEND === "laptop") return (await fetch("/api/session")).json();
   const { key: viewer } = await (await agent("viewer")).json();
   const scheme = location.protocol === "https:" ? "wss" : "ws";
@@ -107,6 +142,7 @@ export async function getSession() {
 }
 
 export async function review(id, remembered) {
+  if (BACKEND === "none") throw new Error(NO_LINK);
   if (BACKEND === "agent") return agent("review", { id, remembered });
   const response = await fetch("/api/review", {
     method: "POST",
@@ -140,7 +176,8 @@ function nextState() {
  * of Float32 samples), and `image_jpeg` when the camera is on. `options.language` is the spoken
  * language for in-browser Whisper; `options.status` reports progress. */
 export async function* ask(payload, options = {}) {
-  if (BACKEND === "laptop") yield* askLaptop(payload);
+  if (BACKEND === "none") yield { type: "error", message: NO_LINK };
+  else if (BACKEND === "laptop") yield* askLaptop(payload);
   else yield* askAgent(payload, options);
 }
 

@@ -555,3 +555,7 @@ a.nav-item, a.tag-link { text-decoration: none; }
     grid-template-areas: "voice voice" "talk camera" "typed typed" "status status";
   }
 }
+
+/* The Cloudflare page opened without a session link (#65). */
+.no-session { color: var(--ink); line-height: 1.5; }
+.no-session code { font-size: 0.9em; color: var(--accent-text); }
