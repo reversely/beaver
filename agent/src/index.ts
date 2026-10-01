@@ -22,24 +22,33 @@ async function role(request: Request, env: Env): Promise<Role | null> {
   return roleFor(env.BEAVER_AGENT_TOKEN, session, key);
 }
 
-async function model(request: Request, env: Env): Promise<Response> {
+async function model(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const key = modelKey(new URL(request.url).pathname);
   if (!key) return json({ error: "Not found" }, 404);
+  // A Worker's responses skip Cloudflare's cache unless it uses the Cache API; streaming 77 MB
+  // from R2 on every first visit took about 45 s, so each file is kept at the edge after one read.
+  const cache = caches.default;
+  const cacheKey = new Request(new URL(request.url).toString(), { method: "GET" });
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
   const object = await env.MODELS.get(key);
   if (!object) return json({ error: "Not found" }, 404);
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set("ETag", object.httpEtag);
+  headers.set("Content-Length", String(object.size));
   // The files never change under one name, so browsers and Cloudflare's edge keep them.
   headers.set("Cache-Control", "public, max-age=31536000, immutable");
-  return new Response(object.body, { headers });
+  const response = new Response(object.body, { headers });
+  ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const path = new URL(request.url).pathname;
     if (path.startsWith("/models/")) {
-      return request.method === "GET" ? model(request, env) : json({ error: "Use GET" }, 405);
+      return request.method === "GET" ? model(request, env, ctx) : json({ error: "Use GET" }, 405);
     }
     if (!path.startsWith("/agents/")) return json({ error: "Not found" }, 404);
     const websocket = request.headers.get("Upgrade") === "websocket";

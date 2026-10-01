@@ -23,6 +23,11 @@ the row says Pi 5, with each app's default `config.toml` unless noted.
 | Typed question through the page's API | `provider.name = "cloudflare"` (Workers AI `llama-4-scout-17b-16e-instruct`, `m2m100-1.2b`, MeloTTS), the 3 `bilingualtest` cases, visitor's language first then English and French, 2026-10-01 | Answer 5.5 to 9.8 s; translation 0.95 to 4.2 s; first audio 8.4 to 12.8 s; all audio 10.8 to 14.8 s; Arabic has no MeloTTS voice |
 | Typed question through the page's API | `provider.name = "gemini"`, the same 3 cases and languages, Argos translation, 2026-10-01 | Answer 1.3 to 5.6 s; translation 0.57 to 0.91 s; first audio 3.3 to 7.8 s; all audio 8.2 to 13.6 s |
 | `beaver-agent` actions, called directly | 2026-10-01, from the laptop | `ask` 3.0 s with a camera frame and 3.4 s without; `translate` 2 sentences into 6 languages 1.5 s; MeloTTS 0.8 to 1.4 s per sentence, returned as WAV |
+| Beaver page, typed question | Deployed `beaver-agent`, headless Chrome, 2026-10-01 | Answer ready 2.3 s after sending |
+| Beaver page, "This device" voice | Deployed, cold browser cache, Whisper base files streamed from R2 through the Worker | Model loaded at 45 s; turn shown at 55 s |
+| Beaver page, "This device" voice | Same, with the files in Cloudflare's edge cache (Cache API) | Model loaded at 11.8 s; Whisper with loading 12.8 s; answer ready 3.5 s after sending; turn shown at 21 s |
+| Whisper base decoder download | 54 MB from the edge cache, 3 runs | 4.0 to 6.6 s (8 to 13 MB/s) |
+| Beaver page, "Cloudflare" voice call | Deployed, `whisper-large-v3-turbo`, 6 turns of "What is poutine?" | Each heard correctly; 1.7 to 3.7 s from the end of speech to the end of the reply |
 | Typed question through the page's API | After the shared-core merge, 7 runs | First audio at 2.36 to 3.00 s, averaging 2.65 s |
 | 3D pieces | 8 pieces at 200 px, headless Chrome | 223 ms on a cold start, 96 ms on a second run; the first piece takes 74 ms for WebGL setup and the rest 1 to 8 ms each |
 
