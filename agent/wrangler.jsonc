@@ -1,0 +1,20 @@
+// The beaver-agent Worker: the desktop app's Cloudflare Agent (#60). Separate from the public
+// site's `beaver` Worker so the two deploy independently.
+{
+  "name": "beaver-agent",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "ai": { "binding": "AI" },
+  "durable_objects": {
+    "bindings": [{ "name": "BeaverGuide", "class_name": "BeaverGuide" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BeaverGuide"] }],
+  "vars": {
+    // Workers AI vision model with JSON mode; the answer prompt sends a camera frame.
+    "ANSWER_MODEL": "@cf/meta/llama-4-scout-17b-16e-instruct",
+    "TRANSLATE_MODEL": "@cf/meta/m2m100-1.2b",
+    "SPEECH_MODEL": "@cf/myshell-ai/melotts"
+  },
+  "observability": { "enabled": true }
+}

@@ -22,6 +22,7 @@ from pathlib import Path
 import bilingual
 import devices
 import notebooks
+import provider
 import rover_phone
 from beaver.core import guard
 from beaver.core.record import RunRecord
@@ -43,6 +44,7 @@ EDITABLE = {
     },
     "answer": {"mode": ("translate", "inline")},
     "translation": {"backend": ("gemini", "argos")},
+    "provider": {"name": ("gemini", "cloudflare")},
 }
 MAX_REQUEST_BYTES = 15 * 1024 * 1024
 
@@ -115,15 +117,26 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
             "codes": result["codes"],
         }
         sentences = []
-        for piece in bilingual.synthesize_in_order(config, result["groups"]):
+        voice = provider.voice(config)
+        for piece in bilingual.synthesize_in_order(
+            config, result["groups"], voice=voice
+        ):
             if not sentences:
                 record.mark("first_audio_ready", start)
             sentence = {k: v for k, v in piece.items() if k not in ("pcm", "rate")}
             sentences.append(sentence)
             audio = None
             if piece["pcm"] is not None:
-                name = f"g{piece['group'] + 1}-{piece['code']}.wav"
-                record.save_file(name, devices.pcm_to_wav(piece["pcm"], piece["rate"]))
+                name = f"g{piece['group'] + 1}-{piece['code']}"
+                # ElevenLabs returns PCM with its rate; Workers AI MeloTTS returns MP3 (rate None).
+                if piece["rate"] is None:
+                    name += ".mp3"
+                    record.save_file(name, piece["pcm"])
+                else:
+                    name += ".wav"
+                    record.save_file(
+                        name, devices.pcm_to_wav(piece["pcm"], piece["rate"])
+                    )
                 audio = f"/runs/{record.dir.name}/{name}"
             yield {
                 "type": "sentence",

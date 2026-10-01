@@ -9,7 +9,8 @@ Either way the result is a list of sentence groups, each group holding one sente
 import json
 
 import argos
-from beaver.core import gemini
+import cloudflare
+import provider
 from beaver.core.record import RunRecord
 from beaver.core.sentences import group, split_sentences, synthesize_in_order, translate
 from beaver.core.settings import render_prompt
@@ -87,7 +88,7 @@ def _answer_then_translate(config, record, system, question, image, spoken):
         max_characters=config["answer"]["max_characters"],
     )
     reply = json.loads(
-        gemini.ask(
+        provider.ask(
             config,
             record,
             system,
@@ -103,6 +104,12 @@ def _answer_then_translate(config, record, system, question, image, spoken):
     names = {**NAMES, visitor["code"]: visitor["name"]}
     translations = {source: sentences}
     others = [code for code in codes if code != source]
+    if provider.is_cloudflare(config):
+        # Workers AI m2m100 takes the base code; zh-Hant and zh-Hans both arrive as zh.
+        translations.update(
+            cloudflare.translate(config, record, sentences, source, others)
+        )
+        return _result(reply, visitor, codes, translations, len(sentences), record)
     if config["translation"]["backend"] == "argos" and others:
         # The visitor's full tag reaches Argos, so zh-Hant selects the Traditional model.
         targets = {c: visitor["tag"] if c == visitor["code"] else c for c in others}
@@ -148,7 +155,7 @@ def _answer_inline(config, record, system, question, image, spoken):
         target_languages=targets + ", and the visitor's language (key visitor)",
     )
     reply = json.loads(
-        gemini.ask(
+        provider.ask(
             config,
             record,
             system,

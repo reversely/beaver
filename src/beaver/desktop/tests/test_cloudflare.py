@@ -1,0 +1,155 @@
+"""The Cloudflare provider against a fake beaver-agent (#60): the token reaches the agent, and the
+agent receives only guarded text, for the question and for every sentence it is asked to speak.
+python -m unittest discover -s src/beaver/desktop/tests"""
+
+import copy
+import json
+import os
+import shutil
+import sys
+import tempfile
+import threading
+import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import ClassVar
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).parents[1]))
+
+import cloudflare
+import server
+from beaver.core.settings import load_config
+
+CONFIG = load_config(Path(__file__).parents[1] / "config.toml", [])
+TOKEN = "test-token"
+# The fake model repeats a phone number in its answer, so the reply guard has work to do.
+ANSWER = {
+    "question": "ignored",
+    "visitor_language_name": "English",
+    "visitor_language_code": "en",
+    "answer": "Poutine comes from Quebec. Call 613 555 0142 for a table.",
+}
+
+
+class FakeAgent(BaseHTTPRequestHandler):
+    calls: ClassVar[list] = []
+
+    def log_message(self, *args):
+        pass
+
+    def do_POST(self):
+        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+        action = self.path.rsplit("/", 1)[-1]
+        FakeAgent.calls.append((self.path, self.headers["Authorization"], action, body))
+        if action == "ask":
+            reply = {"text": json.dumps(ANSWER), "usage": {"prompt": 10, "reply": 5}}
+            self._send(
+                json.dumps({**reply, "model": "fake", "ms": 1}).encode(),
+                "application/json",
+            )
+        elif action == "translate":
+            translations = {
+                t: [f"[{t}] {s}" for s in body["sentences"]] for t in body["targets"]
+            }
+            self._send(
+                json.dumps({"translations": translations, "ms": 1}).encode(),
+                "application/json",
+            )
+        elif action == "speak":
+            self._send(b"ID3fake", "audio/mpeg")
+
+    def _send(self, data, content_type):
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+
+class CloudflareProvider(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.agent = ThreadingHTTPServer(("127.0.0.1", 0), FakeAgent)
+        threading.Thread(target=cls.agent.serve_forever, daemon=True).start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.agent.shutdown()
+        cls.agent.server_close()
+
+    def setUp(self):
+        FakeAgent.calls = []
+        self.config = copy.deepcopy(CONFIG)
+        self.config["provider"]["name"] = "cloudflare"
+        self.config["cloudflare"]["url"] = (
+            f"http://127.0.0.1:{self.agent.server_address[1]}"
+        )
+        self.config["languages"].update(official="both", include_visitor_language=False)
+        self.config["notebooks"]["enabled"] = False
+        # A run folder per test under the app's runs/, since two turns in one second would share
+        # a folder name.
+        desktop = Path(server.__file__).parent
+        (desktop / "runs").mkdir(exist_ok=True)
+        runs = Path(tempfile.mkdtemp(prefix="test-cloudflare-", dir=desktop / "runs"))
+        self.addCleanup(shutil.rmtree, runs)
+        self.config["output"].update(
+            show_prompts=False, runs_dir=str(runs.relative_to(desktop))
+        )
+
+    def turn(self, text):
+        with mock.patch.dict(os.environ, {"BEAVER_AGENT_TOKEN": TOKEN}):
+            return list(server.ask_events(self.config, {"text": text}))
+
+    def test_a_turn_sends_only_guarded_text_to_the_agent(self):
+        events = self.turn("my phone number is 613 555 0142, what is poutine?")
+        self.assertEqual(events[-1]["type"], "done", events[-1])
+        # The question and every sentence to speak are guarded. The translate request carries the
+        # model's own answer before the reply guard, as the Gemini path does: that text came from
+        # the agent, so it shows the agent nothing new.
+        bodies = {action: [] for action in ("ask", "translate", "speak")}
+        for _, _, action, body in FakeAgent.calls:
+            bodies[action].append(body)
+        self.assertNotIn("0142", json.dumps(bodies["ask"] + bodies["speak"]))
+        self.assertTrue(
+            all(auth == f"Bearer {TOKEN}" for _, auth, _, _ in FakeAgent.calls)
+        )
+        self.assertTrue(
+            all(
+                path.startswith("/agents/beaver-guide/desktop/")
+                for path, *_ in FakeAgent.calls
+            )
+        )
+        spoken = [
+            body["text"] for _, _, action, body in FakeAgent.calls if action == "speak"
+        ]
+        self.assertEqual(len(spoken), 4)  # two sentences, in English and French
+        sentences = [e for e in events if e["type"] == "sentence"]
+        self.assertTrue(all(e["audio"].endswith(".mp3") for e in sentences))
+
+    def test_a_language_melotts_lacks_shows_without_audio(self):
+        self.config["languages"].update(official="en", include_visitor_language=True)
+        ANSWER["visitor_language_code"] = "uk"
+        ANSWER["visitor_language_name"] = "Ukrainian"
+        try:
+            events = self.turn("Що таке путін?")
+        finally:
+            ANSWER["visitor_language_code"] = "en"
+            ANSWER["visitor_language_name"] = "English"
+        sentences = [e for e in events if e["type"] == "sentence"]
+        self.assertTrue(
+            any(e["code"] == "uk" and e["audio"] is None for e in sentences)
+        )
+        spoken = {
+            body["lang"] for _, _, action, body in FakeAgent.calls if action == "speak"
+        }
+        self.assertEqual(spoken, {"en"})
+
+    def test_missing_token_stops_before_any_request(self):
+        with mock.patch.dict(os.environ, {}, clear=True), self.assertRaises(SystemExit):
+            cloudflare.translate(self.config, mock.MagicMock(), ["a"], "en", ["fr"])
+        self.assertEqual(FakeAgent.calls, [])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -82,18 +82,25 @@ def group(
 
 
 def synthesize_in_order(
-    config: dict, groups: list, spoken_codes: set[str] | None = None
+    config: dict,
+    groups: list,
+    spoken_codes: set[str] | None = None,
+    voice: tuple | None = None,
 ) -> Iterator[dict]:
     """Yield each sentence's audio in speaking order. Up to tts.parallel sentences synthesize at
-    once, so later sentences are ready while earlier ones play. A language outside
-    elevenlabs.spoken_languages, or outside `spoken_codes` when given, is yielded without audio."""
+    once, so later sentences are ready while earlier ones play. `voice` is (convert function,
+    languages it speaks) and defaults to ElevenLabs. A language the voice does not speak, or
+    outside `spoken_codes` when given, is yielded without audio."""
     pieces = [(g, code, text) for g, group in enumerate(groups) for code, text in group]
-    spoken = set(config["elevenlabs"]["spoken_languages"])
+    convert, spoken = voice or (
+        speech.convert,
+        set(config["elevenlabs"]["spoken_languages"]),
+    )
     if spoken_codes is not None:
-        spoken &= spoken_codes
+        spoken = spoken & spoken_codes
     with ThreadPoolExecutor(config["tts"]["parallel"]) as pool:
         futures = [
-            pool.submit(speech.convert, config, text, code) if code in spoken else None
+            pool.submit(convert, config, text, code) if code in spoken else None
             for _, code, text in pieces
         ]
         for (group_index, code, text), future in zip(pieces, futures, strict=True):

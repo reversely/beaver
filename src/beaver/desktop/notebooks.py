@@ -10,7 +10,7 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-from beaver.core import gemini
+import provider
 from beaver.core.record import RunRecord
 from beaver.core.settings import render_prompt
 
@@ -132,7 +132,7 @@ def summaries(notebooks: list[dict]) -> list[dict]:
 
 
 def file_exchange(config: dict, record: RunRecord, result: dict) -> dict:
-    """Ask Gemini where this exchange belongs, store it, and return the notebook summary."""
+    """Ask the provider's model where this exchange belongs, store it, and return the notebook summary."""
     settings = config["notebooks"]
     existing = load(config)
     listing = "\n".join(
@@ -156,7 +156,7 @@ def file_exchange(config: dict, record: RunRecord, result: dict) -> dict:
         },
     )
     reply = json.loads(
-        gemini.ask(config, record, "", prompt, schema=SCHEMA, label="gemini_notebook")
+        provider.ask(config, record, "", prompt, schema=SCHEMA, label="gemini_notebook")
     )
     entry = {
         "at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -222,7 +222,7 @@ def pick_missing_pieces(config: dict, record: RunRecord) -> dict:
     }
     prompt = render_prompt(config, "pick_pieces", {"notebooks": listing})
     picks = json.loads(
-        gemini.ask(config, record, "", prompt, schema=schema, label="gemini_pieces")
+        provider.ask(config, record, "", prompt, schema=schema, label="gemini_pieces")
     )
     chosen = {p["id"]: p["artifact"] for p in picks if p["artifact"] in PIECES}
     with _lock:

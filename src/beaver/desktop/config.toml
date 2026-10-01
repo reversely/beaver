@@ -2,6 +2,23 @@
 #   --set section.key=value     e.g. --set gemini.model=gemini-3.5-flash-lite
 # Run `run.py list` to see the Gemini models, ElevenLabs models, and voices your keys can use.
 
+[provider]
+# Who answers, translates, and speaks. "gemini": Gemini answers and translates, ElevenLabs speaks.
+# "cloudflare": the beaver-agent Worker (agent/) does all three with Workers AI. Either way the
+# question is transcribed and guarded on this laptop first.
+name = "gemini"
+
+[cloudflare]
+# The beaver-agent Worker; the shared token is BEAVER_AGENT_TOKEN in .env.
+url = "https://beaver-agent.shereenlee-ds.workers.dev"
+# One agent per session; its name is part of every request's path.
+session = "desktop"
+timeout_seconds = 60
+# Languages Workers AI MeloTTS speaks; sentences in other languages show without audio.
+spoken_languages = ["en", "es", "fr", "zh"]
+# Refuse to send a longer sentence to MeloTTS.
+max_characters = 600
+
 [gemini]
 model = "gemini-3.8-flash"
 temperature = 0.7
