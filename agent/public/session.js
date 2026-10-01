@@ -24,7 +24,10 @@ function element(tag, className, text) {
 
 function turnItem(turn) {
   const item = element("li", "turn");
-  item.append(element("p", "question", turn.question));
+  const question = element("p", "question", turn.question);
+  // dir="auto" sets each line's direction from its own text, so Arabic reads right to left.
+  question.dir = "auto";
+  item.append(question);
   const groups = new Map();
   for (const sentence of turn.sentences) {
     if (!groups.has(sentence.group)) groups.set(sentence.group, []);
@@ -35,7 +38,9 @@ function turnItem(turn) {
     for (const sentence of sentences) {
       const line = element("p", "line");
       line.lang = sentence.code;
-      line.append(element("span", "code", sentence.code), element("span", "text", sentence.text));
+      const text = element("span", "text", sentence.text);
+      text.dir = "auto";
+      line.append(element("span", "code", sentence.code), text);
       group.append(line);
     }
     item.append(group);
