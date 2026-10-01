@@ -1,0 +1,176 @@
+[
+ {
+  "input": "write to marie.tremblay+tour@example.ca today",
+  "output": "write to an email address today",
+  "rules": [
+   "email"
+  ]
+ },
+ {
+  "input": "call 613-555-0142 please",
+  "output": "call a phone number please",
+  "rules": [
+   "phone"
+  ]
+ },
+ {
+  "input": "call (613) 555-0142 please",
+  "output": "call a phone number please",
+  "rules": [
+   "phone"
+  ]
+ },
+ {
+  "input": "call 613.555.0142 please",
+  "output": "call a phone number please",
+  "rules": [
+   "phone"
+  ]
+ },
+ {
+  "input": "call 613 555 0142 please",
+  "output": "call a phone number please",
+  "rules": [
+   "phone"
+  ]
+ },
+ {
+  "input": "call +1 613 555 0142 please",
+  "output": "call a phone number please",
+  "rules": [
+   "phone"
+  ]
+ },
+ {
+  "input": "call +44 20 7946 0958 please",
+  "output": "call a phone number please",
+  "rules": [
+   "phone"
+  ]
+ },
+ {
+  "input": "I live near K1A 0A9 downtown",
+  "output": "I live near a postal code downtown",
+  "rules": [
+   "postal_code"
+  ]
+ },
+ {
+  "input": "the code is k1a0a9",
+  "output": "the code is a postal code",
+  "rules": [
+   "postal_code"
+  ]
+ },
+ {
+  "input": "meet me at 221 Rideau Street tomorrow",
+  "output": "meet me at an address tomorrow",
+  "rules": [
+   "address"
+  ]
+ },
+ {
+  "input": "j'habite au 1234 rue Sainte-Catherine",
+  "output": "j'habite au an address",
+  "rules": [
+   "address"
+  ]
+ },
+ {
+  "input": "my SIN is 130 692 544",
+  "output": "my SIN is an ID number",
+  "rules": [
+   "social_insurance"
+  ]
+ },
+ {
+  "input": "sample 046 454 286",
+  "output": "sample 046 454 286",
+  "rules": []
+ },
+ {
+  "input": "the code 123 456 788 is wrong",
+  "output": "the code 123 456 788 is wrong",
+  "rules": []
+ },
+ {
+  "input": "card 4111 1111 1111 1111 expires",
+  "output": "card a card number expires",
+  "rules": [
+   "payment_card"
+  ]
+ },
+ {
+  "input": "card 4111 1111 1111 1112 expires",
+  "output": "card 4111 1111 1111 1112 expires",
+  "rules": []
+ },
+ {
+  "input": "card 4111111111111111 expires",
+  "output": "card a card number expires",
+  "rules": [
+   "payment_card"
+  ]
+ },
+ {
+  "input": "RAMQ TREM 1234 5678",
+  "output": "RAMQ a health card number",
+  "rules": [
+   "health_card_qc"
+  ]
+ },
+ {
+  "input": "Ontario 1234-567-897-AB",
+  "output": "Ontario a health card number",
+  "rules": [
+   "health_card_on"
+  ]
+ },
+ {
+  "input": "Ontario 1234-567-890",
+  "output": "Ontario 1234-567-890",
+  "rules": []
+ },
+ {
+  "input": "Confederation came in 1867, the Group of Seven showed in 1920, and the Charter arrived on April 17, 1982. Key years: 1867 1921 1982 2024. The Peace Tower is 92.2 metres tall.",
+  "output": "Confederation came in 1867, the Group of Seven showed in 1920, and the Charter arrived on April 17, 1982. Key years: 1867 1921 1982 2024. The Peace Tower is 92.2 metres tall.",
+  "rules": []
+ },
+ {
+  "input": "Call 613-555-0142 or email a@b.ca about K1A 0A9.",
+  "output": "Call a phone number or email an email address about a postal code.",
+  "rules": [
+   "phone",
+   "email",
+   "postal_code"
+  ]
+ },
+ {
+  "input": "Écrivez à élodie.côté@exemple.ca ou appelez le 514 555 0199.",
+  "output": "Écrivez à an email address ou appelez le a phone number.",
+  "rules": [
+   "email",
+   "phone"
+  ]
+ },
+ {
+  "input": "我的电话是 613 555 0142，邮编 K1A 0A9。",
+  "output": "我的电话是 a phone number，邮编 a postal code。",
+  "rules": [
+   "phone",
+   "postal_code"
+  ]
+ },
+ {
+  "input": "اتصل بي على 613-555-0142 من فضلك",
+  "output": "اتصل بي على a phone number من فضلك",
+  "rules": [
+   "phone"
+  ]
+ },
+ {
+  "input": "Poutine comes from Quebec. It is fries with cheese curds and gravy.",
+  "output": "Poutine comes from Quebec. It is fries with cheese curds and gravy.",
+  "rules": []
+ }
+]

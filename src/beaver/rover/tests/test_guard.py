@@ -1,5 +1,6 @@
 """Guard rules: python -m unittest discover -s src/beaver/rover/tests"""
 
+import json
 import sys
 import time
 import unittest
@@ -103,6 +104,18 @@ class Shorten(unittest.TestCase):
     def test_full_width_stop(self):
         cut, _ = shorten("Poutine是經典美食！它包含三個主要元素。", 13)
         self.assertEqual(cut, "Poutine是經典美食！")
+
+
+class SharedCases(unittest.TestCase):
+    """guard_cases.json pins this guard's output; agent/public/guard.js must produce the same
+    (agent/test/guard.test.ts), so the web page and the agent redact as the rover does."""
+
+    def test_each_case_matches(self):
+        cases = Path(__file__).parents[2] / "core" / "guard_cases.json"
+        for case in json.loads(cases.read_text()):
+            text, findings = redact(case["input"])
+            self.assertEqual(text, case["output"], case["input"])
+            self.assertEqual([f.rule for f in findings], case["rules"], case["input"])
 
 
 if __name__ == "__main__":
