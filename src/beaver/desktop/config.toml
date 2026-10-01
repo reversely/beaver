@@ -3,10 +3,11 @@
 # Run `run.py list` to see the Gemini models, ElevenLabs models, and voices your keys can use.
 
 [provider]
-# Who answers, translates, and speaks. "gemini": Gemini answers and translates, ElevenLabs speaks.
-# "cloudflare": the beaver-agent Worker (agent/) does all three with Workers AI. Either way the
-# question is transcribed and guarded on this laptop first.
-name = "gemini"
+# Who answers, translates, and speaks. "cloudflare": the beaver-agent Worker (agent/) does all three
+# with Workers AI. "gemini": Gemini answers and translates, ElevenLabs speaks; dropped from the
+# Settings panel on the cloudflare_agents branch (#66), and kept for `--set provider.name=gemini`.
+# Either way the question is transcribed and guarded on this laptop first.
+name = "cloudflare"
 
 [cloudflare]
 # The beaver-agent Worker; the shared token is BEAVER_AGENT_TOKEN in .env.

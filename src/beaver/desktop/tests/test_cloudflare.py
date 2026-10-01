@@ -287,6 +287,19 @@ class CloudflareProvider(unittest.TestCase):
         with mock.patch.dict(os.environ, {}, clear=True):
             self.assertIn("note", server._session_state(self.config))
 
+    def test_cloudflare_is_the_default_provider(self):
+        self.assertEqual(CONFIG["provider"]["name"], "cloudflare")
+        self.assertNotIn("provider", server.EDITABLE)
+
+    def test_saved_settings_naming_dropped_settings_still_load(self):
+        saved = {
+            "languages": {"official": "fr", "smuggled": True},
+            "provider": {"name": "gemini"},
+            "translation": {"backend": "argos"},
+            "answer": "not a section",
+        }
+        self.assertEqual(server._editable(saved), {"languages": {"official": "fr"}})
+
     def test_missing_token_stops_before_any_request(self):
         with mock.patch.dict(os.environ, {}, clear=True), self.assertRaises(SystemExit):
             cloudflare.translate(self.config, mock.MagicMock(), ["a"], "en", ["fr"])

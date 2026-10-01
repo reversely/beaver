@@ -44,10 +44,18 @@ EDITABLE = {
         "order": ("official_first", "visitor_first"),
     },
     "answer": {"mode": ("translate", "inline")},
-    "translation": {"backend": ("gemini", "argos")},
-    "provider": {"name": ("gemini", "cloudflare")},
 }
 MAX_REQUEST_BYTES = 15 * 1024 * 1024
+
+
+def _editable(saved: dict) -> dict:
+    """The saved settings that are still editable. A file saved before a setting was dropped,
+    such as the provider (#66), still loads; the dropped values are ignored, never applied."""
+    return {
+        section: {k: v for k, v in values.items() if k in EDITABLE.get(section, {})}
+        for section, values in saved.items()
+        if isinstance(values, dict) and section in EDITABLE
+    }
 
 
 class App:
@@ -55,7 +63,7 @@ class App:
         self.config = config
         self.lock = threading.Lock()
         if LOCAL_SETTINGS.exists():
-            self.apply(json.loads(LOCAL_SETTINGS.read_text()))
+            self.apply(_editable(json.loads(LOCAL_SETTINGS.read_text())))
 
     def settings(self) -> dict:
         with self.lock:
