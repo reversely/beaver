@@ -1,4 +1,7 @@
 // Page logic: settings, hold-to-talk recording, camera frames, and in-order sentence playback.
+// Every server call goes through backend.js, so this page runs on the laptop and on the
+// Cloudflare agent alike (#65).
+import * as backend from "./backend.js";
 import { notebookHash, refreshNotebooks } from "./notebooks.js";
 import { go, start } from "./router.js";
 
@@ -21,12 +24,15 @@ function settingPath(element) {
 function showSettings(settings) {
   document.querySelectorAll(".seg[data-setting]").forEach((group) => {
     const [section, key] = settingPath(group);
+    // A setting the backend lacks, such as the provider on the Cloudflare page, is left alone.
+    if (settings[section]?.[key] === undefined) return;
     group.querySelectorAll("button").forEach((button) => {
       button.setAttribute("aria-checked", String(button.dataset.value === settings[section][key]));
     });
   });
   document.querySelectorAll("input[data-setting]").forEach((input) => {
     const [section, key] = settingPath(input);
+    if (settings[section]?.[key] === undefined) return;
     input.checked = Boolean(settings[section][key]);
   });
   // live-session.js shows the session link when the provider is Cloudflare.
@@ -34,17 +40,11 @@ function showSettings(settings) {
 }
 
 async function saveSetting(section, key, value) {
-  const response = await fetch("/api/settings", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ [section]: { [key]: value } }),
-  });
-  const body = await response.json();
-  if (!response.ok) {
-    setStatus(body.error, true);
-    return;
+  try {
+    showSettings(await backend.saveSetting(section, key, value));
+  } catch (error) {
+    setStatus(error.message, true);
   }
-  showSettings(body);
 }
 
 document.querySelectorAll(".seg[data-setting] button").forEach((button) => {
@@ -60,11 +60,11 @@ document.querySelectorAll("input[data-setting]").forEach((input) => {
   });
 });
 
-fetch("/api/settings").then((r) => r.json()).then(showSettings);
+backend.getSettings().then(showSettings).catch((error) => setStatus(error.message, true));
 
 // The province and municipality mapped from the rover's phone location, refreshed after each sync.
 async function showPlace() {
-  const place = await fetch("/api/place").then((r) => r.json()).catch(() => ({}));
+  const place = await backend.getPlace();
   $("#place-field").hidden = !place.municipality;
   if (place.municipality) $("#place-name").textContent = `${place.municipality}, ${place.province}`;
   const around = place.municipality || "you";
@@ -73,7 +73,7 @@ async function showPlace() {
   });
 }
 showPlace();
-setInterval(showPlace, 60000);
+if (backend.BACKEND === "laptop") setInterval(showPlace, 60000);
 
 
 // ---- Status ---------------------------------------------------------------------------------
@@ -164,55 +164,107 @@ async function stopRecording() {
     setStatus("Please hold the button while you speak");
     return;
   }
-  ask({ audio_wav: encodeWav(chunks, context.sampleRate) });
+  ask({ audio: { chunks, rate: context.sampleRate } });
 }
 
-function encodeWav(chunks, rate) {
-  const length = chunks.reduce((n, c) => n + c.length, 0);
-  const buffer = new ArrayBuffer(44 + length * 2);
-  const view = new DataView(buffer);
-  const text = (offset, s) => [...s].forEach((ch, i) => view.setUint8(offset + i, ch.charCodeAt(0)));
-  text(0, "RIFF");
-  view.setUint32(4, 36 + length * 2, true);
-  text(8, "WAVEfmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, rate, true);
-  view.setUint32(28, rate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  text(36, "data");
-  view.setUint32(40, length * 2, true);
-  let offset = 44;
-  for (const chunk of chunks) {
-    for (const sample of chunk) {
-      view.setInt16(offset, Math.max(-1, Math.min(1, sample)) * 0x7fff, true);
-      offset += 2;
-    }
-  }
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-  for (let i = 0; i < bytes.length; i += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  }
-  return btoa(binary);
-}
+// On the Cloudflare page the visitor picks how speech is heard: "device" runs Whisper in the
+// browser while they hold the button; "call" streams to the agent's voice pipeline (#64).
+const holding = () => backend.BACKEND === "laptop" || voiceMode === "device";
 
 talk.addEventListener("pointerdown", (event) => {
+  if (!holding()) return;
   talk.setPointerCapture(event.pointerId);
   startRecording();
 });
-talk.addEventListener("pointerup", stopRecording);
-talk.addEventListener("pointercancel", stopRecording);
+talk.addEventListener("pointerup", () => holding() && stopRecording());
+talk.addEventListener("pointercancel", () => holding() && stopRecording());
+talk.addEventListener("click", () => !holding() && toggleCall());
 talk.addEventListener("keydown", (event) => {
-  if ((event.key === " " || event.key === "Enter") && !event.repeat) {
+  if (holding() && (event.key === " " || event.key === "Enter") && !event.repeat) {
     event.preventDefault();
     startRecording();
   }
 });
 talk.addEventListener("keyup", (event) => {
-  if (event.key === " " || event.key === "Enter") stopRecording();
+  if (holding() && (event.key === " " || event.key === "Enter")) stopRecording();
+});
+
+// ---- Cloudflare page: spoken language and voice mode ------------------------------------------
+
+const languagePick = $("#spoken-language");
+let voiceMode = "device";
+let call = null;
+let callTurns = null;
+
+function remember(name, value) {
+  try {
+    localStorage.setItem(name, value);
+  } catch {}
+}
+
+function recall(name) {
+  try {
+    return localStorage.getItem(name);
+  } catch {
+    return null;
+  }
+}
+
+if (backend.BACKEND === "agent") {
+  const saved = recall("beaver-language");
+  if (saved && [...languagePick.options].some((o) => o.value === saved)) languagePick.value = saved;
+  languagePick.addEventListener("change", () => remember("beaver-language", languagePick.value));
+  voiceMode = recall("beaver-voice") === "call" ? "call" : "device";
+  showVoiceMode();
+  document.querySelectorAll("#voice-mode button").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (call?.inCall) await toggleCall();
+      voiceMode = button.dataset.value;
+      remember("beaver-voice", voiceMode);
+      showVoiceMode();
+    });
+  });
+}
+
+function showVoiceMode() {
+  document.querySelectorAll("#voice-mode button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.value === voiceMode)));
+  $("#language-field").hidden = voiceMode !== "device";
+  $("#voice-note").textContent =
+    voiceMode === "device"
+      ? "Speech is transcribed on this device; the first use downloads a 77 MB model."
+      : "Speech streams to Cloudflare, which transcribes it and removes personal information there.";
+  talk.querySelector(".talk-label").textContent = voiceMode === "device" ? "Hold to talk" : "Start call";
+}
+
+async function toggleCall() {
+  call ??= backend.voiceCall(setStatus);
+  try {
+    const active = await call.toggle();
+    talk.classList.toggle("is-recording", active);
+    talk.querySelector(".talk-label").textContent = active ? "End call" : "Start call";
+    callTurns = active ? null : callTurns;
+  } catch (error) {
+    setStatus(`The call could not start: ${error.message}`, true);
+  }
+}
+
+// During a call the agent publishes each turn to the session's state; live-session.js passes the
+// state on, and new turns are drawn here like any other. The call's own audio plays from the
+// voice client, so these lines carry none.
+document.addEventListener("session-state", (event) => {
+  const turns = event.detail.turns ?? [];
+  if (!call?.inCall) {
+    callTurns = turns.length;
+    return;
+  }
+  for (const done of turns.slice(callTurns ?? turns.length)) {
+    const turn = newTurn(done.question);
+    const groups = turn.querySelector(".groups");
+    const player = new Player(() => {});
+    handleEvent({ type: "question", question: done.question, visitor: done.visitor }, turn, groups, player);
+    for (const s of done.sentences) handleEvent({ type: "sentence", ...s, audio: null, spokenElsewhere: true }, turn, groups, player);
+  }
+  callTurns = turns.length;
 });
 
 $("#typed").addEventListener("submit", (event) => {
@@ -315,24 +367,8 @@ async function ask(payload) {
   });
 
   try {
-    const response = await fetch("/api/ask", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let pending = "";
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      pending += decoder.decode(value, { stream: true });
-      const lines = pending.split("\n");
-      pending = lines.pop();
-      for (const line of lines) {
-        if (line.trim()) handleEvent(JSON.parse(line), turn, groups, player);
-      }
-    }
+    const options = { language: languagePick?.value, status: setStatus };
+    for await (const event of backend.ask(payload, options)) handleEvent(event, turn, groups, player);
   } catch (error) {
     setStatus(`Beaver could not answer: ${error.message}`, true);
   } finally {
@@ -362,7 +398,7 @@ function handleEvent(event, turn, groups, player) {
     group.append(line);
     if (event.audio) {
       player.add({ url: event.audio, line });
-    } else {
+    } else if (!event.spokenElsewhere) {
       // The voice model does not speak this language; the line shows without audio.
       line.classList.add("is-silent");
       line.title = `${languageName(event.code)}, shown only`;
@@ -379,6 +415,9 @@ function handleEvent(event, turn, groups, player) {
     link.title = "Open notebook";
     link.href = notebookHash(event.id);
     turn.querySelector(".turn-meta").append(link);
+  } else if (event.type === "notebook_pending") {
+    // The agent files the turn after it is published, a few seconds later (#62).
+    setTimeout(refreshNotebooks, 8000);
   } else if (event.type === "notebook_error") {
     addTag(turn, "not filed");
   } else if (event.type === "error") {

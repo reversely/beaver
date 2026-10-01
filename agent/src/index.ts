@@ -1,6 +1,8 @@
 // The beaver-agent Worker: one deployment that serves the Beaver page, the viewer page, the
 // Whisper model files, and the BeaverGuide agent (guide.ts).
-//   /                  the app page (public/index.html), opened with ?s=<session>&key=<session key>
+//   /app/              the desktop app's interface (copied from src/beaver/desktop/ui/ by
+//                      `npm run build`), opened with ?s=<session>&key=<session key>
+//   /                  a redirect to /app/ that keeps the query
 //   /session.html      the read-only viewer page, opened with the viewer key
 //   /models/<file>     Whisper base for the page's in-browser transcription, from R2
 //   /agents/beaver-guide/<session>/...  the agent's actions and its WebSocket
@@ -46,7 +48,10 @@ async function model(request: Request, env: Env, ctx: ExecutionContext): Promise
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const path = new URL(request.url).pathname;
+    const url = new URL(request.url);
+    const path = url.pathname;
+    // Links minted before #65 opened the page at /.
+    if (path === "/") return Response.redirect(`${url.origin}/app/${url.search}`, 302);
     if (path.startsWith("/models/")) {
       return request.method === "GET" ? model(request, env, ctx) : json({ error: "Use GET" }, 405);
     }

@@ -536,3 +536,22 @@ a.nav-item, a.tag-link { text-decoration: none; }
   .review-word { grid-template-columns: minmax(0, 1fr); }
   .review-actions { grid-column: 1; grid-row: auto; }
 }
+
+/* Cloudflare page (#65): how speech is heard and, for Whisper in the browser, the spoken language,
+   above the talk button. The laptop app has neither, so its composer keeps its own areas. */
+.composer:has(.voice-options:not([hidden])) {
+  grid-template-areas: "voice voice" "talk typed" "talk camera" "status status";
+}
+.voice-options { grid-area: voice; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px 20px; }
+.voice-options .field { margin-bottom: 0; }
+.voice-options .seg button { white-space: nowrap; }
+.voice-note { flex-basis: 100%; margin: 0; color: var(--ink-3); font-size: 14px; }
+.voice-options select {
+  font: inherit; font-size: 15px; color: var(--ink); background: var(--tint);
+  border: 1px solid var(--hairline); border-radius: 12px; padding: 0 12px; min-height: 44px; max-width: 100%;
+}
+@media (max-width: 899px) {
+  .composer:has(.voice-options:not([hidden])) {
+    grid-template-areas: "voice voice" "talk camera" "typed typed" "status status";
+  }
+}

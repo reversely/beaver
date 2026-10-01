@@ -18,5 +18,5 @@ if (!token) {
 }
 const base = process.env.BEAVER_AGENT_URL ?? "https://beaver-agent.shereenlee-ds.workers.dev";
 const query = (key) => `s=${encodeURIComponent(session)}&key=${key}`;
-console.log(`App:    ${base}/?${query(await sessionKey(token, session))}`);
+console.log(`App:    ${base}/app/?${query(await sessionKey(token, session))}`);
 console.log(`Viewer: ${base}/session.html?${query(await viewerKey(token, session))}`);

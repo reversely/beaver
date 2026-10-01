@@ -1,3 +1,5 @@
+import { BACKEND } from "./backend.js";
+
 // The Rover view: start and stop the rover's phone page on the Pi and show its address. The
 // overview's Rover tile repeats the view's status line.
 const status = document.getElementById("rover-status");
@@ -84,4 +86,5 @@ toggle.addEventListener("click", async () => {
   }
 });
 
-refresh();
+// The rover is reached over SSH from the laptop, so the Cloudflare page has no Rover panel (#65).
+if (BACKEND === "laptop") refresh();

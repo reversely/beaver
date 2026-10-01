@@ -7,8 +7,10 @@
     "deploy": "wrangler deploy",
     "check": "tsc --noEmit",
     "test": "node --test test/*.test.ts",
-    "build:client": "esbuild client/voice-entry.js --bundle --format=esm --minify --target=es2022 --outfile=public/voice-client.js",
-    "link": "node scripts/link.mjs"
+    "build:client": "esbuild client/voice-entry.js --bundle --format=esm --minify --target=es2022 --outfile=public/app/voice-client.js",
+    "link": "node scripts/link.mjs",
+    "build:ui": "node scripts/build-ui.mjs",
+    "build": "npm run build:ui && npm run build:client"
   },
   "dependencies": {
     "agents": "^0.24.0"

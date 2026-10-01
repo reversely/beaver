@@ -1,7 +1,7 @@
-// The guard proxy for the web page and the agent (#64): the rules of src/beaver/core/guard.py,
-// ported so a question is redacted before it leaves the browser, and so the agent can redact a
-// transcript it made itself. src/beaver/core/guard_cases.json holds cases both versions must
-// pass; agent/test/guard.test.ts and the rover's test_guard.py check them.
+// The guard proxy for the Cloudflare page and the agent (#64, #65): the rules of
+// src/beaver/core/guard.py, ported so a question is redacted before it leaves the browser, and so
+// the agent can redact a transcript it made itself. src/beaver/core/guard_cases.json holds cases
+// both versions must pass; agent/test/guard.test.ts and the rover's test_guard.py check them.
 //
 // Python's \w and \b match any letter; JavaScript's match ASCII only. W and the two boundary
 // lookarounds below stand in for them, so "élodie" counts as one word as it does in Python.

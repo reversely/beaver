@@ -17,7 +17,7 @@
 import { Agent, type Connection, type ConnectionContext } from "agents";
 import { type TextSource, type Transcriber, type TranscriberSession, type TranscriberSessionOptions, withVoice } from "agents/voice";
 import { PIECES } from "../../src/beaver/desktop/ui/artifact-specs.js";
-import { redact } from "../public/guard.js";
+import { redact } from "../../src/beaver/desktop/ui/guard.js";
 import { type Role, roleFor, viewerKey } from "./auth.ts";
 import { checkFiling, type FilingRequest, listing, newId, type NotebookRow } from "./notebooks.ts";
 import { ANSWER, NOTEBOOK_PROMPT, NOTEBOOKS, PROMPT_VARS, PROMPTS, REVIEW } from "./prompts.ts";

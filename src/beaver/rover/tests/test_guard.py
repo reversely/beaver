@@ -107,7 +107,7 @@ class Shorten(unittest.TestCase):
 
 
 class SharedCases(unittest.TestCase):
-    """guard_cases.json pins this guard's output; agent/public/guard.js must produce the same
+    """guard_cases.json pins this guard's output; src/beaver/desktop/ui/guard.js must produce the same
     (agent/test/guard.test.ts), so the web page and the agent redact as the rover does."""
 
     def test_each_case_matches(self):

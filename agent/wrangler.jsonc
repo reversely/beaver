@@ -6,8 +6,9 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-09-27",
   "compatibility_flags": ["nodejs_compat"],
-  // Bundles the SDK's voice client for the page before every deploy and dev run.
-  "build": { "command": "npm run build:client" },
+  // Copies the desktop interface into public/app/ and bundles the SDK's voice client beside it,
+  // before every deploy and dev run (#65).
+  "build": { "command": "npm run build" },
   "ai": { "binding": "AI" },
   // The app page, the viewer page, and their scripts; static files skip the Worker.
   "assets": { "directory": "./public" },

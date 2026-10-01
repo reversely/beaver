@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { redact } from "../public/guard.js";
+import { redact } from "../../src/beaver/desktop/ui/guard.js";
 
 const cases = JSON.parse(
   readFileSync(new URL("../../src/beaver/core/guard_cases.json", import.meta.url), "utf8"),

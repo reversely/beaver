@@ -1,4 +1,7 @@
 node_modules/
 .wrangler/
 .dev.vars
-public/voice-client.js
+# Built by `npm run build` from src/beaver/desktop/ui/ and web/ (#65).
+public/app/
+public/nav.css
+public/nav.js

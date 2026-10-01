@@ -1,6 +1,7 @@
 // The Notebooks view (the list and one notebook) and the overview's Notebooks tile. All notebook
 // text is model output, so it is set with textContent and never parsed as HTML.
 import { artifactImage, pieceFor } from "./artifacts.js";
+import { getNotebook, getNotebooks } from "./backend.js";
 import { onRoute } from "./router.js";
 
 const list = document.getElementById("notebook-list");
@@ -45,7 +46,7 @@ function listItem(notebook) {
 }
 
 export async function refreshNotebooks() {
-  const notebooks = await fetch("/api/notebooks").then((r) => r.json()).catch(() => null);
+  const notebooks = await getNotebooks().catch(() => null);
   if (!notebooks) {
     emptyNotes.forEach((note) => (note.textContent = "The notebooks could not be loaded."));
     return;
@@ -56,12 +57,11 @@ export async function refreshNotebooks() {
 }
 
 async function openNotebook(id) {
-  const response = await fetch(`/api/notebooks/${encodeURIComponent(id)}`);
-  if (!response.ok) {
+  const notebook = await getNotebook(id);
+  if (!notebook) {
     notebookView.replaceChildren(el("p", "empty card view-note", "This notebook could not be found."));
     return;
   }
-  const notebook = await response.json();
   notebookView.replaceChildren(header(notebook), timeline(notebook), vocabulary(notebook), concepts(notebook), questions(notebook));
 }
 

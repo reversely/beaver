@@ -27,7 +27,7 @@
       <details class="panel settings" id="settings">
         <summary class="settings-summary"><h2 id="settings-heading">Settings</h2></summary>
 
-        <div class="field">
+        <div class="field" data-backend="laptop">
           <span class="field-label" id="provider-label">Answers from</span>
           <div class="seg" role="radiogroup" aria-labelledby="provider-label" data-setting="provider.name">
             <button type="button" role="radio" data-value="gemini">Gemini</button>
@@ -66,7 +66,7 @@
           </div>
         </div>
 
-        <div class="field">
+        <div class="field" data-backend="laptop">
           <span class="field-label" id="backend-label">Translated by</span>
           <div class="seg" role="radiogroup" aria-labelledby="backend-label" data-setting="translation.backend">
             <button type="button" role="radio" data-value="gemini">Gemini</button>
@@ -86,7 +86,7 @@
         <a class="nav-item" href="#/documents" data-route-link="documents">Documents</a>
         <a class="nav-item" href="#/ask" data-route-link="ask">Ask Beaver</a>
         <a class="nav-item" href="#/notebooks" data-route-link="notebooks">Notebooks</a>
-        <a class="nav-item" href="#rover" data-route-link="rover">Rover</a>
+        <a class="nav-item" href="#rover" data-route-link="rover" data-backend="laptop">Rover</a>
       </nav>
     </aside>
 
@@ -115,7 +115,7 @@
             <ul class="tile-list" id="overview-notebooks"></ul>
             <p class="empty" data-notebooks-empty>Notebooks fill as you ask questions</p>
           </article>
-          <article class="tile card">
+          <article class="tile card" data-backend="laptop">
             <h2><a href="#rover">Rover</a></h2>
             <p class="empty" id="overview-rover" role="status">Checking the rover</p>
           </article>
@@ -147,7 +147,8 @@
 
       <section class="view rover" id="rover" data-route="rover" aria-labelledby="rover-heading" hidden>
         <h1 class="view-title" id="rover-heading">Rover</h1>
-        <div class="card view-note">
+        <p class="empty card view-note" data-backend="agent" hidden>The rover's phone page starts from the laptop app, which reaches the rover over SSH.</p>
+        <div class="card view-note" data-backend="laptop">
           <p class="empty" id="rover-status" role="status">Checking the rover</p>
           <div class="rover-link" id="rover-link" hidden>
             <div class="rover-qr" id="rover-qr"></div>
@@ -164,6 +165,29 @@
       </header>
 
       <section class="composer card" aria-label="Ask">
+        <div class="voice-options" data-backend="agent" hidden>
+          <div class="field">
+            <span class="field-label" id="voice-label">Listen with</span>
+            <div class="seg" role="radiogroup" aria-labelledby="voice-label" id="voice-mode">
+              <button type="button" role="radio" data-value="device">This device</button>
+              <button type="button" role="radio" data-value="call">Cloudflare</button>
+            </div>
+          </div>
+          <label class="field" id="language-field">
+            <span class="field-label">I'm speaking</span>
+            <select id="spoken-language">
+              <option value="en">English</option>
+              <option value="fr" lang="fr">Français</option>
+              <option value="es" lang="es">Español</option>
+              <option value="ar" lang="ar">العربية</option>
+              <option value="zh" lang="zh">中文</option>
+              <option value="pa" lang="pa">ਪੰਜਾਬੀ</option>
+              <option value="tl" lang="tl">Tagalog</option>
+              <option value="uk" lang="uk">Українська</option>
+            </select>
+          </label>
+          <p class="voice-note" id="voice-note"></p>
+        </div>
         <button type="button" class="talk" id="talk">
           <span class="talk-dot" aria-hidden="true"></span>
           <span class="talk-label">Hold to talk</span>
