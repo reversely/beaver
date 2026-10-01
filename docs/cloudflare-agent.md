@@ -4,11 +4,11 @@ The Cloudflare agent gives the newcomer at the desktop app a second way to get a
 three features on top: every screen in the room follows the conversation as it happens, the
 newcomer's notebooks are stored online and reachable from any laptop with the token, and the words
 each question taught come back for review on a schedule. It lives on the `cloudflare_agents` branch
-(issues #60 to #64) and runs as the Cloudflare Worker `beaver-agent`, built on the Cloudflare
+(issues #60 to #65) and runs as the Cloudflare Worker `beaver-agent`, built on the Cloudflare
 Agents SDK (`agents` 0.24.0).
 
 The newcomer reaches it two ways. The Beaver page (see Beaver page) needs only a browser and a
-link: the Worker serves the page and hosts the agent in one deployment. The desktop app's Settings
+link: the Worker serves the desktop app's own interface and hosts the agent in one deployment. The desktop app's Settings
 panel also switches between Gemini and the agent with "Answers from: Gemini / Cloudflare"
 (`provider.name`). The rover keeps using Gemini and ElevenLabs in every case.
 
@@ -22,7 +22,8 @@ panel also switches between Gemini and the agent with "Answers from: Gemini / Cl
 | Agent client | Laptop | `src/beaver/desktop/cloudflare.py` | Carries guarded text and camera frames to the agent and brings answers, audio, and notebooks back |
 | `BeaverGuide` agent | Cloudflare, one Durable Object per session | `agent/src/guide.ts` | Answers, translates, and speaks with Workers AI; holds the session's live turns, notebooks, and review schedule; runs voice calls |
 | Worker entry | Cloudflare | `agent/src/index.ts` | Checks each request's token or key, serves the Whisper files from R2, and routes the rest to the agent |
-| Beaver page | Visitor's browser, served by the Worker | `agent/public/index.html`, `app.js`, `app.css`, `whisper.js`, `guard.js` | Lets the newcomer ask by voice or typing, follow the conversation, review words, and browse notebooks from any browser |
+| Beaver page | Visitor's browser, served by the Worker at `/app/` | `src/beaver/desktop/ui/`, copied by `npm run build` in `agent/` | The desktop app's interface, so the newcomer asks by voice or typing, follows the conversation, reviews words, and browses notebooks from any browser |
+| Backend adapter | Browser | `src/beaver/desktop/ui/backend.js` | Sends every call from the interface to the laptop's server or to the session's agent, so one interface serves both |
 | Viewer page | Cloudflare static files | `agent/public/session.html`, `session.js`, `session.css` | Shows each question and answer, and the words due for review, on a phone or a second screen |
 | Session and review cards | Laptop browser | `src/beaver/desktop/ui/live-session.js` | Shows the viewer link and its QR code on the Ask view, and the due words with Remembered and Forgot on the Notebooks view |
 
@@ -91,7 +92,16 @@ Gemini path does. That text came from the agent's model, so it shows the agent n
 The Beaver page serves the newcomer who has only a phone or a borrowed computer: one link opens the
 whole app, with no laptop server and no install.
 
-- **Link.** `/?s=<session>&key=<session key>`. `npm run link -- <session>` in `agent/` prints the
+- **One interface.** `src/beaver/desktop/ui/` is the only copy. `npm run build` in `agent/`, which
+  wrangler runs before every deploy and dev run, copies it to `agent/public/app/` with the site
+  menu from `web/`. `backend.js` reads the page's URL: with `?s=` and `key=` it talks to the agent,
+  without them to the laptop's Python server. Its `ask()` yields the events `/api/ask` streams
+  (question, sentence, done, error), so the Ask view draws a turn the same way on both. Elements
+  marked `data-backend="laptop"` (the provider and Argos settings, the Rover panel and tile) or
+  `data-backend="agent"` (the voice-mode switch and the spoken-language picker) show only on that
+  side. The place line stays empty on the Cloudflare page, and the session card shows its link
+  without a QR code.
+- **Link.** `/app/?s=<session>&key=<session key>`; `/` redirects there. `npm run link -- <session>` in `agent/` prints the
   app link and the watch-only viewer link from the token in `.env`. The session key is
   HMAC-SHA256 of `use:<session>` under the token, so it differs from the viewer key, and neither
   yields the other. Anyone holding the app link can ask questions in that session.
@@ -102,7 +112,7 @@ whole app, with no laptop server and no install.
   frame when the camera is on, to the agent's `turn` action, which answers and translates
   (`agent/src/turn.ts`, the port of `bilingual.py`). The page guards every sentence, publishes the
   turn with `file: true` so the agent files it into a notebook, and asks `speak` for each sentence
-  two at a time. The first use downloads the model; later uses load it from the browser's cache.
+  two at a time. The notebook list refreshes 8 s later, after the agent's filing. The first use downloads the model; later uses load it from the browser's cache.
 - **Cloudflare.** The visitor presses Start call. The SDK's voice client
   (`agent/client/voice-entry.js`, bundled into `public/voice-client.js` by `npm run build:client`)
   streams 16 kHz PCM to the agent over its WebSocket. The agent's transcriber
@@ -113,13 +123,14 @@ whole app, with no laptop server and no install.
   pieces for speech and merges sentences under 10 characters, so the agent's speech provider splits
   each piece back by tag, asks MeloTTS once per language, and joins the WAV clips.
   `beforeSynthesize` runs the guard once more. Only a connection opened with the session key can
-  start a call.
-- **Settings.** The page's Settings panel sets the reply languages, their order, and whether
+  start a call. The voice client plays the reply; the Ask view draws each call turn when the
+  agent's state, which `live-session.js` follows, gains it.
+- **Settings.** The Settings panel sets the reply languages, their order, and whether
   m2m100 translates or the answer model writes every language ("In the answer"). The agent keeps
   them in its state, so every screen in the session shares them and voice calls use them too.
 - **Shared copies.** The agent bundles the repo's own prompt files and reads `[prompt_vars]`,
   `[answer]`, `[notebooks]`, and `[review]` from the desktop `config.toml` (`agent/src/prompts.ts`).
-  `guard.js` ports `guard.py`, and `src/beaver/core/guard_cases.json` holds 26 cases both must pass.
+  `ui/guard.js` ports `guard.py`, and `src/beaver/core/guard_cases.json` holds 26 cases both must pass.
 
 ## Agent actions
 
