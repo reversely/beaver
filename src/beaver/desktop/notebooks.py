@@ -131,6 +131,45 @@ def summaries(notebooks: list[dict]) -> list[dict]:
     ]
 
 
+def _answer(result: dict) -> str:
+    """The answer in the first language spoken, which a notebook entry keeps."""
+    source = result["codes"][0]
+    return " ".join(
+        text for group in result["groups"] for code, text in group if code == source
+    )
+
+
+def _prompt(config: dict, result: dict, listing: str) -> str:
+    settings = config["notebooks"]
+    return render_prompt(
+        config,
+        "notebook",
+        {
+            "max_vocabulary": settings["max_vocabulary"],
+            "max_concepts": settings["max_concepts"],
+            "visitor_language": result["visitor"]["name"],
+            "notebooks": listing,
+            "question": result["question"],
+            "answer": _answer(result),
+        },
+    )
+
+
+def filing_request(config: dict, result: dict) -> dict:
+    """What the Cloudflare agent needs to file a turn itself (#62): this laptop's prompt with
+    ${notebooks} left for the agent to fill from its own tables, the schema, and the limits."""
+    settings = config["notebooks"]
+    return {
+        "prompt": _prompt(config, result, "${notebooks}"),
+        "schema": SCHEMA,
+        "pieces": PIECES,
+        "themes": THEMES,
+        "max_vocabulary": settings["max_vocabulary"],
+        "max_concepts": settings["max_concepts"],
+        "answer": _answer(result),
+    }
+
+
 def file_exchange(config: dict, record: RunRecord, result: dict) -> dict:
     """Ask the provider's model where this exchange belongs, store it, and return the notebook summary."""
     settings = config["notebooks"]
@@ -139,22 +178,8 @@ def file_exchange(config: dict, record: RunRecord, result: dict) -> dict:
         f"- id {n['id']}: {n['title_en']} ({n['theme']}, {n['year_start']}-{n['year_end']})"
         for n in existing
     )
-    source = result["codes"][0]
-    answer = " ".join(
-        text for group in result["groups"] for code, text in group if code == source
-    )
-    prompt = render_prompt(
-        config,
-        "notebook",
-        {
-            "max_vocabulary": settings["max_vocabulary"],
-            "max_concepts": settings["max_concepts"],
-            "visitor_language": result["visitor"]["name"],
-            "notebooks": listing or "(none yet)",
-            "question": result["question"],
-            "answer": answer,
-        },
-    )
+    answer = _answer(result)
+    prompt = _prompt(config, result, listing or "(none yet)")
     reply = json.loads(
         provider.ask(config, record, "", prompt, schema=SCHEMA, label="gemini_notebook")
     )

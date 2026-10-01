@@ -3,12 +3,21 @@
 //   POST /agents/beaver-guide/<session>/ask        rendered prompts and parts -> reply text
 //   POST /agents/beaver-guide/<session>/translate  sentences and target codes -> translations
 //   POST /agents/beaver-guide/<session>/speak      one guarded sentence -> MP3
-//   POST /agents/beaver-guide/<session>/publish    one guarded turn -> the session's state
+//   POST /agents/beaver-guide/<session>/publish    one guarded turn -> the session's state, and
+//                                                  with `notebook`, a queued filing (#62)
+//   GET  /agents/beaver-guide/<session>/notebooks[/<id>]  the session's notebooks (#62)
 // Viewers (session.html) open a read-only WebSocket on /agents/beaver-guide/<session>?key=<key>
 // and receive the state each time it changes.
 
 import { Agent, type Connection, routeAgentRequest } from "agents";
 import { hasToken, sameText, viewerKey } from "./auth.ts";
+import {
+  checkFiling,
+  type FilingRequest,
+  listing,
+  newId,
+  type NotebookRow,
+} from "./notebooks.ts";
 import { addTurn, checkTurn, type Turn } from "./turns.ts";
 import {
   type AskRequest,
@@ -59,14 +68,28 @@ export class BeaverGuide extends Agent<Env, State> {
 
   onMessage() {}
 
+  async onStart() {
+    this.sql`CREATE TABLE IF NOT EXISTS notebooks (
+      id TEXT PRIMARY KEY, title_en TEXT, title_fr TEXT, theme TEXT, artifact TEXT,
+      year_start INTEGER, year_end INTEGER)`;
+    this.sql`CREATE TABLE IF NOT EXISTS entries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT, notebook_id TEXT, at TEXT, question TEXT,
+      visitor TEXT, answer TEXT, vocabulary TEXT, concepts TEXT, moments TEXT)`;
+  }
+
   async onRequest(request: Request): Promise<Response> {
+    const parts = new URL(request.url).pathname.split("/");
+    // /agents/beaver-guide/<session>/<action>[/<id>]
+    const [action, id] = parts.slice(4);
+    if (request.method === "GET" && action === "notebooks") {
+      return id === undefined ? json(this.notebookSummaries()) : this.notebook(id);
+    }
     if (request.method !== "POST") return json({ error: "Use POST" }, 405);
-    const action = new URL(request.url).pathname.split("/").pop();
     try {
       if (action === "ask") return await this.ask(await readJson<AskRequest>(request));
       if (action === "translate") return await this.translate(await readJson(request));
       if (action === "speak") return await this.speak(await readJson(request));
-      if (action === "publish") return this.publish(await readJson(request));
+      if (action === "publish") return await this.publish(await readJson(request));
       return json({ error: `Unknown action ${action}` }, 404);
     } catch (error) {
       const status =
@@ -107,10 +130,67 @@ export class BeaverGuide extends Agent<Env, State> {
     });
   }
 
-  publish(body: unknown): Response {
+  async publish(body: unknown): Promise<Response> {
     const turn = checkTurn(body);
     this.setState({ ...this.state, turns: addTurn(this.state.turns, turn) });
-    return json({ turns: this.state.turns.length });
+    const filing = (body as { notebook?: FilingRequest }).notebook;
+    // Queued, so filing finishes in the agent even when the laptop closes the page, and retries
+    // on a Workers AI error.
+    const queued = filing ? await this.queue("fileTurn", { turn, filing }) : null;
+    return json({ turns: this.state.turns.length, filing: queued });
+  }
+
+  /** File one published turn into a notebook: the queued task behind publish (#62). */
+  async fileTurn({ turn, filing }: { turn: Turn; filing: FilingRequest }) {
+    const prompt = filing.prompt.replace("${notebooks}", listing(this.notebookSummaries()));
+    const output = await this.env.AI.run(
+      this.env.ANSWER_MODEL as never,
+      chatInput({ system: "", instruction: prompt, parts: [], schema: filing.schema }) as never,
+    );
+    const result = checkFiling(JSON.parse(replyText(output)), filing);
+    const chosen = result.notebook;
+    const years = result.moments.map((m) => m.year);
+    const [existing] = this.sql<NotebookRow>`SELECT * FROM notebooks WHERE id = ${chosen.id}`;
+    const id = existing ? existing.id : newId();
+    if (existing) {
+      this.sql`UPDATE notebooks SET
+        artifact = COALESCE(artifact, ${chosen.artifact}),
+        year_start = MIN(year_start, ${Math.min(existing.year_start, ...years)}),
+        year_end = MAX(year_end, ${Math.max(existing.year_end, ...years)})
+        WHERE id = ${id}`;
+    } else {
+      this.sql`INSERT INTO notebooks VALUES (${id}, ${chosen.title_en}, ${chosen.title_fr},
+        ${chosen.theme}, ${chosen.artifact}, ${Math.min(chosen.year_start, ...years)},
+        ${Math.max(chosen.year_end, ...years)})`;
+    }
+    this.sql`INSERT INTO entries (notebook_id, at, question, visitor, answer, vocabulary, concepts,
+      moments) VALUES (${id}, ${turn.at}, ${turn.question}, ${JSON.stringify(turn.visitor)},
+      ${filing.answer.slice(0, 2000)}, ${JSON.stringify(result.vocabulary)},
+      ${JSON.stringify(result.concepts)}, ${JSON.stringify(result.moments)})`;
+    return id;
+  }
+
+  notebookSummaries(): NotebookRow[] {
+    return this.sql<NotebookRow>`SELECT n.*, COUNT(e.id) AS entries FROM notebooks n
+      LEFT JOIN entries e ON e.notebook_id = n.id GROUP BY n.id ORDER BY MIN(e.id)`;
+  }
+
+  /** One notebook in the shape notebooks.json holds, so ui/notebooks.js renders it unchanged. */
+  notebook(id: string): Response {
+    const [row] = this.sql<NotebookRow>`SELECT * FROM notebooks WHERE id = ${id}`;
+    if (!row) return json({ error: "No such notebook" }, 404);
+    const entries = this.sql<Record<string, string>>`SELECT * FROM entries
+      WHERE notebook_id = ${id} ORDER BY id`.map((e) => ({
+      at: e.at,
+      question: e.question,
+      visitor_language: JSON.parse(e.visitor),
+      answer: e.answer,
+      vocabulary: JSON.parse(e.vocabulary),
+      concepts: JSON.parse(e.concepts),
+      moments: JSON.parse(e.moments),
+      source: "desktop",
+    }));
+    return json({ ...row, entries });
   }
 
   async speak(body: { text: string; lang: string }): Promise<Response> {

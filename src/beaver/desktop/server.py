@@ -112,7 +112,14 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
         result = guard_answer(bilingual.answer(config, record, question, image), record)
         record.mark("text_ready", start)
         if provider.is_cloudflare(config):
-            _publish_in_background(config, record, result)
+            # The agent files the turn into its own notebooks (#62), so the local filing below
+            # is skipped.
+            filing = (
+                notebooks.filing_request(config, result)
+                if config["notebooks"]["enabled"]
+                else None
+            )
+            _publish_in_background(config, record, result, filing)
         yield {
             "type": "question",
             "question": result["question"],
@@ -148,7 +155,7 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
             }
         record.mark("all_synthesized", start)
         record.data["sentences"] = sentences
-        if config["notebooks"]["enabled"]:
+        if config["notebooks"]["enabled"] and not provider.is_cloudflare(config):
             # After every sentence is synthesized, so filing never delays the first audio.
             try:
                 yield {
@@ -170,13 +177,13 @@ def ask_events(config: dict, payload: dict, transcribe=_transcribe):
         yield {"type": "error", "message": message}
 
 
-def _publish_in_background(config, record, result):
+def _publish_in_background(config, record, result, filing=None):
     """Show the guarded turn on every viewer of the session (#61) without delaying the first
     audio. A failure is noted in the run record; the turn still plays on this laptop."""
 
     def run():
         try:
-            cloudflare.publish(config, result)
+            cloudflare.publish(config, result, filing)
         except (SystemExit, Exception) as error:  # noqa: BLE001 -- viewers are optional
             record.data["publish_error"] = str(error)
 
@@ -321,6 +328,19 @@ def make_handler(app: App):
                 raise ValueError("request too large")
             return json.loads(self.rfile.read(length) or b"{}")
 
+        def _agent_notebooks(self, notebook_id: str):
+            """The session's notebooks from the Cloudflare agent (#62), in the same shapes."""
+            try:
+                status, body = cloudflare.notebooks(app.config, notebook_id or None)
+            except SystemExit as error:
+                self._json(HTTPStatus.BAD_GATEWAY, {"error": str(error)})
+                return
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
         def do_GET(self):
             path = self.path.split("?")[0]
             if path == "/api/settings":
@@ -329,6 +349,10 @@ def make_handler(app: App):
                 import place
 
                 self._json(HTTPStatus.OK, place.last(app.config) or {})
+            elif path.startswith("/api/notebooks") and provider.is_cloudflare(
+                app.config
+            ):
+                self._agent_notebooks(path.removeprefix("/api/notebooks").strip("/"))
             elif path == "/api/notebooks":
                 self._json(
                     HTTPStatus.OK, notebooks.summaries(notebooks.load(app.config))

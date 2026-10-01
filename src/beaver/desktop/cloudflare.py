@@ -37,9 +37,10 @@ def viewer_link(config: dict) -> str | None:
     return f"{settings['url'].rstrip('/')}/session.html?{query}"
 
 
-def publish(config: dict, result: dict) -> None:
-    """Send one guarded turn to the session's agent, which shows it on every viewer (#61). Call
-    only with the result of server.guard_answer, so the agent holds checked text alone."""
+def publish(config: dict, result: dict, filing: dict | None = None) -> None:
+    """Send one guarded turn to the session's agent, which shows it on every viewer (#61) and,
+    given `filing` (notebooks.filing_request), files it into a notebook (#62). Call only with the
+    result of server.guard_answer, so the agent holds checked text alone."""
     sentences = [
         {"group": g, "code": code, "text": text}
         for g, group in enumerate(result["groups"])
@@ -49,8 +50,38 @@ def publish(config: dict, result: dict) -> None:
     _post(
         config,
         "publish",
-        {"question": result["question"], "visitor": visitor, "sentences": sentences},
+        {
+            "question": result["question"],
+            "visitor": visitor,
+            "sentences": sentences,
+            **({"notebook": filing} if filing else {}),
+        },
     )
+
+
+def notebooks(config: dict, notebook_id: str | None = None) -> tuple[int, bytes]:
+    """The session's notebooks from the agent (#62): the summaries, or one notebook by id, as
+    (HTTP status, JSON body)."""
+    token = os.environ.get("BEAVER_AGENT_TOKEN")
+    if not token:
+        raise SystemExit(
+            "Set BEAVER_AGENT_TOKEN in .env to use the Cloudflare provider"
+        )
+    path = "notebooks" + (
+        f"/{urllib.parse.quote(notebook_id, safe='')}" if notebook_id else ""
+    )
+    request = urllib.request.Request(
+        _url(config, path), headers={"Authorization": f"Bearer {token}"}
+    )
+    try:
+        with urllib.request.urlopen(
+            request, timeout=config["cloudflare"]["timeout_seconds"]
+        ) as response:
+            return response.status, response.read()
+    except urllib.error.HTTPError as error:
+        return error.code, error.read()
+    except urllib.error.URLError as error:
+        raise SystemExit(f"Cloudflare agent could not be reached: {error.reason}")
 
 
 def _url(config: dict, action: str) -> str:

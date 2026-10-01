@@ -11,6 +11,8 @@ import tempfile
 import threading
 import time
 import unittest
+import urllib.error
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import ClassVar
@@ -38,6 +40,15 @@ class FakeAgent(BaseHTTPRequestHandler):
 
     def log_message(self, *args):
         pass
+
+    def do_GET(self):
+        FakeAgent.calls.append((self.path, self.headers["Authorization"], "get", None))
+        if self.path.endswith("/notebooks"):
+            self._send(b'[{"id": "ab12cd34", "entries": 1}]', "application/json")
+        else:
+            self.send_response(404)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
 
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
@@ -169,6 +180,46 @@ class CloudflareProvider(unittest.TestCase):
         self.assertEqual(
             [(s["group"], s["code"]) for s in turn["sentences"]],
             [(0, "en"), (0, "fr"), (1, "en"), (1, "fr")],
+        )
+
+    def test_the_agent_files_the_turn_in_place_of_the_laptop(self):
+        self.config["notebooks"]["enabled"] = True
+        with mock.patch("server.notebooks.file_exchange") as local_filing:
+            events = self.turn("my phone number is 613 555 0142, what is poutine?")
+        local_filing.assert_not_called()
+        self.assertFalse(any(e["type"] == "notebook" for e in events))
+        filing = self.published()["notebook"]
+        self.assertIn("${notebooks}", filing["prompt"])
+        self.assertNotIn("0142", json.dumps(filing))
+        self.assertEqual(
+            filing["answer"],
+            "Poutine comes from Quebec. Call a phone number for a table.",
+        )
+        self.assertIn("poutine", filing["pieces"])
+
+    def test_notebook_routes_read_from_the_agent(self):
+        app = server.App(self.config)
+        app.config = self.config
+        local = ThreadingHTTPServer(("127.0.0.1", 0), server.make_handler(app))
+        threading.Thread(target=local.serve_forever, daemon=True).start()
+        self.addCleanup(local.server_close)
+        self.addCleanup(local.shutdown)
+        base = f"http://127.0.0.1:{local.server_address[1]}/api/notebooks"
+        with mock.patch.dict(os.environ, {"BEAVER_AGENT_TOKEN": TOKEN}):
+            with urllib.request.urlopen(base) as response:
+                self.assertEqual(
+                    json.loads(response.read()), [{"id": "ab12cd34", "entries": 1}]
+                )
+            with self.assertRaises(urllib.error.HTTPError) as missing:
+                urllib.request.urlopen(base + "/nope")
+        self.assertEqual(missing.exception.code, 404)
+        paths = [path for path, auth, action, _ in FakeAgent.calls if action == "get"]
+        self.assertEqual(
+            paths,
+            [
+                "/agents/beaver-guide/desktop/notebooks",
+                "/agents/beaver-guide/desktop/notebooks/nope",
+            ],
         )
 
     def test_viewer_key_matches_the_worker(self):
